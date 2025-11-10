@@ -1,0 +1,212 @@
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --light-bg: #f5f7fa;
+    --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    --hover-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* General Transitions */
+* {
+    transition: all 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Link Item Drag States */
+.link-item {
+    position: relative;
+    user-select: none;
+}
+
+.link-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.link-item.drag-over {
+    border-color: var(--primary-color) !important;
+    background: rgba(102, 126, 234, 0.05);
+    transform: scale(1.02);
+}
+
+/* Buttons Enhancement */
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
+}
+
+/* Card Enhancement */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.12);
+}
+
+/* Stats Card Animation */
+.stat-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.modal-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+/* Form Enhancements */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Badge Enhancement */
+.badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+}
+
+/* Loading Spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+/* Alert Enhancements */
+.alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: var(--card-shadow);
+}
+
+/* Navbar Enhancement */
+.navbar-custom .nav-link {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 0 0.2rem;
+}
+
+.navbar-custom .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.navbar-custom .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .link-item {
+        padding: 1rem;
+    }
+    
+    .drag-handle {
+        font-size: 1.2rem;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Tooltip Enhancement */
+.tooltip-inner {
+    background: var(--primary-gradient);
+    border-radius: 8px;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
