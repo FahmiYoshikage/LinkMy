@@ -1,19 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
     const linksList = document.getElementById('linksList');
-
     if (!linksList) return;
-
     const linkItems = linksList.querySelectorAll('.link-item');
-
     let draggedElement = null;
     let draggedIndex = null;
-
-    // Add drag event listeners to all link items
     linkItems.forEach((item, index) => {
-        // Make items draggable
         item.setAttribute('draggable', 'true');
-
-        // Drag start
         item.addEventListener('dragstart', function (e) {
             draggedElement = this;
             draggedIndex = index;
@@ -21,21 +13,13 @@ document.addEventListener('DOMContentLoaded', function () {
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
         });
-
-        // Drag end
         item.addEventListener('dragend', function (e) {
             this.classList.remove('dragging');
-
-            // Remove all dragover classes
             linkItems.forEach((item) => {
                 item.classList.remove('drag-over');
             });
-
-            // Save new order to database
             saveNewOrder();
         });
-
-        // Drag over
         item.addEventListener('dragover', function (e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
@@ -45,25 +29,18 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.add('drag-over');
             return false;
         });
-
-        // Drag enter
         item.addEventListener('dragenter', function (e) {
             if (this === draggedElement) return;
             this.classList.add('drag-over');
         });
-
-        // Drag leave
         item.addEventListener('dragleave', function (e) {
             this.classList.remove('drag-over');
         });
-
-        // Drop
         item.addEventListener('drop', function (e) {
             e.stopPropagation();
             e.preventDefault();
 
             if (draggedElement !== this) {
-                // Swap elements
                 const allItems = Array.from(linksList.children);
                 const draggedPos = allItems.indexOf(draggedElement);
                 const droppedPos = allItems.indexOf(this);
@@ -82,8 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         });
     });
-
-    // Function to save new order to database
     function saveNewOrder() {
         const items = linksList.querySelectorAll('.link-item');
         const orderData = [];
@@ -95,8 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 order: index + 1,
             });
         });
-
-        // Send AJAX request to update order
         fetch('dashboard.php', {
             method: 'POST',
             headers: {
@@ -119,10 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showToast('Gagal mengupdate urutan!', 'error');
             });
     }
-
-    // Toast notification function
     function showToast(message, type = 'success') {
-        // Create toast element
         const toast = document.createElement('div');
         toast.className = `alert alert-${
             type === 'success' ? 'success' : 'danger'
@@ -136,8 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         document.body.appendChild(toast);
-
-        // Auto remove after 3 seconds
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.5s';
@@ -145,15 +113,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3000);
     }
 });
-
-// Copy to clipboard function (for dashboard)
 function copyToClipboard(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
             alert('Link berhasil disalin!');
         });
     } else {
-        // Fallback for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);

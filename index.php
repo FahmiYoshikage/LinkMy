@@ -1,61 +1,57 @@
 <?php
-    session_start();
+session_start();
+if (isset($_SESSION['user_id'])) {
+    header('Location: admin/dashboard.php');
+    exit;
+}
+require_once 'config/db.php';
+$error = '';
+$success = '';
 
-    if (isset($_SESSION['user_id'])){
-        header('Location: admin/dashboard.php');
-        exit;
-    }
-
-    require_once 'config/db.php';
-
-    $error = '';
-    $succes = '';
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
-        $username = trim($_POST['username']);
-        $password = $_POST['password'];
-
-        if (empty($username) || empty($password)){
-            $error = 'Username dan password harus di isi ngabs!';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    
+    if (empty($email) || empty($password)) {
+        $error = 'Email dan password harus diisi!';
+    } else {
+        $query = "SELECT user_id, username, password_hash, page_slug, email FROM users WHERE email = ?";
+        $user = get_single_row($query, [$email], 's');
+        
+        if ($user && password_verify($password, $user['password_hash'])) {
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['page_slug'] = $user['page_slug'];
+            $_SESSION['last_activity'] = time();
+            
+            header('Location: admin/dashboard.php');
+            exit;
         } else {
-            $query = "SELECT user_id, username, password_hash, page_slug FROM users WHERE username = ?";
-            $user = get_single_row($query, [$username], 's');
-
-            if ($user && password_verify($password, $user['password_hash'])){
-                $_SESSION['usr_id'] = $user['user_id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['page_slug'] = $user['page_slug'];
-                $_SESSION['last_activity'] = time();
-
-                header('Location: admin?dashboard.php');
-                exit;
-            } else {
-                $error = 'Username atau password salah weladalah!';
-            }
+            $error = 'Email atau password salah!';
         }
     }
-    if (isset($_GET['registered'])){
-        $success = 'Registrasi berhasil! Bisa lanjut login';
+}
+if (isset($_GET['registered'])) {
+    $success = 'Registrasi berhasil! Silakan login dengan email Anda.';
+}
+if (isset($_GET['logout'])) {
+    $success = 'Anda telah logout.';
+}
+if (isset($_GET['error'])) {
+    if ($_GET['error'] === 'not_logged_in') {
+        $error = 'Silakan login terlebih dahulu.';
+    } elseif ($_GET['error'] === 'session_expired') {
+        $error = 'Session Anda telah berakhir. Silakan login kembali.';
     }
-    if (isset($_GET['logout'])){
-        $success = 'Anda telah logout';
-    }
-    if (isset($_GET['session_expired'])){
-        if ($_GET['error'] === 'not_logged_in'){
-            $error = 'Silakan login terelbih dahulu';
-        } elseif ($_GET['error'] === 'session_expired'){
-            $error = 'Session Anda telah berakhir. silakan login kembali';
-        }
-    }
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - LinkMy</title>
-    <link href="assets/bootstrap-5.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body {
@@ -136,11 +132,11 @@
                             
                             <form method="POST" action="">
                                 <div class="mb-3">
-                                    <label for="username" class="form-label fw-semibold">Username</label>
+                                    <label for="email" class="form-label fw-semibold">Email</label>
                                     <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                                        <input type="text" class="form-control" id="username" name="username" 
-                                               placeholder="Masukkan username" required autofocus>
+                                        <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               placeholder="email@example.com" required autofocus>
                                     </div>
                                 </div>
                                 
@@ -170,6 +166,6 @@
         </div>
     </div>
     
-    <script src="assets/bootstrap-5.3/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
