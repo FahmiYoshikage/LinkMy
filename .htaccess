@@ -4,27 +4,19 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/(index\.php|register\.php|logout\.php|redirect\.php|admin|config|assets|uploads)
 RewriteRule ^([a-zA-Z0-9_-]+)/?$ profile.php?slug=$1 [L,QSA]
-
-# Protect config directory
 <FilesMatch "^(db\.php|auth_check\.php)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
-
-# Protect uploads directory dari direct access ke PHP files
 <Directory "uploads">
     <FilesMatch "\.php$">
         Order Allow,Deny
         Deny from all
     </FilesMatch>
 </Directory>
-
-# Enable GZIP compression
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
 </IfModule>
-
-# Browser Caching
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType image/jpg "access plus 1 year"
@@ -34,9 +26,5 @@ RewriteRule ^([a-zA-Z0-9_-]+)/?$ profile.php?slug=$1 [L,QSA]
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
 </IfModule>
-
-# Prevent directory listing
 Options -Indexes
-
-# Custom Error Pages (optional)
 ErrorDocument 404 /LinkMy/index.php
