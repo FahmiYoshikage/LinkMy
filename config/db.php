@@ -22,17 +22,29 @@
         if (empty($params)){
             return mysqli_query($conn, $query);
         }
-
         $stmt = mysqli_prepare($conn, $query);
+        if ($stmt === false){
+            return false;
+        }
+        if (!empty($params)){
+            if (empty($types)){
+                $types = str_repeat('s', count($params));
+            }
+            $bindParams = [];
+            $bindParams[] = $stmt; 
+            $bindParams[] = $types; 
+            foreach ($params as $key => $value){
+                $bindParams[] = &$params[$key];
+            }
+            call_user_func_array('mysqli_stmt_bind_param', $bindParams);
+        }
 
-        if ($stmt == false){
+        if (!mysqli_stmt_execute($stmt)){
             return false;
         }
 
-        mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-
-        if ($result == false){
+        if ($result === false){
             return false;
         }
         return $result;
