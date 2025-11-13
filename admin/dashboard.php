@@ -6,23 +6,28 @@
     $error = '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_link'])){
-        $tittle = trim($_POST['title']);
+        $title = trim($_POST['title']);
         $url = trim($_POST['url']);
         $icon_class = trim($_POST['icon_class']);
 
-        if (empty($tittle) || empty($url)){
-            $error = 'Judul dan URL harus di isi';
+        if (empty($title) || empty($url)){
+            $error = 'Judul dan URL harus diisi';
         } else {
-            $last_order = get_single_row("SELECT MAX(order_index) as max_order FROM links where user_id = ?", [$current_user_id], 'i');
-            $new_order = ($last_order('max_order') ?? 0) + 1;
+            $last_order_row = get_single_row("SELECT MAX(order_index) AS max_order FROM links WHERE user_id = ?", [$current_user_id], 'i');
+            $last_order = $last_order_row['max_order'] ?? 0;
+            $new_order = $last_order + 1;
 
             $query = "INSERT INTO links (user_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?)";
             $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $title, $url, $icon_class, $new_order);
-            if (mysqli_stmt_execute($stmt)){
-                $success = 'Link berhasil ditambahkan';
+            if ($stmt){
+                mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $title, $url, $icon_class, $new_order);
+                if (mysqli_stmt_execute($stmt)){
+                    $success = 'Link berhasil ditambahkan';
+                } else {
+                    $error = 'Gagal menambahkan link';
+                }
             } else {
-                $error = 'Gagal menambahkan link';
+                $error = 'Gagal menyiapkan statement';
             }
         }
     }

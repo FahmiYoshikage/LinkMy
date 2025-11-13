@@ -45,7 +45,19 @@ CREATE TABLE appearance (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- 4. DATABASE VIEW untuk Public Page
+-- 4. TABEL EMAIL VERIFICATIONS (untuk OTP)
+CREATE TABLE email_verifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(100) NOT NULL,
+    otp_code VARCHAR(6) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_used TINYINT(1) DEFAULT 0,
+    INDEX idx_email_otp (email, otp_code),
+    INDEX idx_expires (expires_at)
+) ENGINE=InnoDB;
+
+-- 5. DATABASE VIEW untuk Public Page
 CREATE OR REPLACE VIEW v_public_page_data AS
 SELECT 
     u.user_id,

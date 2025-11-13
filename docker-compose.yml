@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+    # MySQL Database
+    db:
+        image: mysql:8.0
+        container_name: linkmy_mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+            MYSQL_DATABASE: ${DB_NAME:-linkmy_db}
+            MYSQL_USER: ${DB_USER:-linkmy_user}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-linkmy_password}
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+        ports:
+            - '3306:3306'
+        networks:
+            - linkmy_network
+
+    # PHP Apache Web Server
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: linkmy_web
+        restart: always
+        depends_on:
+            - db
+        environment:
+            # Database Config
+            DB_HOST: db
+            DB_USER: ${DB_USER:-linkmy_user}
+            DB_PASSWORD: ${DB_PASSWORD:-linkmy_password}
+            DB_NAME: ${DB_NAME:-linkmy_db}
+
+            # Email Config (PHPMailer)
+            MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+            MAIL_PORT: ${MAIL_PORT:-587}
+            MAIL_USERNAME: ${MAIL_USERNAME}
+            MAIL_PASSWORD: ${MAIL_PASSWORD}
+            MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-noreply@linkmy.com}
+            MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LinkMy}
+        volumes:
+            - ./:/var/www/html
+            - ./uploads:/var/www/html/uploads
+        ports:
+            - '80:80'
+            - '443:443'
+        networks:
+            - linkmy_network
+
+    # phpMyAdmin (Optional - untuk development)
+    phpmyadmin:
+        image: phpmyadmin:latest
+        container_name: linkmy_phpmyadmin
+        restart: always
+        depends_on:
+            - db
+        environment:
+            PMA_HOST: db
+            PMA_PORT: 3306
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+        ports:
+            - '8080:80'
+        networks:
+            - linkmy_network
+
+volumes:
+    mysql_data:
+        driver: local
+
+networks:
+    linkmy_network:
+        driver: bridge
+
+

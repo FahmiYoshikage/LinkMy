@@ -1,4 +1,7 @@
 <?php
+
+ob_start();
+
 session_start();
 
 if (isset($_SESSION['user_id'])) {
@@ -7,14 +10,18 @@ if (isset($_SESSION['user_id'])) {
 }
 
 require_once 'config/db.php';
+require_once 'config/mail.php';
 
 $error = '';
 $success = '';
 $current_step = isset($_SESSION['reg_step']) ? $_SESSION['reg_step'] : 1;
+
+// ==================== STEP 1: Email & Password ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step1'])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
+    
     if (empty($email) || empty($password)) {
         $error = 'Email dan password harus diisi!';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -29,14 +36,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step1'])) {
         if ($check_email) {
             $error = 'Email sudah terdaftar! Gunakan email lain atau <a href="index.php">login</a>.';
         } else {
-            $_SESSION['reg_email'] = $email;
-            $_SESSION['reg_password'] = $password;
-            $_SESSION['reg_step'] = 2;
-            $current_step = 2;
+            // Generate OTP
+            $otp_code = generate_otp();
+            
+            // Save OTP to database
+            if (save_otp_to_database($email, $otp_code)) {
+                // Send OTP email
+                if (send_otp_email($email, $otp_code)) {
+                    $_SESSION['reg_email'] = $email;
+                    $_SESSION['reg_password'] = $password;
+                    $_SESSION['reg_step'] = 2;
+                    $_SESSION['otp_sent_at'] = time();
+                    
+                    // Redirect to OTP verification page
+                    header('Location: verify-otp.php');
+                    exit;
+                } else {
+                    $error = 'Gagal mengirim email OTP. Coba lagi!';
+                }
+            } else {
+                $error = 'Terjadi kesalahan. Coba lagi!';
+            }
         }
     }
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step2'])) {
+
+// ==================== STEP 3: Username & Page Slug ====================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step3'])) {
+    if (!isset($_SESSION['email_verified']) || !$_SESSION['email_verified']) {
+        $error = 'Email belum diverifikasi!';
+        $_SESSION['reg_step'] = 2;
+        header('Location: verify-otp.php');
+        exit;
+    }
+    
     if (!isset($_SESSION['reg_email']) || !isset($_SESSION['reg_password'])) {
         $error = 'Session expired. Silakan mulai dari awal.';
         $_SESSION['reg_step'] = 1;
@@ -44,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step2'])) {
     } else {
         $username = trim($_POST['username']);
         $page_slug = trim($_POST['page_slug']);
+        
         if (empty($username) || empty($page_slug)) {
             $error = 'Username dan page slug harus diisi!';
         } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
@@ -56,29 +90,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step2'])) {
             $error = 'Page slug minimal 3 karakter!';
         } else {
             $check_username = get_single_row("SELECT user_id FROM users WHERE username = ?", [$username], 's');
+            
             if ($check_username) {
                 $error = 'Username sudah digunakan! Pilih yang lain.';
             } else {
                 $check_slug = get_single_row("SELECT user_id FROM users WHERE page_slug = ?", [$page_slug], 's');
+                
                 if ($check_slug) {
                     $error = 'Page slug sudah digunakan! Pilih yang lain.';
                 } else {
                     $email = $_SESSION['reg_email'];
                     $password = $_SESSION['reg_password'];
                     $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                    $query = "INSERT INTO users (username, password_hash, page_slug, email) VALUES (?, ?, ?, ?)";
+                    
+                    // Insert user with email_verified = 1
+                    $query = "INSERT INTO users (username, password_hash, page_slug, email, email_verified, email_verified_at) 
+                              VALUES (?, ?, ?, ?, 1, NOW())";
                     $stmt = mysqli_prepare($conn, $query);
                     mysqli_stmt_bind_param($stmt, 'ssss', $username, $password_hash, $page_slug, $email);
+                    
                     if (mysqli_stmt_execute($stmt)) {
                         $new_user_id = mysqli_insert_id($conn);
+                        
+                        // Insert default appearance
                         $appearance_query = "INSERT INTO appearance (user_id, profile_title, bio) VALUES (?, ?, ?)";
                         $default_bio = "Welcome to my LinkMy page!";
                         $stmt2 = mysqli_prepare($conn, $appearance_query);
                         mysqli_stmt_bind_param($stmt2, 'iss', $new_user_id, $username, $default_bio);
                         mysqli_stmt_execute($stmt2);
+                        
+                        // Clear session
                         unset($_SESSION['reg_email']);
                         unset($_SESSION['reg_password']);
                         unset($_SESSION['reg_step']);
+                        unset($_SESSION['email_verified']);
+                        unset($_SESSION['otp_sent_at']);
+                        
                         header('Location: index.php?registered=1');
                         exit;
                     } else {
@@ -89,6 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step2'])) {
         }
     }
 }
+
+// Check current step
+if (isset($_SESSION['email_verified']) && $_SESSION['email_verified']) {
+    $current_step = 3;
+}
+
 if (isset($_GET['back']) && $_GET['back'] == '1') {
     $_SESSION['reg_step'] = 1;
     $current_step = 1;
@@ -202,23 +255,30 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                 <h2 class="fw-bold mb-2">Daftar LinkMy</h2>
                 <p class="text-muted">Buat akun Anda dan mulai berbagi link!</p>
             </div>
+            
+            <!-- Step Indicator (3 Steps) -->
             <div class="step-indicator">
                 <div class="step-container">
-                    <div class="step <?= $current_step >= 1 ? 'active' : '' ?> <?= $current_step > 1 ? 'completed' : '' ?>">
-                        1
-                    </div>
-                    <div class="step <?= $current_step >= 2 ? 'active' : '' ?>">
-                        2
-                    </div>
+                    <div class="step <?= $current_step >= 1 ? 'active' : '' ?> <?= $current_step > 1 ? 'completed' : '' ?>">1</div>
+                    <div class="step <?= $current_step >= 2 ? 'active' : '' ?> <?= $current_step > 2 ? 'completed' : '' ?>">2</div>
+                    <div class="step <?= $current_step >= 3 ? 'active' : '' ?>">3</div>
                 </div>
             </div>
             
             <div class="text-center mb-4">
                 <h5 class="fw-bold">
-                    <?= $current_step == 1 ? 'Langkah 1: Akun Anda' : 'Langkah 2: Profil Publik' ?>
+                    <?php
+                    if ($current_step == 1) echo 'Langkah 1: Akun Anda';
+                    elseif ($current_step == 2) echo 'Langkah 2: Verifikasi Email';
+                    else echo 'Langkah 3: Profil Publik';
+                    ?>
                 </h5>
                 <p class="text-muted small mb-0">
-                    <?= $current_step == 1 ? 'Masukkan email dan password untuk akun Anda' : 'Pilih username dan URL publik Anda' ?>
+                    <?php
+                    if ($current_step == 1) echo 'Masukkan email dan password untuk akun Anda';
+                    elseif ($current_step == 2) echo 'Verifikasi email dengan kode OTP';
+                    else echo 'Pilih username dan URL publik Anda';
+                    ?>
                 </p>
             </div>
             
@@ -231,6 +291,7 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
             <?php endif; ?>
             
             <?php if ($current_step == 1): ?>
+                <!-- STEP 1: Email & Password -->
                 <form method="POST" action="">
                     <div class="mb-3">
                         <label for="email" class="form-label">
@@ -259,7 +320,7 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                     </div>
                     
                     <button type="submit" name="step1" class="btn btn-primary btn-register w-100 mb-3">
-                        Lanjut ke Step 2 <i class="bi bi-arrow-right ms-2"></i>
+                        Kirim Kode OTP <i class="bi bi-arrow-right ms-2"></i>
                     </button>
                     
                     <div class="text-center">
@@ -269,8 +330,14 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                     </div>
                 </form>
             
-            <?php else: ?>
+            <?php elseif ($current_step == 3): ?>
+                <!-- STEP 3: Username & Page Slug -->
                 <form method="POST" action="" id="registerForm">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Email <strong><?= htmlspecialchars($_SESSION['reg_email']) ?></strong> telah terverifikasi!
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="username" class="form-label">
                             <i class="bi bi-person-fill me-1"></i>Username
@@ -294,25 +361,28 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                                title="Hanya huruf, angka, underscore, dan dash (min 3 karakter)">
                         <div class="slug-preview mt-2">
                             <i class="bi bi-globe me-1"></i>
-                            Link Publik Anda: <span class="fw-bold" id="slugPreview">linkmy.fahmi.app/namakamu</span>
+                            Link Publik Anda: <span class="fw-bold" id="slugPreview">linkmy.com/namakamu</span>
                         </div>
                     </div>
                     
-                    <div class="d-flex gap-2">
-                        <a href="?back=1" class="btn btn-outline-secondary flex-fill">
-                            <i class="bi bi-arrow-left me-2"></i>Kembali
-                        </a>
-                        <button type="submit" name="step2" class="btn btn-primary btn-register flex-fill">
-                            <i class="bi bi-check-circle-fill me-2"></i>Daftar
-                        </button>
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <p class="mb-0 small text-muted">
-                            Email: <strong><?= isset($_SESSION['reg_email']) ? htmlspecialchars($_SESSION['reg_email']) : '' ?></strong>
-                        </p>
-                    </div>
+                    <button type="submit" name="step3" class="btn btn-primary btn-register w-100 mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>Selesaikan Registrasi
+                    </button>
                 </form>
+            
+            <?php else: ?>
+                <!-- STEP 2 should redirect to verify-otp.php -->
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Mengalihkan ke verifikasi OTP...</p>
+                </div>
+                <script>
+                    setTimeout(() => {
+                        window.location.href = 'verify-otp.php';
+                    }, 1000);
+                </script>
             <?php endif; ?>
         </div>
     </div>
@@ -323,9 +393,10 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
         if (pageSlugInput) {
             pageSlugInput.addEventListener('input', function() {
                 const slugValue = this.value || 'namakamu';
-                document.getElementById('slugPreview').textContent = 'linkmy.fahmi.app/' + slugValue;
+                document.getElementById('slugPreview').textContent = 'linkmy.com/' + slugValue;
             });
         }
+        
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirm_password');
         
@@ -338,6 +409,7 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                 }
             });
         }
+        
         const usernameInput = document.getElementById('username');
         if (usernameInput && pageSlugInput) {
             usernameInput.addEventListener('input', function() {
@@ -350,3 +422,6 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
     </script>
 </body>
 </html>
+<?php 
+    ob_end_flush();
+?>
