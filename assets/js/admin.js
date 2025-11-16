@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', function () {
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDraggingTouch = false;
+    let touchStartX = 0;
+    
+    // Prevent body scroll when dragging
+    const preventBodyScroll = (e) => {
+        if (isDraggingTouch) {
+            e.preventDefault();
+        }
+    };
+    document.body.addEventListener('touchmove', preventBodyScroll, { passive: false });
     linkItems.forEach((item, index) => {
         item.setAttribute('draggable', 'true');
         item.addEventListener('dragstart', function (e) {
@@ -69,11 +78,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 draggedElement = this;
                 draggedIndex = index;
                 touchStartY = e.touches[0].clientY;
+                touchStartX = e.touches[0].clientX;
                 isDraggingTouch = true;
                 this.classList.add('dragging');
+                
+                // Store initial position
+                this.style.zIndex = '1000';
+                this.style.transition = 'none';
 
                 // Prevent scrolling while dragging
                 e.preventDefault();
+                e.stopPropagation();
             },
             { passive: false }
         );
@@ -89,14 +104,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Visual feedback - move the element
                 this.style.transform = `translateY(${deltaY}px)`;
                 this.style.opacity = '0.7';
+                this.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+                
+                // Hide this element temporarily to get element below
+                this.style.visibility = 'hidden';
 
                 // Find element at touch position
                 const elementBelow = document.elementFromPoint(
                     e.touches[0].clientX,
                     e.touches[0].clientY
                 );
+                
+                // Show element again
+                this.style.visibility = 'visible';
 
-                if (elementBelow && elementBelow !== this) {
+                if (elementBelow) {
                     const linkItem = elementBelow.closest('.link-item');
                     if (linkItem && linkItem !== this) {
                         // Clear all drag-over classes
@@ -108,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 e.preventDefault();
+                e.stopPropagation();
             },
             { passive: false }
         );
@@ -119,6 +142,10 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.remove('dragging');
             this.style.transform = '';
             this.style.opacity = '';
+            this.style.zIndex = '';
+            this.style.transition = '';
+            this.style.boxShadow = '';
+            this.style.visibility = '';
 
             // Find the target element
             const elementBelow = document.elementFromPoint(
@@ -148,6 +175,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Clear all drag-over classes
             linkItems.forEach((item) => item.classList.remove('drag-over'));
+            
+            e.preventDefault();
+            e.stopPropagation();
         });
     });
     function saveNewOrder() {

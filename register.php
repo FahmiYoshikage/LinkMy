@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step1'])) {
         $check_email = get_single_row("SELECT user_id FROM users WHERE email = ?", [$email], 's');
         
         if ($check_email) {
-            $error = 'Email sudah terdaftar! Gunakan email lain atau <a href="index.php">login</a>.';
+            $error = 'Email sudah terdaftar! Gunakan email lain atau <a href="login.php">login</a>.';
         } else {
             // Generate OTP
             $otp_code = generate_otp();

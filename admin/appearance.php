@@ -13,11 +13,25 @@
         $base_upload_dir . '/folder_pics'
     ];
     
+    // Try to create folders with aggressive permissions
     foreach ($required_folders as $folder) {
         if (!is_dir($folder)) {
+            $old_umask = umask(0);
             @mkdir($folder, 0777, true);
+            umask($old_umask);
+            @chmod($folder, 0777);
+        } else {
+            // Folder exists, ensure writable
             @chmod($folder, 0777);
         }
+    }
+    
+    // Verify uploads directory is writable
+    if (!is_writable($base_upload_dir)) {
+        // Log error for debugging
+        error_log("WARNING: Uploads directory not writable: " . $base_upload_dir);
+        error_log("Current user: " . get_current_user());
+        error_log("Directory permissions: " . substr(sprintf('%o', fileperms($base_upload_dir)), -4));
     }
 
     $success = '';
@@ -1488,7 +1502,19 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = document.getElementById(previewId);
+                    let img = document.getElementById(previewId);
+                    
+                    // Create img element if not exists (for background)
+                    if (!img && previewId === 'bgImagePreview') {
+                        const uploadArea = input.closest('.upload-area');
+                        if (uploadArea) {
+                            img = document.createElement('img');
+                            img.id = previewId;
+                            img.className = 'image-preview';
+                            uploadArea.insertBefore(img, uploadArea.firstChild);
+                        }
+                    }
+                    
                     if (img) {
                         img.src = e.target.result;
                         img.style.display = 'block';
@@ -1496,7 +1522,10 @@
                     
                     // Update live preview if profile pic
                     if (previewId === 'profilePicPreview') {
-                        document.getElementById('previewAvatar').src = e.target.result;
+                        const previewAvatar = document.getElementById('previewAvatar');
+                        if (previewAvatar) {
+                            previewAvatar.src = e.target.result;
+                        }
                     }
                     
                     // Update live preview if background image
