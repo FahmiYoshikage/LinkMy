@@ -1,0 +1,47 @@
+# Docker
+.env
+docker-compose.override.yml
+
+# Uploads (user data)
+uploads/*
+!uploads/.gitkeep
+!uploads/profile_pics/.gitkeep
+!uploads/backgrounds/.gitkeep
+!uploads/folder_pics/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Temporary
+*.tmp
+*.temp
+*.swp
+*~
+
+# Backups
+*.bak
+*.backup
+config/db.backup.php
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PHP
+vendor/
+composer.lock
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock

@@ -15,7 +15,7 @@ services:
             - mysql_data:/var/lib/mysql
             - ./database.sql:/docker-entrypoint-initdb.d/database.sql
         ports:
-            - '3306:3306'
+            - '3307:3306'
         networks:
             - linkmy_network
 
@@ -46,7 +46,7 @@ services:
             - ./:/var/www/html
             - ./uploads:/var/www/html/uploads
         ports:
-            - '80:80'
+            - '83:80'
             - '443:443'
         networks:
             - linkmy_network
@@ -63,7 +63,7 @@ services:
             PMA_PORT: 3306
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
         ports:
-            - '8080:80'
+            - '8083:80'
         networks:
             - linkmy_network
 
@@ -74,5 +74,3 @@ volumes:
 networks:
     linkmy_network:
         driver: bridge
-
-

@@ -1,10 +1,11 @@
-# 🔗 LinkMy v2.0 - Advanced Customization Platform
+# 🔗 LinkMy v2.1 - Advanced Customization Platform
 
 > A powerful link-in-bio platform with advanced customization features
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/yourusername/linkmy)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/yourusername/linkmy)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net)
 [![MySQL](https://img.shields.io/badge/MySQL-5.7+-orange.svg)](https://mysql.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](https://www.docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **LinkMy** adalah aplikasi web berbasis PHP untuk membuat halaman profil link pribadi yang dapat disesuaikan, mirip dengan Linktree atau Linktr.ee. Project ini dibuat dengan **PHP Native**, **MySQL**, dan **Bootstrap 5.3**.
@@ -29,14 +30,38 @@
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Docker (Recommended) 🐳
+
+**Paling mudah dan cepat!** Tidak perlu install PHP, MySQL, atau Apache.
+
+```bash
+# Windows
+docker-setup.bat
+
+# Linux/Mac
+chmod +x docker-setup.sh
+./docker-setup.sh
+```
+
+**Akses aplikasi:**
+
+-   Web: http://localhost:83
+-   phpMyAdmin: http://localhost:8083
+
+📖 **Panduan lengkap**: [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) | [DOCKER.md](DOCKER.md)
+
+---
+
+### Option 2: Manual Installation
+
+**Prerequisites:**
 
 -   PHP 7.4 or higher
 -   MySQL 5.7+ or MariaDB 10.2+
 -   Apache/Nginx with mod_rewrite
 -   50MB+ disk space
 
-### Installation Steps
+**Installation Steps:**
 
 1. **Setup database**
 
@@ -47,8 +72,8 @@
     # Import initial schema
     mysql -u root -p linkmy_db < database.sql
 
-    # Apply v2.0 updates
-    mysql -u root -p linkmy_db < database_update_v2.sql
+    # Apply v2.1 updates
+    mysql -u root -p linkmy_db < database_update_v2.1.sql
     ```
 
 2. **Configure database connection**
@@ -508,7 +533,55 @@ ORDER BY u.user_id, l.order_index
 
 ---
 
-## 🌐 Deploy ke Hosting
+## 🐳 Deploy dengan Docker (Recommended)
+
+### Quick Start dengan Docker
+
+```bash
+# Windows - Jalankan script setup
+docker-setup.bat
+
+# Linux/Mac - Jalankan script setup
+chmod +x docker-setup.sh
+./docker-setup.sh
+```
+
+### Manual Docker Deployment
+
+```bash
+# Build dan start semua services
+docker-compose up -d --build
+
+# Cek status containers
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+```
+
+### Akses Aplikasi
+
+-   **Web Application**: http://localhost:83
+-   **phpMyAdmin**: http://localhost:8083
+-   **MySQL**: localhost:3307
+
+### Database Credentials (Docker)
+
+```
+Host:     db (dalam container) atau localhost:3307 (dari host)
+Database: linkmy_db
+User:     linkmy_user
+Password: linkmy_password
+```
+
+**📖 Dokumentasi lengkap Docker**: Lihat [DOCKER.md](DOCKER.md)
+
+---
+
+## 🌐 Deploy ke Hosting (Traditional)
 
 ### 1. Persiapan File
 
