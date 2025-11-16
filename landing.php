@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Primary Meta Tags -->
     <title>LinkMy - Platform Link Management Gratis | Kelola Semua Link Anda dalam Satu Tempat</title>
@@ -67,9 +70,15 @@
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
         
+        html {
+            scroll-behavior: smooth;
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .hero-section {
@@ -293,6 +302,223 @@
         .footer a:hover {
             color: white;
         }
+        
+        /* ============================================
+           MOBILE RESPONSIVE OPTIMIZATION
+           ============================================ */
+        
+        /* Mobile - Small phones (< 576px) */
+        @media (max-width: 575.98px) {
+            .hero-title {
+                font-size: 2.5rem !important;
+                line-height: 1.2;
+                margin-bottom: 1rem !important;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            .hero-description {
+                font-size: 0.95rem !important;
+                margin-bottom: 1.5rem !important;
+                line-height: 1.6;
+            }
+            
+            .btn-hero {
+                padding: 0.75rem 1.5rem !important;
+                font-size: 0.95rem !important;
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+            
+            .hero-section {
+                min-height: auto;
+                padding: 5rem 0 3rem;
+            }
+            
+            .feature-section {
+                padding: 3rem 0;
+            }
+            
+            .feature-card {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .feature-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 1rem;
+            }
+            
+            .feature-icon i {
+                font-size: 1.5rem;
+            }
+            
+            .feature-title {
+                font-size: 1.25rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .stat-label {
+                font-size: 0.9rem;
+            }
+            
+            .stats-section {
+                padding: 2.5rem 0;
+            }
+            
+            .mockup-phone {
+                max-width: 280px;
+                margin: 0 auto;
+                padding: 10px;
+                border: 6px solid #1a1a1a;
+            }
+            
+            .mockup-screen {
+                padding: 1rem;
+                min-height: 400px;
+            }
+            
+            .mockup-screen h4 {
+                font-size: 1.1rem;
+            }
+            
+            .mockup-screen .btn {
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+            
+            .cta-section {
+                padding: 3rem 0;
+            }
+            
+            .cta-section h2 {
+                font-size: 1.75rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.25rem !important;
+            }
+            
+            /* Fix overflow */
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        /* Tablet - Medium devices (576px - 767.98px) */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .hero-description {
+                font-size: 1rem;
+            }
+            
+            .btn-hero {
+                padding: 0.875rem 2rem;
+                font-size: 1rem;
+            }
+            
+            .mockup-phone {
+                max-width: 320px;
+                margin: 0 auto;
+            }
+        }
+        
+        /* Large tablets (768px - 991.98px) */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            
+            .hero-section {
+                padding: 4rem 0;
+            }
+            
+            .feature-section {
+                padding: 4rem 0;
+            }
+            
+            .mockup-phone {
+                max-width: 350px;
+                margin: 0 auto;
+            }
+        }
+        
+        /* Desktop adjustments */
+        @media (min-width: 992px) {
+            .hero-section {
+                min-height: 100vh;
+            }
+        }
+        
+        /* Landscape mode untuk mobile */
+        @media (max-width: 767.98px) and (orientation: landscape) {
+            .hero-section {
+                min-height: auto;
+                padding: 3rem 0 2rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .hero-description {
+                font-size: 0.85rem;
+                margin-bottom: 1rem;
+            }
+            
+            .mockup-container {
+                display: none; /* Hide mockup di landscape mobile */
+            }
+        }
+        
+        /* Fix button spacing di mobile */
+        @media (max-width: 575.98px) {
+            .d-flex.gap-3 {
+                flex-direction: column;
+                gap: 0.75rem !important;
+            }
+            
+            .mt-4.text-white-50 small {
+                display: block;
+                margin: 0.25rem 0 !important;
+            }
+        }
+        
+        /* Improve touch targets untuk mobile */
+        @media (max-width: 767.98px) {
+            .btn, .nav-link {
+                min-height: 44px; /* Apple HIG recommendation */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .navbar-toggler {
+                padding: 0.5rem;
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -317,8 +543,8 @@
                     <li class="nav-item">
                         <a class="nav-link" href="login.php">Login</a>
                     </li>
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-light btn-sm rounded-pill px-4" href="register.php">
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-light btn-sm rounded-pill px-4 w-100 w-lg-auto mt-2 mt-lg-0" href="register.php">
                             <i class="bi bi-person-plus"></i> Daftar Gratis
                         </a>
                     </li>
