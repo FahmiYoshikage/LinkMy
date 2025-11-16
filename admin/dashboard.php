@@ -416,7 +416,7 @@
                         <h6 class="fw-bold mb-2">Link Publik Anda:</h6>
                         <div class="input-group">
                             <input type="text" class="form-control"
-                                   value="linkmy.fahmi.app/<?= $current_page_slug ?>"
+                                   value="linkmy.iet.ovh/<?= $current_page_slug ?>"
                                    id="publicLink" readonly>
                             <button class="btn btn-outline-secondary" onclick="copyLink()">
                                 <i class="bi bi-clipboard"></i>
