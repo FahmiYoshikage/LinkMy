@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const linkItems = linksList.querySelectorAll('.link-item');
     let draggedElement = null;
     let draggedIndex = null;
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isDraggingTouch = false;
     linkItems.forEach((item, index) => {
         item.setAttribute('draggable', 'true');
         item.addEventListener('dragstart', function (e) {
@@ -57,6 +60,81 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.classList.remove('drag-over');
             return false;
+        });
+
+        // Touch Events for Mobile
+        item.addEventListener('touchstart', function (e) {
+            draggedElement = this;
+            draggedIndex = index;
+            touchStartY = e.touches[0].clientY;
+            isDraggingTouch = true;
+            this.classList.add('dragging');
+            
+            // Prevent scrolling while dragging
+            e.preventDefault();
+        }, { passive: false });
+
+        item.addEventListener('touchmove', function (e) {
+            if (!isDraggingTouch) return;
+            
+            touchCurrentY = e.touches[0].clientY;
+            const deltaY = touchCurrentY - touchStartY;
+            
+            // Visual feedback - move the element
+            this.style.transform = `translateY(${deltaY}px)`;
+            this.style.opacity = '0.7';
+            
+            // Find element at touch position
+            const elementBelow = document.elementFromPoint(
+                e.touches[0].clientX,
+                e.touches[0].clientY
+            );
+            
+            if (elementBelow && elementBelow !== this) {
+                const linkItem = elementBelow.closest('.link-item');
+                if (linkItem && linkItem !== this) {
+                    // Clear all drag-over classes
+                    linkItems.forEach(item => item.classList.remove('drag-over'));
+                    linkItem.classList.add('drag-over');
+                }
+            }
+            
+            e.preventDefault();
+        }, { passive: false });
+
+        item.addEventListener('touchend', function (e) {
+            if (!isDraggingTouch) return;
+            
+            isDraggingTouch = false;
+            this.classList.remove('dragging');
+            this.style.transform = '';
+            this.style.opacity = '';
+            
+            // Find the target element
+            const elementBelow = document.elementFromPoint(
+                e.changedTouches[0].clientX,
+                e.changedTouches[0].clientY
+            );
+            
+            if (elementBelow) {
+                const targetItem = elementBelow.closest('.link-item');
+                if (targetItem && targetItem !== this) {
+                    const allItems = Array.from(linksList.children);
+                    const draggedPos = allItems.indexOf(this);
+                    const droppedPos = allItems.indexOf(targetItem);
+                    
+                    if (draggedPos < droppedPos) {
+                        targetItem.parentNode.insertBefore(this, targetItem.nextSibling);
+                    } else {
+                        targetItem.parentNode.insertBefore(this, targetItem);
+                    }
+                    
+                    saveNewOrder();
+                }
+            }
+            
+            // Clear all drag-over classes
+            linkItems.forEach(item => item.classList.remove('drag-over'));
         });
     });
     function saveNewOrder() {

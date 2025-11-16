@@ -192,6 +192,58 @@
             border-radius: 15px;
             padding: 1.5rem;
         }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .link-item {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .drag-handle {
+                font-size: 20px;
+                padding: 5px;
+            }
+            .stat-card {
+                padding: 1rem;
+            }
+            .stat-card h6 {
+                font-size: 12px;
+            }
+            .stat-card h2 {
+                font-size: 24px;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            /* Better spacing for mobile */
+            .mb-3 {
+                margin-bottom: 1rem !important;
+            }
+            /* Stack elements vertically on mobile */
+            .d-flex {
+                flex-wrap: wrap !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            h2 {
+                font-size: 24px;
+            }
+            .link-item {
+                padding: 10px;
+            }
+            .card {
+                border-radius: 10px;
+            }
+            /* Touch-friendly buttons */
+            .btn {
+                min-height: 44px;
+            }
+        }
     </style>
 </head>
 <body>

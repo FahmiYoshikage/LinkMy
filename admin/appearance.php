@@ -4,6 +4,22 @@
    error_reporting(E_ALL);
    ini_set('display_errors', 1);
 
+    // Auto-create upload folders if not exist
+    $base_upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads';
+    $required_folders = [
+        $base_upload_dir,
+        $base_upload_dir . '/profile_pics',
+        $base_upload_dir . '/backgrounds',
+        $base_upload_dir . '/folder_pics'
+    ];
+    
+    foreach ($required_folders as $folder) {
+        if (!is_dir($folder)) {
+            @mkdir($folder, 0777, true);
+            @chmod($folder, 0777);
+        }
+    }
+
     $success = '';
     $error = '';
 
