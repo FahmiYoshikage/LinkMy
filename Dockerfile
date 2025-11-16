@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd zip
 
-# Enable Apache modules
-RUN a2enmod rewrite headers expires deflate
+# Enable Apache modules (including rate limiting and timeout protection)
+RUN a2enmod rewrite headers expires deflate ratelimit reqtimeout
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
