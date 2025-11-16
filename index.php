@@ -152,7 +152,11 @@ if (isset($_GET['error'])) {
                                 <button type="submit" name="login" class="btn btn-primary btn-login w-100 mb-3">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>Login
                                 </button>
-                                
+                                <div class="text-center">
+                                    <p   class="mb-0">Belum punya akun? 
+                                        <a href="register.php" class="text-decoration-none fw-semibold">Daftar Sekarang</a>
+                                    </p>
+                                </div>
                                 <div class="text-center">
                                     <p class="mb-0">Belum punya akun? 
                                         <a href="register.php" class="text-decoration-none fw-semibold">Daftar Sekarang</a>

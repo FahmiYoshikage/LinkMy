@@ -48,6 +48,50 @@
     $bg_image = $user_data['bg_image_filename'] ?? '';
     $theme_name = $user_data['theme_name'] ?? 'light';
     $button_style = $user_data['button_style'] ?? 'rounded';
+    
+    // V2.0 Advanced Customization
+    $gradient_preset = $user_data['gradient_preset'] ?? null;
+    $custom_bg_color = $user_data['custom_bg_color'] ?? null;
+    $custom_button_color = $user_data['custom_button_color'] ?? null;
+    $custom_text_color = $user_data['custom_text_color'] ?? null;
+    $custom_link_text_color = $user_data['custom_link_text_color'] ?? null;
+    $profile_layout = $user_data['profile_layout'] ?? 'centered';
+    $show_profile_border = $user_data['show_profile_border'] ?? 1;
+    $enable_animations = $user_data['enable_animations'] ?? 1;
+    
+    // V2.1 New Features
+    $enable_glass_effect = $user_data['enable_glass_effect'] ?? 0;
+    $shadow_intensity = $user_data['shadow_intensity'] ?? 'medium';
+    
+    // Gradient presets mapping (v2.0 + v2.1)
+    $gradient_presets = [
+        // V2.0 Original
+        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
+        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
+        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
+        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
+        // V2.1 New
+        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
+        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
+        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
+        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
+        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
+        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
+        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
+        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
+        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
+        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+    ];
 
     mysqli_data_seek($result, 0);
 
@@ -58,34 +102,67 @@
         }
     }
 
-    $theme_styles = [
-        'light' => [
-            'bg' => '#ffffff',
-            'text' => '#333333',
-            'card' => '#f8f9fa',
-            'link_bg' => '#ffffff',
-            'link_hover' => '#667eea',
-            'shadow' => 'rgba(0,0,0,0.1)'
-        ],
-        'dark' => [
-            'bg' => '#1a1a1a',
-            'text' => '#ffffff',
-            'card' => '#2d2d2d',
-            'link_bg' => '#2d2d2d',
-            'link_hover' => '#667eea',
-            'shadow' => 'rgba(0,0,0,0.3)'
-        ],
-        'gradient' => [
-            'bg' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            'text' => '#ffffff',
-            'card' => 'rgba(255,255,255,0.1)',
-            'link_bg' => 'rgba(255,255,255,0.2)',
-            'link_hover' => 'rgba(255,255,255,0.3)',
-            'shadow' => 'rgba(0,0,0,0.2)'
-        ]
+    // Determine background based on priority: gradient_preset > custom_bg_color > theme_name
+    $background_css = '#ffffff';
+    $text_color = $custom_text_color ?? '#333333';
+    $is_gradient = false;
+    
+    // Priority 1: Gradient preset (highest priority - v2.0 feature)
+    if (!empty($gradient_preset) && isset($gradient_presets[$gradient_preset])) {
+        // Use gradient preset - overrides everything
+        $background_css = $gradient_presets[$gradient_preset];
+        $text_color = $custom_text_color ?? '#ffffff';
+        $is_gradient = true;
+    }
+    // Priority 2: Custom background color (only if NO gradient preset)
+    elseif (empty($gradient_preset) && !empty($custom_bg_color)) {
+        // Use custom solid color
+        $background_css = $custom_bg_color;
+        $text_color = $custom_text_color ?? '#333333';
+    }
+    // Priority 3: Theme name fallback
+    elseif ($theme_name === 'gradient') {
+        // Use default gradient theme
+        $background_css = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        $text_color = $custom_text_color ?? '#ffffff';
+        $is_gradient = true;
+    } elseif ($theme_name === 'dark') {
+        $background_css = '#1a1a1a';
+        $text_color = $custom_text_color ?? '#ffffff';
+    } else {
+        // Light theme (default)
+        $background_css = '#ffffff';
+        $text_color = $custom_text_color ?? '#333333';
+    }
+    
+    // Button/link colors
+    $button_bg = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.2)' : '#ffffff');
+    $button_hover = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.3)' : '#667eea');
+    
+    // Link text color (NEW v2.1)
+    $link_text_color = $custom_link_text_color ?? ($is_gradient ? '#ffffff' : '#333333');
+    $link_hover_text_color = '#ffffff'; // Always white on hover for contrast
+    
+    // Shadow intensity mapping (NEW v2.1)
+    $shadow_values = [
+        'none' => ['normal' => 'none', 'hover' => 'none'],
+        'light' => ['normal' => '0 2px 8px rgba(0,0,0,0.08)', 'hover' => '0 4px 15px rgba(0,0,0,0.12)'],
+        'medium' => ['normal' => '0 2px 10px rgba(0,0,0,0.15)', 'hover' => '0 5px 20px rgba(0,0,0,0.25)'],
+        'heavy' => ['normal' => '0 4px 15px rgba(0,0,0,0.3)', 'hover' => '0 8px 30px rgba(0,0,0,0.4)']
     ];
-
-    $current_theme = $theme_styles[$theme_name];
+    $shadow_normal = $shadow_values[$shadow_intensity]['normal'];
+    $shadow_hover = $shadow_values[$shadow_intensity]['hover'];
+    
+    $current_theme = [
+        'bg' => $background_css,
+        'text' => $text_color,
+        'link_bg' => $button_bg,
+        'link_hover' => $button_hover,
+        'link_text' => $link_text_color,
+        'link_hover_text' => $link_hover_text_color,
+        'shadow_normal' => $shadow_normal,
+        'shadow_hover' => $shadow_hover
+    ];
     $button_classes = [
         'rounded' => 'border-radius: 12px;',
         'sharp' => 'border-radius: 0;',
@@ -118,6 +195,10 @@
             background-position: center;
             background-attachment: fixed;
             position: relative;
+            <?php else: ?>
+            <?php if ($is_gradient): ?>
+            background-attachment: fixed;
+            <?php endif; ?>
             <?php endif; ?>
         }
         
@@ -135,24 +216,33 @@
         <?php endif; ?>
         
         .profile-container {
-            max-width: 680px;
+            max-width: <?= $profile_layout === 'minimal' ? '480px' : '680px' ?>;
             margin: 0 auto;
             padding: 0 1rem;
+            <?= $profile_layout === 'left' ? 'text-align: left;' : '' ?>
         }
         
         .profile-header {
-            text-align: center;
+            text-align: <?= $profile_layout === 'left' ? 'left' : 'center' ?>;
             margin-bottom: 2rem;
+            <?php if ($profile_layout === 'left'): ?>
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            <?php endif; ?>
         }
         
         .profile-pic {
-            width: 120px;
-            height: 120px;
+            width: <?= $profile_layout === 'minimal' ? '80px' : ($profile_layout === 'left' ? '100px' : '120px') ?>;
+            height: <?= $profile_layout === 'minimal' ? '80px' : ($profile_layout === 'left' ? '100px' : '120px') ?>;
             border-radius: 50%;
             object-fit: cover;
-            border: 5px solid <?= $current_theme['link_bg'] ?>;
+            border: <?= $show_profile_border ? '5px' : '0' ?> solid <?= $current_theme['link_bg'] ?>;
             box-shadow: 0 5px 20px <?= $current_theme['shadow'] ?>;
-            margin-bottom: 1rem;
+            margin-bottom: <?= $profile_layout === 'left' ? '0' : '1rem' ?>;
+            <?php if ($profile_layout === 'left'): ?>
+            flex-shrink: 0;
+            <?php endif; ?>
         }
         
         .profile-title {
@@ -169,24 +259,38 @@
         
         .link-card {
             background: <?= $current_theme['link_bg'] ?>;
-            padding: 1.2rem 1.5rem;
+            padding: <?= $profile_layout === 'minimal' ? '1rem 1.2rem' : '1.2rem 1.5rem' ?>;
             margin-bottom: 1rem;
             <?= $current_button_style ?>
-            box-shadow: 0 2px 10px <?= $current_theme['shadow'] ?>;
-            transition: all 0.3s ease;
+            box-shadow: <?= $current_theme['shadow_normal'] ?>;
+            transition: <?= $enable_animations ? 'all 0.3s ease' : 'none' ?>;
             text-decoration: none;
             display: flex;
             align-items: center;
-            color: <?= $current_theme['text'] ?>;
+            color: <?= $current_theme['link_text'] ?>;
             border: 2px solid transparent;
+            <?php if ($enable_glass_effect): ?>
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: <?= $is_gradient ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)' ?> !important;
+            border: 1px solid rgba(255,255,255,0.3);
+            <?php elseif ($is_gradient): ?>
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            <?php endif; ?>
         }
         
         .link-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px <?= $current_theme['shadow'] ?>;
-            background: <?= $current_theme['link_hover'] ?>;
-            color: white;
+            <?= $enable_animations ? 'transform: translateY(-3px);' : '' ?>
+            box-shadow: <?= $current_theme['shadow_hover'] ?>;
+            background: <?= $current_theme['link_hover'] ?> !important;
+            color: <?= $current_theme['link_hover_text'] ?> !important;
             border-color: <?= $current_theme['link_hover'] ?>;
+        }
+        
+        .link-card:hover .link-icon,
+        .link-card:hover .link-title {
+            color: <?= $current_theme['link_hover_text'] ?> !important;
         }
         
         .link-icon {
@@ -196,7 +300,7 @@
         
         .link-title {
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: <?= $profile_layout === 'minimal' ? '1rem' : '1.1rem' ?>;
             margin: 0;
         }
         
@@ -252,13 +356,13 @@
                        class="link-card" 
                        target="_blank"
                        rel="noopener noreferrer">
-                        <div class="link-icon">
+                        <div class="link-icon" style="color: <?= $current_theme['link_text'] ?>;">
                             <i class="<?= htmlspecialchars($link['icon_class']) ?>"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="link-title"><?= htmlspecialchars($link['link_title']) ?></p>
+                            <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title']) ?></p>
                         </div>
-                        <div>
+                        <div style="color: <?= $current_theme['link_text'] ?>;">
                             <i class="bi bi-arrow-right"></i>
                         </div>
                     </a>

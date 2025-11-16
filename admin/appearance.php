@@ -1,6 +1,8 @@
 <?php 
    require_once '../config/auth_check.php';
-    require_once '../config/db.php';
+   require_once '../config/db.php';
+   error_reporting(E_ALL);
+   ini_set('display_errors', 1);
 
     $success = '';
     $error = '';
@@ -140,6 +142,125 @@
             $error = 'Gagal mengupdate tema!';
         }
     }
+
+    // DEBUG: Log all POST data
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        error_log("POST received: " . print_r($_POST, true));
+    }
+
+    // Handle advanced customization updates
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_advanced'])) {
+        error_log("Advanced update triggered!");
+        error_log("RAW POST gradient_preset: " . ($_POST['gradient_preset'] ?? 'NOT SET'));
+        
+        $gradient_preset = !empty($_POST['gradient_preset']) ? $_POST['gradient_preset'] : null;
+        $custom_bg_color = !empty($_POST['custom_bg_color']) ? $_POST['custom_bg_color'] : null;
+        $custom_button_color = !empty($_POST['custom_button_color']) ? $_POST['custom_button_color'] : null;
+        $custom_text_color = !empty($_POST['custom_text_color']) ? $_POST['custom_text_color'] : null;
+        $custom_link_text_color = !empty($_POST['custom_link_text_color']) ? $_POST['custom_link_text_color'] : null;
+        $profile_layout = !empty($_POST['profile_layout']) ? $_POST['profile_layout'] : 'centered';
+        $show_profile_border = isset($_POST['show_profile_border']) ? 1 : 0;
+        $enable_animations = isset($_POST['enable_animations']) ? 1 : 0;
+        $enable_glass_effect = isset($_POST['enable_glass_effect']) ? 1 : 0;
+        $shadow_intensity = !empty($_POST['shadow_intensity']) ? $_POST['shadow_intensity'] : 'medium';
+        
+        error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
+        error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
+        
+        $query = "UPDATE appearance SET 
+                  gradient_preset = ?, 
+                  custom_bg_color = ?, 
+                  custom_button_color = ?,
+                  custom_text_color = ?,
+                  custom_link_text_color = ?,
+                  profile_layout = ?,
+                  show_profile_border = ?,
+                  enable_animations = ?,
+                  enable_glass_effect = ?,
+                  shadow_intensity = ?
+                  WHERE user_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        
+        if (!$stmt) {
+            $error = 'Database prepare error: ' . mysqli_error($conn);
+            error_log("PREPARE ERROR: " . mysqli_error($conn));
+        } else {
+            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiiisi', 
+                $gradient_preset, $custom_bg_color, $custom_button_color, $custom_text_color, $custom_link_text_color,
+                $profile_layout, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $current_user_id);
+            
+            if (!$bind_result) {
+                $error = 'Bind param error: ' . mysqli_stmt_error($stmt);
+                error_log("BIND ERROR: " . mysqli_stmt_error($stmt));
+            } elseif (mysqli_stmt_execute($stmt)) {
+                $affected = mysqli_stmt_affected_rows($stmt);
+                if ($affected > 0) {
+                    $success = '✅ Kustomisasi lanjutan berhasil disimpan dan diupdate! (' . $affected . ' baris diubah)';
+                } else {
+                    $success = '✅ Kustomisasi tersimpan! (Data sama dengan sebelumnya, tidak ada perubahan)';
+                }
+                error_log("SUCCESS! Affected rows: $affected");
+                
+                // Reload data from database to ensure we have latest
+                $appearance = get_single_row("SELECT * FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
+                
+                error_log("After save - gradient: " . ($appearance['gradient_preset'] ?? 'NULL'));
+                
+                // Set flag to switch to Advanced tab after reload
+                $_SESSION['show_advanced_tab'] = true;
+            } else {
+                $error = 'Gagal menyimpan: ' . mysqli_stmt_error($stmt);
+                error_log("EXECUTE ERROR: " . mysqli_stmt_error($stmt));
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    // Fetch gradient presets
+    $gradient_presets = get_all_rows("SELECT * FROM gradient_presets WHERE is_default = 1 ORDER BY preset_name", [], '');
+    
+    // Gradient presets CSS mapping for preview
+    $gradient_css_map = [
+        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
+        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
+        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
+        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
+        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
+        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
+        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
+        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
+        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
+        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
+        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
+        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
+        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
+        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+    ];
+    
+    // Determine preview background
+    $preview_bg = '#ffffff'; // default
+    if (!empty($appearance['gradient_preset']) && isset($gradient_css_map[$appearance['gradient_preset']])) {
+        $preview_bg = $gradient_css_map[$appearance['gradient_preset']];
+    } elseif (!empty($appearance['custom_bg_color'])) {
+        $preview_bg = $appearance['custom_bg_color'];
+    } elseif (($appearance['theme_name'] ?? 'light') == 'dark') {
+        $preview_bg = '#1a1a1a';
+    } elseif (($appearance['theme_name'] ?? '') == 'gradient') {
+        $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+    
+    // Fetch social icons
+    $social_icons = get_all_rows("SELECT * FROM social_icons ORDER BY platform_name", [], '');
 ?>
 
 <!DOCTYPE html>
@@ -147,55 +268,455 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
     <title>Appearance - LinkMy</title>
     <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="../assets/css/admin.css" rel="stylesheet">
+    <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <style>
-        body {
-            background: #f5f7fa;
-        }
-        .navbar-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+        body { background: #f5f7fa; }
+        .navbar-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
         .card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
         }
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+        
+        /* Enhanced Upload Area */
         .upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
-            padding: 2rem;
+            border: 3px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
             text-align: center;
             transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
         .upload-area:hover {
             border-color: #667eea;
-            background: #f8f9ff;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            transform: translateY(-2px);
         }
-        .preview-image {
-            max-width: 200px;
+        .upload-area.has-image {
+            border-style: solid;
+            border-color: #667eea;
+            padding: 1rem;
+        }
+        .upload-area .image-preview {
+            max-width: 100%;
             max-height: 200px;
             border-radius: 10px;
             object-fit: cover;
+            margin-bottom: 1rem;
         }
-        .theme-option {
+        
+        /* Theme Cards */
+        .theme-card {
             border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .theme-card.active {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+        .theme-card .check-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 10;
+        }
+        .theme-card.active .check-badge {
+            display: flex;
+            animation: popIn 0.3s ease-out;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Button Preview Styles */
+        .button-preview {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .button-preview:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Live Preview Container */
+        .preview-container {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+        }
+        
+        .preview-phone {
+            max-width: 320px;
+            margin: 0 auto;
+            border: 4px solid #333;
+            border-radius: 35px;
+            padding: 50px 20px 20px;
+            background: white;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+            position: relative;
+        }
+        .preview-phone::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 6px;
+            background: #333;
             border-radius: 10px;
-            padding: 1rem;
+        }
+        .preview-phone::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+        }
+        
+        .preview-content {
+            border-radius: 20px;
+            padding: 25px 20px;
+            min-height: 450px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .preview-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 12px;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .preview-link {
+            padding: 14px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .preview-link:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Font Preview */
+        .font-option {
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        .font-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .font-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        
+        /* Tab Styling */
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            background: white;
+            border-bottom: 3px solid #667eea !important;
+        }
+        
+        /* Color Picker */
+        .color-picker-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .color-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            border: 3px solid #dee2e6;
             cursor: pointer;
             transition: all 0.3s;
         }
-        .theme-option:hover {
-            transform: translateY(-5px);
-        }
-        .theme-option.active {
+        .color-preview:hover {
+            transform: scale(1.1);
             border-color: #667eea;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
         }
-        .theme-light { background: #ffffff; color: #333; }
-        .theme-dark { background: #1a1a1a; color: #fff; }
-        .theme-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Gradient Preset Cards */
+        .gradient-preset-card {
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            text-align: center;
+        }
+        .gradient-preset-card .check-badge {
+            opacity: 0;
+        }
+        .gradient-preset-card.active .check-badge {
+            opacity: 1;
+        }
+        .gradient-preview {
+            width: 100%;
+            height: 100px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .gradient-preset-card:hover .gradient-preview {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .gradient-colors {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            display: flex;
+            gap: 5px;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .gradient-name {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* Color Picker */
+        .color-picker-wrapper {
+            position: relative;
+        }
+        .form-control-color {
+            height: 50px;
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .form-control-color::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        .form-control-color::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+        
+        /* Layout Cards */
+        .layout-card {
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background: white;
+        }
+        .layout-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .layout-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+        .layout-card .check-badge {
+            opacity: 0;
+        }
+        .layout-card.active .check-badge {
+            opacity: 1;
+        }
+        .layout-preview {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .layout-preview.left {
+            align-items: flex-start;
+            padding-left: 15px;
+        }
+        .layout-preview.minimal {
+            flex-direction: row;
+            gap: 12px;
+        }
+        .layout-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        .layout-icon.small {
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+        }
+        .layout-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+        .layout-preview.minimal .layout-lines {
+            flex: 1;
+        }
+        .line {
+            height: 8px;
+            background: #dee2e6;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .line.short {
+            width: 60%;
+            margin: 0 auto;
+        }
+        .layout-preview.left .line.short {
+            margin: 0;
+        }
+        .line.thin {
+            height: 6px;
+        }
+        
+        /* Social Icons Grid */
+        .social-icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        .social-icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .social-icon-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+        .social-icon-item i {
+            font-size: 2rem;
+        }
+        .social-icon-item span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+        }
+        
+        /* Badges */
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+        }
     </style>
 </head>
 <body>
@@ -240,209 +761,1012 @@
         </div>
     </nav>
     
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center text-white">
+            <div class="spinner mb-3"></div>
+            <p>Uploading...</p>
+        </div>
+    </div>
+
     <div class="container py-4">
-        <h2 class="fw-bold mb-4">
-            <i class="bi bi-palette-fill"></i> Appearance Settings
-        </h2>
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold">
+                    <i class="bi bi-palette-fill text-primary"></i> Customize Your Appearance
+                </h2>
+                <p class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Personalisasi tampilan halaman profil Anda dengan berbagai pilihan tema, warna, dan gaya
+                </p>
+            </div>
+        </div>
         
         <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i><?= $success ?>
+                <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($success) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
         
         <?php if ($error): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $error ?>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($error) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
         
-        <div class="row">
-            <!-- Profile Info -->
-            <div class="col-lg-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-person-badge"></i> Informasi Profil
-                        </h5>
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Judul Profil</label>
-                                <input type="text" class="form-control" name="profile_title" 
-                                       value="<?= htmlspecialchars($appearance['profile_title'] ?? '') ?>"
-                                       placeholder="Nama atau Judul Anda">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Bio</label>
-                                <textarea class="form-control" name="bio" rows="3" 
-                                          placeholder="Ceritakan tentang diri Anda..."><?= htmlspecialchars($appearance['bio'] ?? '') ?></textarea>
-                            </div>
-                            <button type="submit" name="update_info" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Simpan Info
-                            </button>
-                        </form>
-                    </div>
-                </div>
+        <!-- DEBUG: Show saved data -->
+        <?php if (isset($_GET['debug'])): ?>
+            <div class="alert alert-info">
+                <h5>🔍 Debug - Saved Data in Database:</h5>
+                <ul style="font-family: monospace; font-size: 12px;">
+                    <li>gradient_preset: <strong><?= $appearance['gradient_preset'] ?? 'NULL' ?></strong></li>
+                    <li>custom_bg_color: <strong><?= $appearance['custom_bg_color'] ?? 'NULL' ?></strong></li>
+                    <li>custom_button_color: <strong><?= $appearance['custom_button_color'] ?? 'NULL' ?></strong></li>
+                    <li>custom_text_color: <strong><?= $appearance['custom_text_color'] ?? 'NULL' ?></strong></li>
+                    <li>profile_layout: <strong><?= $appearance['profile_layout'] ?? 'NULL' ?></strong></li>
+                    <li>show_profile_border: <strong><?= $appearance['show_profile_border'] ?? 'NULL' ?></strong></li>
+                    <li>enable_animations: <strong><?= $appearance['enable_animations'] ?? 'NULL' ?></strong></li>
+                </ul>
+                <?php if ($success): ?>
+                    <p class="text-success mb-0">✅ Last action: <?= htmlspecialchars($success) ?></p>
+                <?php endif; ?>
             </div>
-            
-            <!-- Profile Picture -->
-            <div class="col-lg-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-image"></i> Foto Profil
-                        </h5>
-                        
-                        <div class="text-center mb-3">
-                            <?php
-                            $profile_pic_path = '../uploads/profile_pics/' . ($appearance['profile_pic_filename'] ?? 'default-avatar.png');
-                            if (!file_exists($profile_pic_path)):
-                            ?>
-                                <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
-                                     style="width: 150px; height: 150px; font-size: 3rem;">
-                                    <i class="bi bi-person-fill"></i>
-                                </div>
-                            <?php else: ?>
-                                <img src="<?= $profile_pic_path ?>" class="preview-image" alt="Profile Picture">
-                            <?php endif; ?>
+        <?php endif; ?>
+        
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#profile-tab">
+                            <i class="bi bi-person-badge me-2"></i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#theme-tab">
+                            <i class="bi bi-palette me-2"></i>Theme
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#media-tab">
+                            <i class="bi bi-image me-2"></i>Media
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#advanced-tab">
+                            <i class="bi bi-magic me-2"></i>Advanced
+                            <span class="badge bg-primary ms-1">New</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade show active" id="profile-tab">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">
+                                    <i class="bi bi-person-badge text-primary"></i> Profile Information
+                                </h5>
+                                <form method="POST" id="profileForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Profile Title</label>
+                                        <input type="text" class="form-control form-control-lg" name="profile_title" 
+                                               id="profileTitle"
+                                               value="<?= htmlspecialchars($appearance['profile_title'] ?? $current_username) ?>"
+                                               placeholder="Your name or title">
+                                        <small class="text-muted">This will be displayed as your main heading</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Bio</label>
+                                        <textarea class="form-control" name="bio" rows="4" id="profileBio"
+                                                  placeholder="Tell your audience about yourself..."><?= htmlspecialchars($appearance['bio'] ?? '') ?></textarea>
+                                        <small class="text-muted">A short description that appears below your title</small>
+                                    </div>
+                                    <button type="submit" name="update_info" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-save me-2"></i>Save Profile Info
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Theme Tab -->
+                    <div class="tab-pane fade" id="theme-tab">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">
+                                    <i class="bi bi-palette text-primary"></i> Color Theme
+                                </h5>
+                                <form method="POST" id="themeForm">
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? 'light') == 'light' ? 'active' : '' ?>" onclick="selectTheme('light')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body" style="background: #ffffff;">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div style="width: 30px; height: 30px; background: #333; border-radius: 50%; margin-right: 10px;"></div>
+                                                        <div style="flex: 1; height: 10px; background: #333; border-radius: 5px;"></div>
+                                                    </div>
+                                                    <div style="height: 40px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 8px;"></div>
+                                                    <div style="height: 40px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px;"></div>
+                                                </div>
+                                                <div class="card-footer text-center bg-white">
+                                                    <i class="bi bi-sun-fill text-warning display-6"></i>
+                                                    <p class="mb-0 mt-2 fw-bold">Light</p>
+                                                    <small class="text-muted">Clean & bright</small>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="theme_name" value="light" <?= ($appearance['theme_name'] ?? 'light') == 'light' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? '') == 'dark' ? 'active' : '' ?>" onclick="selectTheme('dark')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body" style="background: #1a1a1a;">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div style="width: 30px; height: 30px; background: #ffffff; border-radius: 50%; margin-right: 10px;"></div>
+                                                        <div style="flex: 1; height: 10px; background: #ffffff; border-radius: 5px;"></div>
+                                                    </div>
+                                                    <div style="height: 40px; background: #2d2d2d; border: 2px solid #444; border-radius: 8px; margin-bottom: 8px;"></div>
+                                                    <div style="height: 40px; background: #2d2d2d; border: 2px solid #444; border-radius: 8px;"></div>
+                                                </div>
+                                                <div class="card-footer text-center bg-white">
+                                                    <i class="bi bi-moon-stars-fill text-dark display-6"></i>
+                                                    <p class="mb-0 mt-2 fw-bold">Dark</p>
+                                                    <small class="text-muted">Sleek & modern</small>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="theme_name" value="dark" <?= ($appearance['theme_name'] ?? '') == 'dark' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? '') == 'gradient' ? 'active' : '' ?>" onclick="selectTheme('gradient')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div style="width: 30px; height: 30px; background: rgba(255,255,255,0.9); border-radius: 50%; margin-right: 10px;"></div>
+                                                        <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.9); border-radius: 5px;"></div>
+                                                    </div>
+                                                    <div style="height: 40px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; margin-bottom: 8px;"></div>
+                                                    <div style="height: 40px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px;"></div>
+                                                </div>
+                                                <div class="card-footer text-center bg-white">
+                                                    <i class="bi bi-rainbow display-6" style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                                                    <p class="mb-0 mt-2 fw-bold">Gradient</p>
+                                                    <small class="text-muted">Colorful & vibrant</small>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="theme_name" value="gradient" <?= ($appearance['theme_name'] ?? '') == 'gradient' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-square text-primary me-2"></i>Button Style</h6>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'active' : '' ?>" onclick="selectButtonStyle('rounded')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body">
+                                                    <div class="button-preview" style="border-radius: 12px;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
+                                                    <p class="mt-3 mb-0 fw-semibold">Rounded</p>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="button_style" value="rounded" <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'active' : '' ?>" onclick="selectButtonStyle('sharp')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body">
+                                                    <div class="button-preview" style="border-radius: 0;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
+                                                    <p class="mt-3 mb-0 fw-semibold">Sharp</p>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="button_style" value="sharp" <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'pill' ? 'active' : '' ?>" onclick="selectButtonStyle('pill')">
+                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                <div class="card-body">
+                                                    <div class="button-preview" style="border-radius: 50px;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
+                                                    <p class="mt-3 mb-0 fw-semibold">Pill</p>
+                                                </div>
+                                            </div>
+                                            <input type="radio" name="button_style" value="pill" <?= ($appearance['button_style'] ?? '') == 'pill' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" name="update_theme" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-save me-2"></i>Save Theme Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Tab -->
+                    <div class="tab-pane fade" id="media-tab">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">
+                                    <i class="bi bi-person-circle text-primary"></i> Profile Picture
+                                </h5>
+                                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                                    <div class="upload-area mb-3 <?= !empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png' ? 'has-image' : '' ?>" onclick="document.getElementById('profilePicInput').click()">
+                                        <?php if (!empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png'): ?>
+                                            <img src="../uploads/profile_pics/<?= htmlspecialchars($appearance['profile_pic_filename']) ?>" id="profilePicPreview" class="image-preview">
+                                        <?php else: ?>
+                                            <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
+                                            <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Profile Photo</p>
+                                            <small class="text-muted">Max 2MB • JPG, PNG, GIF, WebP</small>
+                                        <?php endif; ?>
+                                    </div>
+                                    <input type="file" id="profilePicInput" name="profile_pic" accept="image/*" style="display: none;" onchange="previewImage(this, 'profilePicPreview')">
+                                    <button type="submit" name="upload_profile" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-upload me-2"></i>Upload Profile Picture
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         
-                        <form method="POST" enctype="multipart/form-data">
-                            <div class="upload-area mb-3">
-                                <i class="bi bi-cloud-upload display-4 text-muted mb-2"></i>
-                                <p class="mb-2">Upload foto profil baru</p>
-                                <input type="file" class="form-control" name="profile_pic" 
-                                       accept="image/jpeg,image/png,image/gif" required>
-                                <small class="text-muted">Maksimal 2MB (JPG, PNG, GIF)</small>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">
+                                    <i class="bi bi-card-image text-primary"></i> Background Image
+                                </h5>
+                                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                                    <div class="upload-area mb-3 <?= !empty($appearance['bg_image_filename']) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
+                                        <?php if (!empty($appearance['bg_image_filename'])): ?>
+                                            <img src="../uploads/backgrounds/<?= htmlspecialchars($appearance['bg_image_filename']) ?>" id="bgImagePreview" class="image-preview">
+                                            <a href="?remove_bg=1" class="btn btn-danger btn-sm mt-2" onclick="event.stopPropagation(); return confirm('Remove background image?')">
+                                                <i class="bi bi-trash"></i> Remove Background
+                                            </a>
+                                        <?php else: ?>
+                                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                                            <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Background</p>
+                                            <small class="text-muted">Max 5MB • JPG, PNG, GIF, WebP</small>
+                                        <?php endif; ?>
+                                    </div>
+                                    <input type="file" id="bgImageInput" name="bg_image" accept="image/*" style="display: none;" onchange="previewImage(this, 'bgImagePreview')">
+                                    <button type="submit" name="upload_background" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-upload me-2"></i>Upload Background Image
+                                    </button>
+                                </form>
                             </div>
-                            <button type="submit" name="upload_profile" class="btn btn-primary w-100">
-                                <i class="bi bi-upload"></i> Upload Foto
-                            </button>
-                        </form>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Tab -->
+                    <div class="tab-pane fade" id="advanced-tab">
+                        <!-- Gradient Presets -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3">
+                                    <i class="bi bi-palette2 text-primary"></i> Gradient Backgrounds
+                                    <span class="badge bg-success ms-2">New!</span>
+                                </h5>
+                                <p class="text-muted mb-4">Pilih gradient preset yang sudah jadi atau buat custom color sendiri</p>
+                                
+                                <form method="POST" id="advancedForm">
+                                    <div class="row g-3 mb-4">
+                                        <?php foreach ($gradient_presets as $preset): ?>
+                                        <div class="col-md-4 col-6">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="gradient_preset" value="<?= htmlspecialchars($preset['preset_name']) ?>" 
+                                                       <?= ($appearance['gradient_preset'] ?? '') == $preset['preset_name'] ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectGradientFromRadio(this, '<?= htmlspecialchars($preset['gradient_css']) ?>')">
+                                                <div class="gradient-preset-card <?= ($appearance['gradient_preset'] ?? '') == $preset['preset_name'] ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="gradient-preview" style="background: <?= htmlspecialchars($preset['gradient_css']) ?>;">
+                                                        <div class="gradient-colors">
+                                                            <span class="color-dot" style="background: <?= htmlspecialchars($preset['preview_color_1']) ?>;"></span>
+                                                            <span class="color-dot" style="background: <?= htmlspecialchars($preset['preview_color_2']) ?>;"></span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="gradient-name"><?= htmlspecialchars($preset['preset_name']) ?></p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <!-- Custom Colors -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-droplet text-primary me-2"></i>Custom Colors
+                                    </h6>
+                                    <p class="text-muted small mb-3">Atau buat kombinasi warna sendiri (akan override gradient preset)</p>
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Background Color</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_bg_color" id="customBgColor"
+                                                       value="<?= htmlspecialchars($appearance['custom_bg_color'] ?? '#ffffff') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['custom_bg_color'] ?? '#ffffff') ?>"
+                                                       id="customBgColorHex" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Button Color</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_button_color" id="customButtonColor"
+                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#667eea') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#667eea') ?>"
+                                                       id="customButtonColorHex" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Text Color</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_text_color" id="customTextColor"
+                                                       value="<?= htmlspecialchars($appearance['custom_text_color'] ?? '#333333') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['custom_text_color'] ?? '#333333') ?>"
+                                                       id="customTextColorHex" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-type text-info me-1"></i>Link Text Color
+                                                <span class="badge bg-info ms-1">v2.1</span>
+                                            </label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_link_text_color" id="customLinkTextColor"
+                                                       value="<?= htmlspecialchars($appearance['custom_link_text_color'] ?? '#333333') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['custom_link_text_color'] ?? '#333333') ?>"
+                                                       id="customLinkTextColorHex" readonly>
+                                            </div>
+                                            <small class="text-muted">Warna text pada link cards</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-shadow text-warning me-1"></i>Shadow Intensity
+                                                <span class="badge bg-warning text-dark ms-1">v2.1</span>
+                                            </label>
+                                            <select class="form-select" name="shadow_intensity" id="shadowIntensity">
+                                                <option value="none" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'none' ? 'selected' : '' ?>>None - No shadow</option>
+                                                <option value="light" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'light' ? 'selected' : '' ?>>Light - Subtle</option>
+                                                <option value="medium" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'medium' ? 'selected' : '' ?>>Medium - Default</option>
+                                                <option value="heavy" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'heavy' ? 'selected' : '' ?>>Heavy - Strong</option>
+                                            </select>
+                                            <small class="text-muted">Intensity shadow pada link cards</small>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <!-- Profile Layout -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-layout-text-window text-primary me-2"></i>Profile Layout
+                                    </h6>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="profile_layout" value="centered" 
+                                                       <?= ($appearance['profile_layout'] ?? 'centered') == 'centered' ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectLayoutFromRadio(this)">
+                                                <div class="layout-card <?= ($appearance['profile_layout'] ?? 'centered') == 'centered' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="layout-preview">
+                                                        <div class="layout-icon">⬤</div>
+                                                        <div class="layout-lines">
+                                                            <div class="line"></div>
+                                                            <div class="line short"></div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 fw-semibold">Centered</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="profile_layout" value="left" 
+                                                       <?= ($appearance['profile_layout'] ?? '') == 'left' ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectLayoutFromRadio(this)">
+                                                <div class="layout-card <?= ($appearance['profile_layout'] ?? '') == 'left' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="layout-preview left">
+                                                        <div class="layout-icon">⬤</div>
+                                                        <div class="layout-lines">
+                                                            <div class="line"></div>
+                                                            <div class="line short"></div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 fw-semibold">Left Aligned</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="profile_layout" value="minimal" 
+                                                       <?= ($appearance['profile_layout'] ?? '') == 'minimal' ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectLayoutFromRadio(this)">
+                                                <div class="layout-card <?= ($appearance['profile_layout'] ?? '') == 'minimal' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="layout-preview minimal">
+                                                        <div class="layout-icon small">⬤</div>
+                                                        <div class="layout-lines">
+                                                            <div class="line thin"></div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 fw-semibold">Minimal</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Additional Options -->
+                                    <hr class="my-4">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-gear text-primary me-2"></i>Additional Options
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="show_profile_border" 
+                                                       id="showProfileBorder" <?= ($appearance['show_profile_border'] ?? 1) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="showProfileBorder">
+                                                    <strong>Show Profile Border</strong><br>
+                                                    <small class="text-muted">Border around profile pic</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="enable_animations" 
+                                                       id="enableAnimations" <?= ($appearance['enable_animations'] ?? 1) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="enableAnimations">
+                                                    <strong>Enable Animations</strong><br>
+                                                    <small class="text-muted">Hover effects on links</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="enable_glass_effect" 
+                                                       id="enableGlassEffect" <?= ($appearance['enable_glass_effect'] ?? 0) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="enableGlassEffect">
+                                                    <strong>Glass Morphism</strong> <span class="badge bg-info">v2.1</span><br>
+                                                    <small class="text-muted">Frosted glass effect</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <!-- Hidden input to ensure update_advanced is sent -->
+                                    <input type="hidden" name="update_advanced" value="1">
+                                    
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-save me-2"></i>Save Advanced Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Social Icons Reference -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3">
+                                    <i class="bi bi-collection text-primary"></i> Available Social Icons
+                                </h5>
+                                <p class="text-muted mb-3">Gunakan icon ini saat menambah link di Dashboard</p>
+                                <div class="social-icons-grid">
+                                    <?php foreach ($social_icons as $icon): ?>
+                                    <div class="social-icon-item" title="<?= htmlspecialchars($icon['platform_name']) ?>">
+                                        <i class="<?= htmlspecialchars($icon['icon_class']) ?>" 
+                                           style="color: <?= htmlspecialchars($icon['icon_color'] ?? '#667eea') ?>;"></i>
+                                        <span><?= htmlspecialchars($icon['platform_name']) ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Background Image -->
-            <div class="col-lg-12 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-card-image"></i> Background Image
-                        </h5>
-                        
-                        <?php if (!empty($appearance['bg_image_filename'])): ?>
-                            <div class="mb-3 text-center">
-                                <img src="../uploads/backgrounds/<?= $appearance['bg_image_filename'] ?>" 
-                                     class="img-fluid rounded" style="max-height: 200px;" alt="Background">
-                                <div class="mt-2">
-                                    <a href="?remove_bg=1" class="btn btn-danger btn-sm"
-                                       onclick="return confirm('Hapus background?')">
-                                        <i class="bi bi-trash"></i> Hapus Background
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <form method="POST" enctype="multipart/form-data">
-                            <div class="upload-area">
-                                <i class="bi bi-image display-4 text-muted mb-2"></i>
-                                <p class="mb-2">Upload background image</p>
-                                <input type="file" class="form-control" name="bg_image" 
-                                       accept="image/jpeg,image/png,image/gif" required>
-                                <small class="text-muted">Maksimal 5MB (JPG, PNG, GIF)</small>
-                            </div>
-                            <button type="submit" name="upload_background" class="btn btn-primary mt-3">
-                                <i class="bi bi-upload"></i> Upload Background
-                            </button>
-                        </form>
+            <!-- Live Preview Sidebar -->
+            <div class="col-lg-4">
+                <div class="preview-container">
+                    <h5 class="fw-bold mb-3 text-center">
+                        <i class="bi bi-phone me-2"></i>Live Preview
+                    </h5>
+                    <p class="text-muted text-center mb-4" style="font-size: 0.85rem;">
+                        See changes in real-time
+                    </p>
+                    
+                    <div class="preview-phone">
+                        <div class="preview-content" id="previewContent" 
+                             style="background: <?= $preview_bg ?>;">
+                            
+                            <?php
+                            $profile_pic_url = '../uploads/profile_pics/' . ($appearance['profile_pic_filename'] ?? 'default-avatar.png');
+                            if (!file_exists($profile_pic_url)) {
+                                $profile_pic_url = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="90" height="90"%3E%3Ccircle cx="45" cy="45" r="45" fill="%236c757d"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+                            }
+                            ?>
+                            <img src="<?= $profile_pic_url ?>" class="preview-avatar" id="previewAvatar" alt="Avatar">
+                            
+                            <?php
+                            $button_radius = '12px';
+                            if (($appearance['button_style'] ?? 'rounded') == 'sharp') {
+                                $button_radius = '0';
+                            } elseif (($appearance['button_style'] ?? '') == 'pill') {
+                                $button_radius = '50px';
+                            }
+                            
+                            // Use actual saved colors if available
+                            $has_gradient = !empty($appearance['gradient_preset']);
+                            $btn_bg = $appearance['custom_button_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.2)' : '#f8f9fa');
+                            $btn_border = $has_gradient ? 'rgba(255,255,255,0.3)' : '#dee2e6';
+                            $btn_color = $appearance['custom_link_text_color'] ?? ($has_gradient ? '#fff' : '#333');
+                            
+                            // Text colors
+                            $preview_text_color = $appearance['custom_text_color'] ?? ($has_gradient ? '#fff' : '#333');
+                            $preview_bio_color = $appearance['custom_text_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.8)' : '#666');
+                            
+                            // Shadow
+                            $shadow_map = [
+                                'none' => 'none',
+                                'light' => '0 2px 8px rgba(0,0,0,0.08)',
+                                'medium' => '0 2px 10px rgba(0,0,0,0.15)',
+                                'heavy' => '0 4px 15px rgba(0,0,0,0.3)'
+                            ];
+                            $btn_shadow = $shadow_map[$appearance['shadow_intensity'] ?? 'medium'];
+                            
+                            // Glass effect
+                            $glass_style = '';
+                            if ($appearance['enable_glass_effect'] ?? 0) {
+                                $glass_style = 'backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); background: rgba(255,255,255,0.15) !important; border: 1px solid rgba(255,255,255,0.3);';
+                            }
+                            ?>
+                            
+                            <h5 class="fw-bold mb-2" id="previewTitle" style="color: <?= $preview_text_color ?>;">
+                                <?= htmlspecialchars($appearance['profile_title'] ?? $current_username) ?>
+                            </h5>
+                            
+                            <p class="mb-4" id="previewBio" style="color: <?= $preview_bio_color ?>; font-size: 0.9rem;">
+                                <?= htmlspecialchars($appearance['bio'] ?? 'Your bio will appear here...') ?>
+                            </p>
+                            
+                            <a href="#" class="preview-link" id="previewLink1"
+                               style="background: <?= $btn_bg ?>; border: 2px solid <?= $btn_border ?>; color: <?= $btn_color ?>; border-radius: <?= $button_radius ?>; box-shadow: <?= $btn_shadow ?>; <?= $glass_style ?>">
+                                <i class="bi bi-link-45deg me-2"></i>
+                                <span>Sample Link 1</span>
+                            </a>
+                            
+                            <a href="#" class="preview-link" id="previewLink2"
+                               style="background: <?= $btn_bg ?>; border: 2px solid <?= $btn_border ?>; color: <?= $btn_color ?>; border-radius: <?= $button_radius ?>; box-shadow: <?= $btn_shadow ?>; <?= $glass_style ?>">
+                                <i class="bi bi-instagram me-2"></i>
+                                <span>Sample Link 2</span>
+                            </a>
+                            
+                            <a href="#" class="preview-link" id="previewLink3"
+                               style="background: <?= $btn_bg ?>; border: 2px solid <?= $btn_border ?>; color: <?= $btn_color ?>; border-radius: <?= $button_radius ?>; box-shadow: <?= $btn_shadow ?>; <?= $glass_style ?>">
+                                <i class="bi bi-github me-2"></i>
+                                <span>Sample Link 3</span>
+                            </a>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Theme Settings -->
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-palette"></i> Tema & Gaya
-                        </h5>
-                        
-                        <form method="POST">
-                            <div class="row mb-4">
-                                <div class="col-md-4 mb-3">
-                                    <label>
-                                        <input type="radio" name="theme_name" value="light" 
-                                               <?= ($appearance['theme_name'] ?? 'light') === 'light' ? 'checked' : '' ?>
-                                               class="d-none theme-radio">
-                                        <div class="theme-option theme-light <?= ($appearance['theme_name'] ?? 'light') === 'light' ? 'active' : '' ?>">
-                                            <i class="bi bi-sun-fill display-4"></i>
-                                            <p class="fw-bold mb-0 mt-2">Light</p>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label>
-                                        <input type="radio" name="theme_name" value="dark" 
-                                               <?= ($appearance['theme_name'] ?? 'light') === 'dark' ? 'checked' : '' ?>
-                                               class="d-none theme-radio">
-                                        <div class="theme-option theme-dark <?= ($appearance['theme_name'] ?? 'light') === 'dark' ? 'active' : '' ?>">
-                                            <i class="bi bi-moon-stars-fill display-4"></i>
-                                            <p class="fw-bold mb-0 mt-2">Dark</p>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label>
-                                        <input type="radio" name="theme_name" value="gradient" 
-                                               <?= ($appearance['theme_name'] ?? 'light') === 'gradient' ? 'checked' : '' ?>
-                                               class="d-none theme-radio">
-                                        <div class="theme-option theme-gradient <?= ($appearance['theme_name'] ?? 'light') === 'gradient' ? 'active' : '' ?>">
-                                            <i class="bi bi-rainbow display-4"></i>
-                                            <p class="fw-bold mb-0 mt-2">Gradient</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Gaya Tombol</label>
-                                <select class="form-select" name="button_style">
-                                    <option value="rounded" <?= ($appearance['button_style'] ?? 'rounded') === 'rounded' ? 'selected' : '' ?>>
-                                        Rounded (Sudut Melengkung)
-                                    </option>
-                                    <option value="sharp" <?= ($appearance['button_style'] ?? 'rounded') === 'sharp' ? 'selected' : '' ?>>
-                                        Sharp (Sudut Tajam)
-                                    </option>
-                                    <option value="pill" <?= ($appearance['button_style'] ?? 'rounded') === 'pill' ? 'selected' : '' ?>>
-                                        Pill (Bulat Penuh)
-                                    </option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" name="update_theme" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Simpan Tema
-                            </button>
-                        </form>
+                    
+                    <div class="text-center mt-3">
+                        <a href="../profile.php?slug=<?= $current_page_slug ?>" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View Full Page
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle theme option active state
-        document.querySelectorAll('.theme-radio').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.querySelectorAll('.theme-option').forEach(opt => {
-                    opt.classList.remove('active');
+        // Show loading overlay
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        
+        // Theme selection
+        function selectTheme(theme) {
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.querySelector(`input[name="theme_name"][value="${theme}"]`).checked = true;
+            
+            // Update preview
+            const previewContent = document.getElementById('previewContent');
+            const previewTitle = document.getElementById('previewTitle');
+            const previewBio = document.getElementById('previewBio');
+            const previewLinks = [
+                document.getElementById('previewLink1'),
+                document.getElementById('previewLink2'),
+                document.getElementById('previewLink3')
+            ];
+            
+            if (theme === 'light') {
+                previewContent.style.background = '#ffffff';
+                previewTitle.style.color = '#333';
+                previewBio.style.color = '#666';
+                previewLinks.forEach(link => {
+                    link.style.background = '#f8f9fa';
+                    link.style.borderColor = '#dee2e6';
+                    link.style.color = '#333';
                 });
-                this.parentElement.querySelector('.theme-option').classList.add('active');
+            } else if (theme === 'dark') {
+                previewContent.style.background = '#1a1a1a';
+                previewTitle.style.color = '#fff';
+                previewBio.style.color = 'rgba(255,255,255,0.8)';
+                previewLinks.forEach(link => {
+                    link.style.background = '#2d2d2d';
+                    link.style.borderColor = '#444';
+                    link.style.color = '#fff';
+                });
+            } else {
+                previewContent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                previewTitle.style.color = '#fff';
+                previewBio.style.color = 'rgba(255,255,255,0.9)';
+                previewLinks.forEach(link => {
+                    link.style.background = 'rgba(255,255,255,0.2)';
+                    link.style.borderColor = 'rgba(255,255,255,0.3)';
+                    link.style.color = '#fff';
+                });
+            }
+        }
+        
+        // Button style selection
+        function selectButtonStyle(style) {
+            document.querySelectorAll('[onclick^="selectButtonStyle"]').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.querySelector(`input[name="button_style"][value="${style}"]`).checked = true;
+            
+            // Update preview
+            let borderRadius = '12px';
+            if (style === 'sharp') borderRadius = '0';
+            if (style === 'pill') borderRadius = '50px';
+            
+            document.querySelectorAll('.preview-link').forEach(link => {
+                link.style.borderRadius = borderRadius;
+            });
+        }
+        
+        // Live update preview on input
+        document.getElementById('profileTitle')?.addEventListener('input', function() {
+            document.getElementById('previewTitle').textContent = this.value || 'Your Name';
+        });
+        
+        document.getElementById('profileBio')?.addEventListener('input', function() {
+            document.getElementById('previewBio').textContent = this.value || 'Your bio will appear here...';
+        });
+        
+        // Image preview on file select
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(previewId);
+                    if (img) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    }
+                    
+                    // Update live preview if profile pic
+                    if (previewId === 'profilePicPreview') {
+                        document.getElementById('previewAvatar').src = e.target.result;
+                    }
+                    
+                    // Show image in upload area
+                    const uploadArea = input.closest('.upload-area');
+                    if (uploadArea) {
+                        uploadArea.classList.add('has-image');
+                        const icon = uploadArea.querySelector('i.bi-person-circle, i.bi-image');
+                        const text = uploadArea.querySelector('p');
+                        const small = uploadArea.querySelector('small');
+                        
+                        if (icon) icon.style.display = 'none';
+                        if (text) text.style.display = 'none';
+                        if (small) small.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Gradient preset selection
+        function selectGradient(name, css) {
+            document.querySelectorAll('.gradient-preset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.querySelector(`input[name="gradient_preset"][value="${name}"]`).checked = true;
+            
+            // Update preview background
+            document.getElementById('previewContent').style.background = css;
+        }
+        
+        function selectGradientFromRadio(radio, css) {
+            // Remove active from all cards
+            document.querySelectorAll('.gradient-preset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            // Add active to clicked card
+            radio.closest('label').querySelector('.gradient-preset-card').classList.add('active');
+            // Update preview
+            document.getElementById('previewContent').style.background = css;
+        }
+        
+        // Layout selection
+        function selectLayout(layout) {
+            document.querySelectorAll('.layout-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.querySelector(`input[name="profile_layout"][value="${layout}"]`).checked = true;
+            
+            // Update preview layout
+            const previewContent = document.getElementById('previewContent');
+        }
+        
+        function selectLayoutFromRadio(radio) {
+            // Remove active from all cards
+            document.querySelectorAll('.layout-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            // Add active to clicked card
+            radio.closest('label').querySelector('.layout-card').classList.add('active');
+            
+            // Update preview layout
+            const previewContent = document.getElementById('previewContent');
+            previewContent.className = 'preview-phone-content';
+            
+            if (layout === 'left_aligned') {
+                previewContent.style.textAlign = 'left';
+                previewContent.style.paddingLeft = '30px';
+            } else if (layout === 'minimal') {
+                previewContent.style.textAlign = 'center';
+                previewContent.style.padding = '20px 15px';
+            } else {
+                // centered
+                previewContent.style.textAlign = 'center';
+                previewContent.style.padding = '30px 20px';
+            }
+        }
+        
+        // Color picker hex display
+        document.getElementById('customBgColor')?.addEventListener('input', function() {
+            document.getElementById('customBgColorHex').value = this.value;
+            // Update preview
+            document.getElementById('previewContent').style.background = this.value;
+        });
+        
+        document.getElementById('customButtonColor')?.addEventListener('input', function() {
+            document.getElementById('customButtonColorHex').value = this.value;
+            // Update preview buttons
+            document.querySelectorAll('.preview-link').forEach(link => {
+                link.style.background = this.value;
             });
         });
+        
+        document.getElementById('customTextColor')?.addEventListener('input', function() {
+            document.getElementById('customTextColorHex').value = this.value;
+            // Update preview text
+            document.getElementById('previewTitle').style.color = this.value;
+            document.getElementById('previewBio').style.color = this.value;
+        });
+        
+        document.getElementById('customLinkTextColor')?.addEventListener('input', function() {
+            document.getElementById('customLinkTextColorHex').value = this.value;
+            // Update preview link text
+            document.querySelectorAll('.preview-link').forEach(link => {
+                link.style.color = this.value;
+            });
+        });
+        
+        // Shadow Intensity selector
+        document.getElementById('shadowIntensity')?.addEventListener('change', function() {
+            const shadows = {
+                'none': 'none',
+                'light': '0 2px 8px rgba(0,0,0,0.08)',
+                'medium': '0 2px 10px rgba(0,0,0,0.15)',
+                'heavy': '0 4px 15px rgba(0,0,0,0.3)'
+            };
+            document.querySelectorAll('.preview-link').forEach(link => {
+                link.style.boxShadow = shadows[this.value] || shadows.medium;
+            });
+        });
+        
+        // Glass Effect toggle
+        document.getElementById('enableGlassEffect')?.addEventListener('change', function() {
+            document.querySelectorAll('.preview-link').forEach(link => {
+                if (this.checked) {
+                    link.style.backdropFilter = 'blur(20px) saturate(180%)';
+                    link.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+                    link.style.background = 'rgba(255,255,255,0.15)';
+                    link.style.border = '1px solid rgba(255,255,255,0.3)';
+                } else {
+                    link.style.backdropFilter = 'none';
+                    link.style.webkitBackdropFilter = 'none';
+                    // Reset to original background based on current button color
+                    const btnColor = document.getElementById('customButtonColor')?.value;
+                    if (btnColor) {
+                        link.style.background = btnColor;
+                    }
+                }
+            });
+        });
+        
+        // Toggle switches for Additional Options
+        document.getElementById('showProfileBorder')?.addEventListener('change', function() {
+            const avatar = document.getElementById('previewAvatar');
+            if (this.checked) {
+                avatar.style.border = '4px solid white';
+                avatar.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.1)';
+            } else {
+                avatar.style.border = 'none';
+                avatar.style.boxShadow = 'none';
+            }
+        });
+        
+        document.getElementById('enableAnimations')?.addEventListener('change', function() {
+            const previewLinks = document.querySelectorAll('.preview-link');
+            if (this.checked) {
+                previewLinks.forEach(link => {
+                    link.style.transition = 'all 0.3s ease';
+                });
+            } else {
+                previewLinks.forEach(link => {
+                    link.style.transition = 'none';
+                });
+            }
+        });
+        
+        // Copy icon class to clipboard
+        document.querySelectorAll('.social-icon-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const iconClass = this.querySelector('i').className;
+                navigator.clipboard.writeText(iconClass).then(() => {
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed bottom-0 end-0 p-3';
+                    toast.style.zIndex = '11';
+                    toast.innerHTML = `
+                        <div class="toast show" role="alert">
+                            <div class="toast-header bg-success text-white">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <strong class="me-auto">Copied!</strong>
+                                <button type="button" class="btn-close btn-close-white" onclick="this.closest('.position-fixed').remove()"></button>
+                            </div>
+                            <div class="toast-body">
+                                Icon class copied: <code>${iconClass}</code>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                });
+            });
+        });
+        
+        // Initialize preview with current settings on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Apply current border setting
+            const showBorder = document.getElementById('showProfileBorder');
+            const avatar = document.getElementById('previewAvatar');
+            if (showBorder && showBorder.checked) {
+                avatar.style.border = '4px solid white';
+                avatar.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.1)';
+            }
+            
+            // Apply current animation setting
+            const enableAnim = document.getElementById('enableAnimations');
+            const previewLinks = document.querySelectorAll('.preview-link');
+            if (enableAnim && enableAnim.checked) {
+                previewLinks.forEach(link => {
+                    link.style.transition = 'all 0.3s ease';
+                });
+            }
+            
+            // Apply current layout
+            const layoutRadios = document.querySelectorAll('input[name="profile_layout"]');
+            layoutRadios.forEach(radio => {
+                if (radio.checked) {
+                    const layout = radio.value;
+                    const previewContent = document.getElementById('previewContent');
+                    
+                    if (layout === 'left_aligned') {
+                        previewContent.style.textAlign = 'left';
+                        previewContent.style.paddingLeft = '30px';
+                    } else if (layout === 'minimal') {
+                        previewContent.style.textAlign = 'center';
+                        previewContent.style.padding = '20px 15px';
+                    } else {
+                        previewContent.style.textAlign = 'center';
+                        previewContent.style.padding = '30px 20px';
+                    }
+                }
+            });
+        });
+        
+        // DEBUG: Log form submission
+        const advancedForm = document.getElementById('advancedForm');
+        if (advancedForm) {
+            advancedForm.addEventListener('submit', function(e) {
+                console.log('Form submitting!');
+                console.log('Form data:', new FormData(this));
+                
+                // Log all form elements
+                const formData = new FormData(this);
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+                
+                // Add timestamp to prevent browser cache
+                const timestamp = new Date().getTime();
+                this.action = this.action || window.location.href;
+                if (this.action.indexOf('?') > -1) {
+                    this.action += '&_=' + timestamp;
+                } else {
+                    this.action += '?_=' + timestamp;
+                }
+                
+                // Don't prevent default - let form submit naturally
+            });
+        }
+        
+        // Scroll to alert and switch to Advanced tab after page load (if success/error exists)
+        window.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['show_advanced_tab'])): ?>
+            // Switch to Advanced tab
+            const advancedTab = document.querySelector('[href="#advanced-tab"]');
+            if (advancedTab) {
+                const tab = new bootstrap.Tab(advancedTab);
+                tab.show();
+            }
+            <?php 
+                unset($_SESSION['show_advanced_tab']); 
+            endif; 
+            ?>
+            
+            // Scroll to alert
+            const alert = document.querySelector('.alert-success, .alert-danger');
+            if (alert) {
+                setTimeout(() => {
+                    alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    alert.style.animation = 'pulse 0.5s ease-in-out 3';
+                }, 300);
+            }
+        });
     </script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+    </style>
 </body>
 </html>
+<?php
+// Close the connection
+mysqli_close($conn);
+?>
