@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+Allow: /landing.php
+Allow: /register.php
+Allow: /login.php
+Allow: /assets/
+
+Disallow: /admin/
+Disallow: /config/
+Disallow: /uploads/
+Disallow: /logout.php
+Disallow: /redirect.php
+
+# Sitemap
+Sitemap: https://linkmy.iet.ovh/sitemap.xml
+
+# Crawl delay (1 second between requests)
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

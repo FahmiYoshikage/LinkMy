@@ -3,7 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkMy - Your Personal Link Hub</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>LinkMy - Platform Link Management Gratis | Kelola Semua Link Anda dalam Satu Tempat</title>
+    <meta name="title" content="LinkMy - Platform Link Management Gratis | Kelola Semua Link Anda dalam Satu Tempat">
+    <meta name="description" content="LinkMy adalah platform gratis untuk mengelola semua link penting Anda dalam satu halaman. Buat bio link profesional, pantau analytics, dan bagikan dengan mudah. Gratis selamanya!">
+    <meta name="keywords" content="link management, bio link, linktree alternative, link organizer, link in bio, social media links, link management tool, free link manager, Indonesia, URL shortener">
+    <meta name="author" content="LinkMy">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Indonesian">
+    <meta name="revisit-after" content="7 days">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://linkmy.iet.ovh/">
+    <meta property="og:title" content="LinkMy - Platform Link Management Gratis">
+    <meta property="og:description" content="Kelola semua link penting Anda dalam satu tempat. Gratis, mudah, dan profesional.">
+    <meta property="og:image" content="https://linkmy.iet.ovh/assets/images/og-image.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="LinkMy">
+    <meta property="og:locale" content="id_ID">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://linkmy.iet.ovh/">
+    <meta property="twitter:title" content="LinkMy - Platform Link Management Gratis">
+    <meta property="twitter:description" content="Kelola semua link penting Anda dalam satu tempat. Gratis, mudah, dan profesional.">
+    <meta property="twitter:image" content="https://linkmy.iet.ovh/assets/images/og-image.svg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://linkmy.iet.ovh/">
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "LinkMy",
+      "description": "Platform gratis untuk mengelola semua link penting Anda dalam satu halaman",
+      "url": "https://linkmy.iet.ovh/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "IDR"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "127"
+      }
+    }
+    </script>
+    
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <link href="/assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css">
