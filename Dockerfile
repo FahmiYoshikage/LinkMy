@@ -40,6 +40,9 @@ RUN if [ -f apache-config.conf ]; then \
         cp apache-config.conf /etc/apache2/sites-available/000-default.conf; \
     fi
 
+# Set ServerName globally to suppress warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # Expose port 80
 EXPOSE 80
 
