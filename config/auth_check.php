@@ -6,7 +6,9 @@
         header('Location: ../index.php?error=not_logged_in');
         exit;
     }
-    $timeout_duration = 1800;
+    
+    // Extended session: 7 days (604800 seconds)
+    $timeout_duration = 604800;
 
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration){
         session_unset();

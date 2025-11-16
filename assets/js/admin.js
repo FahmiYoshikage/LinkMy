@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let isDraggingTouch = false;
     let touchStartX = 0;
 
+    // Get overlay element
+    const dragOverlay = document.getElementById('dragOverlay');
+
     // Prevent body scroll when dragging
     const preventBodyScroll = (e) => {
         if (isDraggingTouch) {
@@ -84,6 +87,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 isDraggingTouch = true;
                 this.classList.add('dragging');
 
+                // Show blur overlay
+                if (dragOverlay) {
+                    dragOverlay.classList.add('active');
+                }
+
                 // Store initial position
                 this.style.zIndex = '1000';
                 this.style.transition = 'none';
@@ -148,6 +156,11 @@ document.addEventListener('DOMContentLoaded', function () {
             this.style.transition = '';
             this.style.boxShadow = '';
             this.style.visibility = '';
+
+            // Hide blur overlay
+            if (dragOverlay) {
+                dragOverlay.classList.remove('active');
+            }
 
             // Find the target element
             const elementBelow = document.elementFromPoint(

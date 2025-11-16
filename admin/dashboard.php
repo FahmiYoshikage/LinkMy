@@ -193,15 +193,62 @@
             padding: 1.5rem;
         }
 
+        /* Drag Overlay for Mobile */
+        .drag-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: none;
+        }
+        .drag-overlay.active {
+            display: block;
+        }
+        .link-item.dragging {
+            z-index: 1000;
+            position: relative;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .link-item {
-                padding: 12px;
-                font-size: 14px;
+                padding: 1rem;
+                font-size: 15px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .link-item .d-flex {
+                flex: 1;
+                align-items: center;
+                gap: 10px;
+            }
+            .link-item h6 {
+                font-size: 16px;
+                margin-bottom: 0.25rem;
+            }
+            .link-item small {
+                font-size: 12px;
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .drag-handle {
-                font-size: 20px;
-                padding: 5px;
+                font-size: 24px;
+                padding: 8px;
+                touch-action: none;
+            }
+            .link-item .btn {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            .link-item .btn i {
+                font-size: 14px;
             }
             .stat-card {
                 padding: 1rem;
@@ -214,10 +261,6 @@
             }
             .card-body {
                 padding: 1rem;
-            }
-            .btn {
-                padding: 8px 16px;
-                font-size: 14px;
             }
             /* Better spacing for mobile */
             .mb-3 {
@@ -247,6 +290,9 @@
     </style>
 </head>
 <body>
+    <!-- Drag Overlay for Mobile -->
+    <div class="drag-overlay" id="dragOverlay"></div>
+
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">

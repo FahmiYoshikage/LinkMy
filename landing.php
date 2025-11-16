@@ -597,7 +597,7 @@
                         <a href="register.php" class="btn btn-primary-custom btn-hero">
                             <i class="bi bi-rocket-takeoff me-2"></i>Mulai Gratis
                         </a>
-                        <a href="#features" class="btn btn-outline-custom btn-hero">
+                        <a href="demo.php" class="btn btn-outline-custom btn-hero">
                             <i class="bi bi-play-circle me-2"></i>Lihat Demo
                         </a>
                     </div>
