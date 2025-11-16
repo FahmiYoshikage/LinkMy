@@ -30,8 +30,11 @@ COPY . /var/www/html
 # Install PHPMailer via Composer
 RUN composer require phpmailer/phpmailer
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
+# Create upload directories and set permissions
+RUN mkdir -p /var/www/html/uploads/profile_pics \
+    && mkdir -p /var/www/html/uploads/backgrounds \
+    && mkdir -p /var/www/html/uploads/folder_pics \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 777 /var/www/html/uploads
 

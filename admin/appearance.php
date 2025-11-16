@@ -37,17 +37,21 @@
             } elseif ($file_size > $max_size) {
                 $error = 'Ukuran file terlalu besar! Maksimal 2MB.';
             } else {
-                $upload_dir = '../uploads/profile_pics/';
+                // Use absolute path for Docker compatibility
+                $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/profile_pics/';
                 if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0755, true);
+                    mkdir($upload_dir, 0777, true);
+                    chmod($upload_dir, 0777); // Ensure permissions
                 }
                 $extension = pathinfo($_FILES['profile_pic']['name'], PATHINFO_EXTENSION);
                 $new_filename = 'user_' . $current_user_id . '_' . time() . '.' . $extension;
                 $upload_path = $upload_dir . $new_filename;
                 if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $upload_path)) {
-                    if ($appearance['profile_pic_filename'] !== 'default-avatar.png' && 
-                        file_exists($upload_dir . $appearance['profile_pic_filename'])) {
-                        unlink($upload_dir . $appearance['profile_pic_filename']);
+                    chmod($upload_path, 0644); // Set file permissions
+                    // Delete old file
+                    $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/profile_pics/' . $appearance['profile_pic_filename'];
+                    if ($appearance['profile_pic_filename'] !== 'default-avatar.png' && file_exists($old_file)) {
+                        unlink($old_file);
                     }
                     $query = "UPDATE appearance SET profile_pic_filename = ? WHERE user_id = ?";
                     $stmt = mysqli_prepare($conn, $query);
@@ -79,18 +83,22 @@
             } elseif ($file_size > $max_size) {
                 $error = 'Ukuran file terlalu besar! Maksimal 5MB.';
             } else {
-                $upload_dir = '../uploads/backgrounds/';
+                // Use absolute path for Docker compatibility
+                $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/backgrounds/';
                 if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0755, true);
+                    mkdir($upload_dir, 0777, true);
+                    chmod($upload_dir, 0777); // Ensure permissions
                 }
                 $extension = pathinfo($_FILES['bg_image']['name'], PATHINFO_EXTENSION);
                 $new_filename = 'bg_' . $current_user_id . '_' . time() . '.' . $extension;
                 $upload_path = $upload_dir . $new_filename;
                 
                 if (move_uploaded_file($_FILES['bg_image']['tmp_name'], $upload_path)) {
-                    if (!empty($appearance['bg_image_filename']) && 
-                        file_exists($upload_dir . $appearance['bg_image_filename'])) {
-                        unlink($upload_dir . $appearance['bg_image_filename']);
+                    chmod($upload_path, 0644); // Set file permissions
+                    // Delete old file
+                    $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/backgrounds/' . $appearance['bg_image_filename'];
+                    if (!empty($appearance['bg_image_filename']) && file_exists($old_file)) {
+                        unlink($old_file);
                     }
                     $query = "UPDATE appearance SET bg_image_filename = ? WHERE user_id = ?";
                     $stmt = mysqli_prepare($conn, $query);
@@ -268,12 +276,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
     <title>Appearance - LinkMy</title>
+    <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="../assets/css/admin.css" rel="stylesheet">
-    <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <style>
         body { background: #f5f7fa; }
         .navbar-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -1474,6 +1481,16 @@
                     // Update live preview if profile pic
                     if (previewId === 'profilePicPreview') {
                         document.getElementById('previewAvatar').src = e.target.result;
+                    }
+                    
+                    // Update live preview if background image
+                    if (previewId === 'bgImagePreview') {
+                        const previewContainer = document.getElementById('previewContainer');
+                        if (previewContainer) {
+                            previewContainer.style.backgroundImage = `url(${e.target.result})`;
+                            previewContainer.style.backgroundSize = 'cover';
+                            previewContainer.style.backgroundPosition = 'center';
+                        }
                     }
                     
                     // Show image in upload area

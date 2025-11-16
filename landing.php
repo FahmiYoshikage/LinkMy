@@ -303,6 +303,31 @@
             color: white;
         }
         
+        /* Navbar collapse background untuk mobile */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(102, 126, 234, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 1rem;
+                border-radius: 10px;
+                margin-top: 1rem;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            
+            .navbar-nav {
+                gap: 0.5rem;
+            }
+            
+            .nav-item {
+                border-radius: 8px;
+                transition: background 0.3s;
+            }
+            
+            .nav-item:hover {
+                background: rgba(255,255,255,0.1);
+            }
+        }
+        
         /* ============================================
            MOBILE RESPONSIVE OPTIMIZATION
            ============================================ */
@@ -524,7 +549,7 @@
 <body>
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark position-absolute w-100" style="z-index: 100;">
+    <nav class="navbar navbar-expand-lg navbar-dark position-absolute w-100" style="z-index: 1030;">
         <div class="container">
             <a class="navbar-brand fw-bold fs-4" href="#">
                 <i class="bi bi-link-45deg"></i> LinkMy
