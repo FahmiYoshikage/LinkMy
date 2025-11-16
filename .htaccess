@@ -2,6 +2,14 @@
 # LinkMy - URL Rewriting Configuration
 # ====================================================
 
+# ====================================================
+# MIME Types untuk Favicon
+# ====================================================
+AddType image/x-icon .ico
+AddType image/png .png
+AddType image/svg+xml .svg
+AddType application/manifest+json .webmanifest
+
 # Enable RewriteEngine
 <IfModule mod_rewrite.c>
     RewriteEngine On
