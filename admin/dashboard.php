@@ -86,6 +86,60 @@
         }
     }
     $links = get_all_rows("SELECT * FROM links WHERE user_id = ? ORDER BY order_index ASC", [$current_user_id], 'i');
+    
+    // Get analytics data for charts
+    // Get link performance data (top 10 most clicked links)
+    $link_performance = get_all_rows(
+        "SELECT title, click_count FROM links WHERE user_id = ? AND is_active = 1 ORDER BY click_count DESC LIMIT 10",
+        [$current_user_id],
+        'i'
+    );
+    
+    // Get daily clicks for last 7 days
+    $daily_clicks = get_all_rows(
+        "SELECT 
+            DATE(clicked_at) as date,
+            COUNT(*) as clicks
+        FROM link_analytics la
+        INNER JOIN links l ON la.link_id = l.link_id
+        WHERE l.user_id = ? AND clicked_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY DATE(clicked_at)
+        ORDER BY date ASC",
+        [$current_user_id],
+        'i'
+    );
+    
+    // Fill missing dates with 0 clicks
+    $dates_range = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $dates_range[$date] = 0;
+    }
+    
+    foreach ($daily_clicks as $row) {
+        $dates_range[$row['date']] = intval($row['clicks']);
+    }
+    
+    // Get click distribution by referrer
+    $click_by_referrer = get_all_rows(
+        "SELECT 
+            CASE 
+                WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
+                WHEN referrer LIKE '%instagram%' THEN 'Instagram'
+                WHEN referrer LIKE '%facebook%' THEN 'Facebook'
+                WHEN referrer LIKE '%twitter%' OR referrer LIKE '%x.com%' THEN 'Twitter/X'
+                WHEN referrer LIKE '%tiktok%' THEN 'TikTok'
+                ELSE 'Others'
+            END as source,
+            COUNT(*) as clicks
+        FROM link_analytics la
+        INNER JOIN links l ON la.link_id = l.link_id
+        WHERE l.user_id = ?
+        GROUP BY source
+        ORDER BY clicks DESC",
+        [$current_user_id],
+        'i'
+    );
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -221,6 +275,53 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
+        
+        <!-- Analytics Charts Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Analytics Dashboard</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="analyticsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="trends-tab" data-bs-toggle="tab" data-bs-target="#trends" type="button">
+                                    <i class="bi bi-graph-up-arrow"></i> Click Trends (7 Days)
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance" type="button">
+                                    <i class="bi bi-bar-chart"></i> Link Performance
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="traffic-tab" data-bs-toggle="tab" data-bs-target="#traffic" type="button">
+                                    <i class="bi bi-pie-chart"></i> Traffic Sources
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content pt-3" id="analyticsTabContent">
+                            <!-- Click Trends Chart -->
+                            <div class="tab-pane fade show active" id="trends" role="tabpanel">
+                                <div id="clickTrendsChart" style="height: 400px;"></div>
+                            </div>
+                            
+                            <!-- Link Performance Chart -->
+                            <div class="tab-pane fade" id="performance" role="tabpanel">
+                                <div id="linkPerformanceChart" style="height: 400px;"></div>
+                            </div>
+                            
+                            <!-- Traffic Sources Chart -->
+                            <div class="tab-pane fade" id="traffic" role="tabpanel">
+                                <div id="trafficSourcesChart" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="row">
             <div class="col-lg-8">
                 <div class="card mb-4">
@@ -404,6 +505,9 @@
     </div>
 
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/highcharts.js"></script>
+    <script src="../assets/js/exporting.js"></script>
     <script src="../assets/js/admin.js"></script>
     <script>
         function editLink(link) {
@@ -419,6 +523,257 @@
             document.execCommand('copy');
             alert('Link berhasil disalin!');
         }
+        
+        // Highcharts Global Options
+        Highcharts.setOptions({
+            colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'],
+            chart: {
+                style: {
+                    fontFamily: 'Inter, sans-serif'
+                }
+            },
+            credits: {
+                enabled: false
+            }
+        });
+        
+        // 1. Click Trends Chart (Line Chart - Last 7 Days)
+        Highcharts.chart('clickTrendsChart', {
+            chart: {
+                type: 'area',
+                backgroundColor: '#f8f9fa'
+            },
+            title: {
+                text: 'Click Trends - Last 7 Days',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Total clicks per day on your links',
+                align: 'left'
+            },
+            xAxis: {
+                categories: <?= json_encode(array_keys($dates_range)) ?>,
+                crosshair: true,
+                labels: {
+                    formatter: function() {
+                        const date = new Date(this.value);
+                        return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+                    }
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Number of Clicks'
+                },
+                min: 0
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' clicks',
+                formatter: function() {
+                    const date = new Date(this.x);
+                    return '<b>' + date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '</b><br/>' +
+                           this.points.map(p => p.series.name + ': <b>' + p.y + ' clicks</b>').join('<br/>');
+                }
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, 'rgba(102, 126, 234, 0.3)'],
+                            [1, 'rgba(102, 126, 234, 0.05)']
+                        ]
+                    },
+                    marker: {
+                        radius: 4,
+                        fillColor: '#667eea',
+                        lineWidth: 2,
+                        lineColor: '#fff'
+                    },
+                    lineWidth: 3,
+                    states: {
+                        hover: {
+                            lineWidth: 4
+                        }
+                    },
+                    threshold: null
+                }
+            },
+            series: [{
+                name: 'Daily Clicks',
+                data: <?= json_encode(array_values($dates_range)) ?>,
+                color: '#667eea'
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
+        });
+        
+        // 2. Link Performance Chart (Bar Chart)
+        Highcharts.chart('linkPerformanceChart', {
+            chart: {
+                type: 'column',
+                backgroundColor: '#f8f9fa'
+            },
+            title: {
+                text: 'Top 10 Most Clicked Links',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Performance comparison of your links',
+                align: 'left'
+            },
+            xAxis: {
+                categories: <?= json_encode(array_column($link_performance, 'title')) ?>,
+                crosshair: true,
+                labels: {
+                    rotation: -45,
+                    style: {
+                        fontSize: '11px'
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Total Clicks'
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:14px"><b>{point.key}</b></span><br/>',
+                pointFormat: '<span style="color:{point.color}">●</span> Clicks: <b>{point.y}</b>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.y}',
+                        style: {
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    colorByPoint: true
+                }
+            },
+            series: [{
+                name: 'Clicks',
+                data: <?= json_encode(array_map('intval', array_column($link_performance, 'click_count'))) ?>,
+                showInLegend: false
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
+        });
+        
+        // 3. Traffic Sources Chart (Pie Chart)
+        Highcharts.chart('trafficSourcesChart', {
+            chart: {
+                type: 'pie',
+                backgroundColor: '#f8f9fa',
+                options3d: {
+                    enabled: true,
+                    alpha: 45
+                }
+            },
+            title: {
+                text: 'Traffic Sources Distribution',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Where your visitors are coming from',
+                align: 'left'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.percentage:.1f}%</b><br/>Total Clicks: <b>{point.y}</b>',
+                style: {
+                    fontSize: '13px'
+                }
+            },
+            accessibility: {
+                point: {
+                    valueSuffix: '%'
+                }
+            },
+            plotOptions: {
+                pie: {
+                    innerSize: '50%',
+                    depth: 45,
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b><br>{point.percentage:.1f}%<br>{point.y} clicks',
+                        style: {
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        },
+                        connectorColor: 'silver'
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                align: 'right',
+                verticalAlign: 'middle',
+                layout: 'vertical',
+                itemStyle: {
+                    fontSize: '13px'
+                }
+            },
+            series: [{
+                name: 'Traffic Share',
+                colorByPoint: true,
+                data: [
+                    <?php foreach ($click_by_referrer as $source): ?>
+                    ,{
+                        name: '<?= htmlspecialchars($source['source']) ?>',
+                        y: <?= intval($source['clicks']) ?>
+                    },
+                    <?php endforeach; ?>
+                ]
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

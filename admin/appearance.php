@@ -1537,10 +1537,11 @@
             radio.closest('label').querySelector('.layout-card').classList.add('active');
             
             // Update preview layout
+            const layout = radio.value;
             const previewContent = document.getElementById('previewContent');
             previewContent.className = 'preview-phone-content';
             
-            if (layout === 'left_aligned') {
+            if (layout === 'left') {
                 previewContent.style.textAlign = 'left';
                 previewContent.style.paddingLeft = '30px';
             } else if (layout === 'minimal') {
@@ -1694,7 +1695,7 @@
                     const layout = radio.value;
                     const previewContent = document.getElementById('previewContent');
                     
-                    if (layout === 'left_aligned') {
+                    if (layout === 'left') {
                         previewContent.style.textAlign = 'left';
                         previewContent.style.paddingLeft = '30px';
                     } else if (layout === 'minimal') {
