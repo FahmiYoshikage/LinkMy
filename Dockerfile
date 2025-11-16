@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd zip
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Enable Apache modules
+RUN a2enmod rewrite headers expires deflate
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -35,8 +35,10 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 777 /var/www/html/uploads
 
-# Apache configuration
-COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
+# Apache configuration (copy if exists, otherwise use default)
+RUN if [ -f apache-config.conf ]; then \
+        cp apache-config.conf /etc/apache2/sites-available/000-default.conf; \
+    fi
 
 # Expose port 80
 EXPOSE 80
