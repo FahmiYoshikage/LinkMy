@@ -129,8 +129,10 @@ function send_password_reset_email($email, $resetToken) {
     }
     
     try {
-        // Reset link (adjust domain!)
-        $resetLink = "http://localhost/reset-password.php?token=" . $resetToken;
+        // Reset link - automatically detect domain
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $host = $_SERVER['HTTP_HOST'] ?? 'linkmy.iet.ovh';
+        $resetLink = $protocol . "://" . $host . "/reset-password.php?token=" . $resetToken;
         
         // Recipients
         $mail->addAddress($email);

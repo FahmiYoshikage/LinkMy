@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->get_result();
         
         if ($result->num_rows === 0) {
-            // Email not found - but don't reveal this for security
-            $success = 'Jika email terdaftar, link reset password telah dikirim ke email Anda. Cek inbox/spam folder.';
+            // Email not found - inform user to register first
+            $error = 'Email belum terdaftar. Silakan <a href="register.php" class="alert-link">daftar terlebih dahulu</a>.';
         } else {
             // Generate reset token
             $resetToken = bin2hex(random_bytes(32)); // 64 character hex

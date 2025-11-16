@@ -40,7 +40,7 @@ services:
             MAIL_PORT: ${MAIL_PORT:-587}
             MAIL_USERNAME: ${MAIL_USERNAME}
             MAIL_PASSWORD: ${MAIL_PASSWORD}
-            MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-noreply@linkmy.com}
+            MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-noreply@linkmy.iet.ovh}
             MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LinkMy}
         volumes:
             - ./:/var/www/html

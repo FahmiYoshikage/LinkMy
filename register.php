@@ -361,7 +361,7 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                                title="Hanya huruf, angka, underscore, dan dash (min 3 karakter)">
                         <div class="slug-preview mt-2">
                             <i class="bi bi-globe me-1"></i>
-                            Link Publik Anda: <span class="fw-bold" id="slugPreview">linkmy.com/namakamu</span>
+                            Link Publik Anda: <span class="fw-bold" id="slugPreview">linkmy.iet.ovh/namakamu</span>
                         </div>
                     </div>
                     
@@ -393,7 +393,7 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
         if (pageSlugInput) {
             pageSlugInput.addEventListener('input', function() {
                 const slugValue = this.value || 'namakamu';
-                document.getElementById('slugPreview').textContent = 'linkmy.com/' + slugValue;
+                document.getElementById('slugPreview').textContent = 'linkmy.iet.ovh/' + slugValue;
             });
         }
         
