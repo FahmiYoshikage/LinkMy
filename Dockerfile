@@ -27,8 +27,7 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install PHPMailer via Composer
-RUN composer require phpmailer/phpmailer
+# PHPMailer already included in libs/ directory, no need to install via Composer
 
 # Create upload directories and set permissions
 RUN mkdir -p /var/www/html/uploads/profile_pics \
