@@ -525,17 +525,20 @@
                 <div class="col-md-4 mb-4">
                     <h6 class="fw-bold mb-3">Connect</h6>
                     <div class="d-flex gap-2">
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://www.instagram.com/fahmi.ilham06/" class="btn btn-outline-light btn-sm rounded-circle">
                             <i class="bi bi-instagram"></i>
                         </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://x.com/FahmiVoldigoad" class="btn btn-outline-light btn-sm rounded-circle">
                             <i class="bi bi-twitter"></i>
                         </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://www.facebook.com/Fahmi1lham" class="btn btn-outline-light btn-sm rounded-circle">
                             <i class="bi bi-facebook"></i>
                         </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://github.com/FahmiYoshikage" class="btn btn-outline-light btn-sm rounded-circle">
                             <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/" class="btn btn-outline-light btn-sm rounded-circle">
+                            <i class="bi bi-linkedin"></i>
                         </a>
                     </div>
                 </div>
