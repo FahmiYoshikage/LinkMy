@@ -326,14 +326,14 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
                     
                     <div class="text-center">
                         <p class="mb-0">Sudah punya akun? 
-                            <a href="index.php" class="text-decoration-none fw-semibold">Login di sini</a>
+                            <a href="login.php" class="text-decoration-none fw-semibold">Login di sini</a>
                         </p>
                     </div>
                 </form>
             
             <?php elseif ($current_step == 3): ?>
                 <!-- STEP 3: Username & Page Slug -->
-                <form method="POST" action="" id="registerForm">
+                <form method="POST" action="login.php" id="registerForm">
                     <div class="alert alert-success">
                         <i class="bi bi-check-circle-fill me-2"></i>
                         Email <strong><?= htmlspecialchars($_SESSION['reg_email']) ?></strong> telah terverifikasi!
