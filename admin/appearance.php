@@ -1528,8 +1528,15 @@
                         }
                     }
                     
-                    // DO NOT update live preview for background - only show in upload box
-                    // Live preview will update AFTER form submit and page reload
+                    // Update live preview if background image
+                    if (previewId === 'bgImagePreview') {
+                        const previewContent = document.getElementById('previewContent');
+                        if (previewContent) {
+                            previewContent.style.backgroundImage = `url(${e.target.result})`;
+                            previewContent.style.backgroundSize = 'cover';
+                            previewContent.style.backgroundPosition = 'center';
+                        }
+                    }
                     
                     // Show image in upload area
                     const uploadArea = input.closest('.upload-area');

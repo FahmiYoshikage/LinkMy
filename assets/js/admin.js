@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let touchCurrentY = 0;
     let isDraggingTouch = false;
     let touchStartX = 0;
+    let touchStartTime = 0;
+    let touchHoldTimer = null;
+    let isReadyToDrag = false;
+    const HOLD_DURATION = 500; // 500ms hold before drag starts
 
     // Get overlay element
     const dragOverlay = document.getElementById('dragOverlay');
