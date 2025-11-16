@@ -13,7 +13,7 @@ services:
             MYSQL_PASSWORD: ${DB_PASSWORD:-linkmy_password}
         volumes:
             - mysql_data:/var/lib/mysql
-            - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+            - ./linkmy_db.sql:/docker-entrypoint-initdb.d/init.sql
         ports:
             - '3307:3306'
         networks:
