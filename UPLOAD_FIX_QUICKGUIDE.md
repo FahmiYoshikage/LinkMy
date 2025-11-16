@@ -1,12 +1,15 @@
 # Upload Folders Fix - Quick Guide
 
 ## 🚨 Problem
+
 Upload masih gagal dengan error:
+
 ```
 Warning: move_uploaded_file(): Failed to open stream: Permission denied
 ```
 
 ## 🔧 Root Cause
+
 Folder `/var/www/html/uploads/` **BELUM DIBUAT** di VPS Docker container.
 
 ---
@@ -14,22 +17,26 @@ Folder `/var/www/html/uploads/` **BELUM DIBUAT** di VPS Docker container.
 ## ✅ Solution 1: Run Script in Container (RECOMMENDED)
 
 ### Step 1: Pull Latest Code
+
 ```bash
 cd /opt/LinkMy
 git pull origin master
 ```
 
 ### Step 2: Copy Script to Container
+
 ```bash
 docker cp create_upload_folders.sh linkmy_web:/var/www/html/
 ```
 
 ### Step 3: Run Script Inside Container
+
 ```bash
 docker exec linkmy_web bash /var/www/html/create_upload_folders.sh
 ```
 
 **Expected Output:**
+
 ```
 Creating upload folders for LinkMy...
 Creating directories...
@@ -48,6 +55,7 @@ Done! Upload functionality should work now.
 ```
 
 ### Step 4: Test Upload
+
 1. Go to linkmy.iet.ovh/admin/appearance.php
 2. Upload profile picture
 3. Upload background image
@@ -75,6 +83,7 @@ ls -la /var/www/html/uploads/
 ```
 
 **Should show:**
+
 ```
 drwxrwxrwx 2 www-data www-data profile_pics
 drwxrwxrwx 2 www-data www-data backgrounds
@@ -82,6 +91,7 @@ drwxrwxrwx 2 www-data www-data folder_pics
 ```
 
 **Exit container:**
+
 ```bash
 exit
 ```
@@ -102,6 +112,7 @@ RUN mkdir -p /var/www/html/uploads/profile_pics \
 ```
 
 **Then rebuild:**
+
 ```bash
 cd /opt/LinkMy
 docker-compose down
@@ -113,17 +124,20 @@ docker-compose up -d --build
 ## 🧪 Testing
 
 ### Test Profile Picture Upload:
+
 ```bash
 # Upload via website, then check:
 docker exec linkmy_web ls -la /var/www/html/uploads/profile_pics/
 ```
 
 ### Test Background Image Upload:
+
 ```bash
 docker exec linkmy_web ls -la /var/www/html/uploads/backgrounds/
 ```
 
 ### Check Apache Logs:
+
 ```bash
 docker logs linkmy_web --tail 50
 # Should NOT see permission denied errors
@@ -134,12 +148,14 @@ docker logs linkmy_web --tail 50
 ## 📱 Mobile Drag & Drop Fix
 
 ### What Changed:
+
 1. **Prevent document scroll** during drag
 2. **Hide element temporarily** to detect element below
 3. **Better visual feedback** (shadow, opacity)
 4. **Proper cleanup** on touchend
 
 ### How to Test on Mobile:
+
 1. Open dashboard on phone
 2. Press and hold link item for 0.5 seconds
 3. Drag up or down (page should NOT scroll)
@@ -147,6 +163,7 @@ docker logs linkmy_web --tail 50
 5. Order should update ✅
 
 ### Debugging on Mobile:
+
 ```javascript
 // Add to admin.js for debugging
 console.log('Touch start:', touchStartY);
@@ -159,11 +176,13 @@ console.log('Element below:', elementBelow);
 ## 🖼️ Background Preview Fix
 
 ### What Changed:
-- Auto-create `<img id="bgImagePreview">` if not exists
-- Show preview in upload box before submitting
-- Update live preview container background
+
+-   Auto-create `<img id="bgImagePreview">` if not exists
+-   Show preview in upload box before submitting
+-   Update live preview container background
 
 ### How to Test:
+
 1. Go to Appearance → Theme tab
 2. Click "Click to Upload Background"
 3. Select image
@@ -177,6 +196,7 @@ console.log('Element below:', elementBelow);
 ## 🚀 Quick Deploy Commands
 
 **All in one:**
+
 ```bash
 cd /opt/LinkMy && \
 git pull origin master && \
@@ -191,12 +211,13 @@ echo "✅ Done! Test upload now."
 ## ✅ Success Criteria
 
 After fix:
-- [ ] Profile picture uploads successfully
-- [ ] Background image uploads successfully  
-- [ ] Preview shows before upload
-- [ ] Live preview updates instantly
-- [ ] Mobile drag & drop works (no scroll)
-- [ ] No permission errors in logs
+
+-   [ ] Profile picture uploads successfully
+-   [ ] Background image uploads successfully
+-   [ ] Preview shows before upload
+-   [ ] Live preview updates instantly
+-   [ ] Mobile drag & drop works (no scroll)
+-   [ ] No permission errors in logs
 
 ---
 
