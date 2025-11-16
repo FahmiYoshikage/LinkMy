@@ -6,7 +6,7 @@
     <title>LinkMy - Your Personal Link Hub</title>
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <link href="/assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
