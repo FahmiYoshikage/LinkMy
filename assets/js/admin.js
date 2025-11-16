@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         });
 
-        // Touch Events for Mobile
+        // Touch Events for Mobile with hold delay
         item.addEventListener(
             'touchstart',
             function (e) {
@@ -84,20 +84,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 draggedIndex = index;
                 touchStartY = e.touches[0].clientY;
                 touchStartX = e.touches[0].clientX;
-                isDraggingTouch = true;
-                this.classList.add('dragging');
+                touchStartTime = Date.now();
+                isReadyToDrag = false;
 
-                // Show blur overlay
-                if (dragOverlay) {
-                    dragOverlay.classList.add('active');
-                }
+                // Start hold timer
+                touchHoldTimer = setTimeout(() => {
+                    isReadyToDrag = true;
+                    isDraggingTouch = true;
+                    this.classList.add('dragging');
+
+                    // Show blur overlay
+                    if (dragOverlay) {
+                        dragOverlay.classList.add('active');
+                    }
+
+                    // Highlight ALL links container
+                    if (linksList) {
+                        linksList.classList.add('dragging-active');
+                    }
+
+                    // Vibrate feedback (if supported)
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                }, HOLD_DURATION);
 
                 // Store initial position
                 this.style.zIndex = '1000';
                 this.style.transition = 'none';
 
-                // Prevent scrolling while dragging
-                e.preventDefault();
+                // Don't prevent default here - allow scrolling initially
                 e.stopPropagation();
             },
             { passive: false }
@@ -106,15 +122,27 @@ document.addEventListener('DOMContentLoaded', function () {
         item.addEventListener(
             'touchmove',
             function (e) {
+                // Check if moved too much before hold completed - cancel drag
+                if (!isReadyToDrag) {
+                    const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+                    const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+                    if (deltaY > 10 || deltaX > 10) {
+                        clearTimeout(touchHoldTimer);
+                    }
+                    return; // Allow normal scrolling
+                }
+
                 if (!isDraggingTouch) return;
 
                 touchCurrentY = e.touches[0].clientY;
                 const deltaY = touchCurrentY - touchStartY;
 
-                // Visual feedback - move the element
-                this.style.transform = `translateY(${deltaY}px)`;
-                this.style.opacity = '0.7';
-                this.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+                // Visual feedback - smooth transform
+                this.style.transform = `translateY(${deltaY}px) scale(1.05)`;
+                this.style.opacity = '0.9';
+                this.style.boxShadow = '0 10px 30px rgba(0,0,0,0.4)';
+                this.style.transition =
+                    'transform 0.1s ease, box-shadow 0.1s ease';
 
                 // Hide this element temporarily to get element below
                 this.style.visibility = 'hidden';
@@ -146,9 +174,18 @@ document.addEventListener('DOMContentLoaded', function () {
         );
 
         item.addEventListener('touchend', function (e) {
-            if (!isDraggingTouch) return;
+            // Clear hold timer if not ready
+            clearTimeout(touchHoldTimer);
+
+            if (!isDraggingTouch || !isReadyToDrag) {
+                // Reset states
+                isReadyToDrag = false;
+                isDraggingTouch = false;
+                return;
+            }
 
             isDraggingTouch = false;
+            isReadyToDrag = false;
             this.classList.remove('dragging');
             this.style.transform = '';
             this.style.opacity = '';
@@ -160,6 +197,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Hide blur overlay
             if (dragOverlay) {
                 dragOverlay.classList.remove('active');
+            }
+
+            // Remove highlight from links container
+            if (linksList) {
+                linksList.classList.remove('dragging-active');
             }
 
             // Find the target element
@@ -193,6 +235,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
             e.preventDefault();
             e.stopPropagation();
+        });
+
+        // Handle touch cancel
+        item.addEventListener('touchcancel', function (e) {
+            clearTimeout(touchHoldTimer);
+            isDraggingTouch = false;
+            isReadyToDrag = false;
+            this.classList.remove('dragging');
+            this.style.transform = '';
+            this.style.opacity = '';
+            this.style.zIndex = '';
+            this.style.transition = '';
+            this.style.boxShadow = '';
+            this.style.visibility = '';
+
+            if (dragOverlay) {
+                dragOverlay.classList.remove('active');
+            }
+
+            if (linksList) {
+                linksList.classList.remove('dragging-active');
+            }
+
+            linkItems.forEach((item) => item.classList.remove('drag-over'));
         });
     });
     function saveNewOrder() {

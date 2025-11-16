@@ -1528,15 +1528,8 @@
                         }
                     }
                     
-                    // Update live preview if background image
-                    if (previewId === 'bgImagePreview') {
-                        const previewContainer = document.getElementById('previewContainer');
-                        if (previewContainer) {
-                            previewContainer.style.backgroundImage = `url(${e.target.result})`;
-                            previewContainer.style.backgroundSize = 'cover';
-                            previewContainer.style.backgroundPosition = 'center';
-                        }
-                    }
+                    // DO NOT update live preview for background - only show in upload box
+                    // Live preview will update AFTER form submit and page reload
                     
                     // Show image in upload area
                     const uploadArea = input.closest('.upload-area');

@@ -193,24 +193,35 @@
             padding: 1.5rem;
         }
 
-        /* Drag Overlay for Mobile */
+        /* Drag Overlay for Mobile - Blur everything EXCEPT links container */
         .drag-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            z-index: 999;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 998;
             display: none;
+            pointer-events: none;
         }
         .drag-overlay.active {
             display: block;
         }
+        /* Highlight all links container when dragging */
+        #linksList.dragging-active {
+            position: relative;
+            z-index: 999;
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8);
+        }
         .link-item.dragging {
             z-index: 1000;
             position: relative;
+            opacity: 0.9;
         }
 
         /* Mobile Responsive */
