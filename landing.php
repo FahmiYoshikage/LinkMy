@@ -545,7 +545,7 @@
             </div>
             <hr class="border-secondary">
             <div class="text-center text-white-50">
-                <small>&copy; 2025 LinkMy. Made with <i class="bi bi-heart-fill text-danger"></i> for creators everywhere.</small>
+                <small>&copy; 2025 LinkMy. Made with <i class="bi bi-heart-fill text-danger"></i> for all creators everywhere.</small>
             </div>
         </div>
     </footer>
