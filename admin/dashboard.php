@@ -228,41 +228,66 @@
         @media (max-width: 768px) {
             .link-item {
                 padding: 1rem;
-                font-size: 15px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
+                border: 2px solid #e9ecef;
+                border-radius: 12px;
+                margin-bottom: 0.75rem;
             }
             .link-item .d-flex {
-                flex: 1;
-                align-items: center;
-                gap: 10px;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.75rem;
             }
-            .link-item h6 {
-                font-size: 16px;
-                margin-bottom: 0.25rem;
+            /* Top row: drag handle + icon + title */
+            .link-item .d-flex > .d-flex:first-child {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+            .link-item .flex-grow-1 {
+                width: 100%;
+            }
+            .link-item .flex-grow-1 > .d-flex {
+                margin-bottom: 0.5rem;
+            }
+            .link-item .flex-grow-1 > .d-flex i {
+                font-size: 20px;
+            }
+            .link-item .flex-grow-1 strong {
+                font-size: 15px;
+                flex: 1;
             }
             .link-item small {
-                font-size: 12px;
+                font-size: 11px;
                 display: block;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 max-width: 100%;
-                word-break: break-all;
-                overflow-wrap: break-word;
+            }
+            .link-item .badge {
+                font-size: 11px;
+                padding: 0.35em 0.65em;
             }
             .drag-handle {
-                font-size: 24px;
-                padding: 8px;
+                font-size: 22px;
+                padding: 4px;
                 touch-action: none;
+                margin-right: 0.5rem;
+            }
+            /* Action buttons - horizontal at bottom */
+            .link-item > .d-flex > div:last-child {
+                display: flex;
+                gap: 0.5rem;
+                justify-content: flex-end;
+                width: 100%;
             }
             .link-item .btn {
-                padding: 6px 10px;
+                padding: 8px 16px;
                 font-size: 13px;
+                flex: 1;
+                max-width: 48%;
             }
             .link-item .btn i {
-                font-size: 14px;
+                font-size: 13px;
             }
             .stat-card {
                 padding: 1rem;
@@ -689,8 +714,9 @@
                 shared: true,
                 valueSuffix: ' clicks',
                 formatter: function() {
-                    // Parse YYYY-MM-DD format manually to avoid timezone issues
-                    const parts = this.x.split('-');
+                    // this.x is category index, get the actual date string from categories
+                    const dateString = this.points[0].point.category;
+                    const parts = dateString.split('-');
                     const date = new Date(parts[0], parts[1] - 1, parts[2]);
                     return '<b>' + date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '</b><br/>' +
                            this.points.map(p => p.series.name + ': <b>' + p.y + ' clicks</b>').join('<br/>');
