@@ -248,6 +248,9 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                max-width: 100%;
+                word-break: break-all;
+                overflow-wrap: break-word;
             }
             .drag-handle {
                 font-size: 24px;
@@ -669,7 +672,9 @@
                 crosshair: true,
                 labels: {
                     formatter: function() {
-                        const date = new Date(this.value);
+                        // Parse YYYY-MM-DD format manually to avoid timezone issues
+                        const parts = this.value.split('-');
+                        const date = new Date(parts[0], parts[1] - 1, parts[2]);
                         return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
                     }
                 }
@@ -684,7 +689,9 @@
                 shared: true,
                 valueSuffix: ' clicks',
                 formatter: function() {
-                    const date = new Date(this.x);
+                    // Parse YYYY-MM-DD format manually to avoid timezone issues
+                    const parts = this.x.split('-');
+                    const date = new Date(parts[0], parts[1] - 1, parts[2]);
                     return '<b>' + date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '</b><br/>' +
                            this.points.map(p => p.series.name + ': <b>' + p.y + ' clicks</b>').join('<br/>');
                 }
