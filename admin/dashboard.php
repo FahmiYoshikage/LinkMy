@@ -9,6 +9,7 @@
         $title = trim($_POST['title']);
         $url = trim($_POST['url']);
         $icon_class = trim($_POST['icon_class']);
+        $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
 
         if (empty($title) || empty($url)){
             $error = 'Judul dan URL harus diisi';
@@ -17,10 +18,10 @@
             $last_order = $last_order_row['max_order'] ?? 0;
             $new_order = $last_order + 1;
 
-            $query = "INSERT INTO links (user_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?)";
+            $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = mysqli_prepare($conn, $query);
             if ($stmt){
-                mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $title, $url, $icon_class, $new_order);
+                mysqli_stmt_bind_param($stmt, 'isssii', $current_user_id, $title, $url, $icon_class, $category_id, $new_order);
                 if (mysqli_stmt_execute($stmt)){
                     $success = 'Link berhasil ditambahkan';
                 } else {
@@ -37,13 +38,14 @@
         $title = trim($_POST['title']);
         $url = trim($_POST['url']);
         $icon_class = trim($_POST['icon_class']);
+        $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
         
         if (empty($title) || empty($url)) {
             $error = 'Judul dan URL harus diisi!';
         } else {
-            $query = "UPDATE links SET title = ?, url = ?, icon_class = ? WHERE link_id = ? AND user_id = ?";
+            $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND user_id = ?";
             $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'sssii', $title, $url, $icon_class, $link_id, $current_user_id);
+            mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $current_user_id);
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Link berhasil diupdate!';
@@ -95,6 +97,13 @@
         'i'
     );
     
+    // Get user categories for dropdown
+    $user_categories = get_all_rows(
+        "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE user_id = ? ORDER BY display_order ASC",
+        [$current_user_id],
+        'i'
+    );
+
     // Get daily clicks for last 7 days
     $daily_clicks = get_all_rows(
         "SELECT 
@@ -586,6 +595,19 @@
                                    placeholder="https://instagram.com/username">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Category (Optional) <span class="badge bg-success">New!</span></label>
+                            <select class="form-select" name="category_id">
+                                <option value="">None (Uncategorized)</option>
+                                <?php foreach ($user_categories as $cat): ?>
+                                    <option value="<?= $cat['category_id'] ?>">
+                                        <i class="<?= htmlspecialchars($cat['category_icon']) ?>"></i>
+                                        <?= htmlspecialchars($cat['category_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Group this link under a category. <a href="categories.php">Manage Categories</a></small>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Ikon (Bootstrap Icons)</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text">
@@ -687,6 +709,17 @@
                             <input type="url" class="form-control" name="url" id="edit_url" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Category <span class="badge bg-success">New!</span></label>
+                            <select class="form-select" name="category_id" id="edit_category">
+                                <option value="">None (Uncategorized)</option>
+                                <?php foreach ($user_categories as $cat): ?>
+                                    <option value="<?= $cat['category_id'] ?>">
+                                        <?= htmlspecialchars($cat['category_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Ikon</label>
                             <input type="text" class="form-control" name="icon_class" id="edit_icon">
                         </div>
@@ -740,6 +773,7 @@
             document.getElementById('edit_title').value = link.title;
             document.getElementById('edit_url').value = link.url;
             document.getElementById('edit_icon').value = link.icon_class;
+            document.getElementById('edit_category').value = link.category_id || '';
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
         function copyLink() {

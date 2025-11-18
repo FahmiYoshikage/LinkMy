@@ -63,6 +63,10 @@
     $enable_glass_effect = $user_data['enable_glass_effect'] ?? 0;
     $shadow_intensity = $user_data['shadow_intensity'] ?? 'medium';
     
+    // V2.2 Linktree Features
+    $container_style = $user_data['container_style'] ?? 'wide';
+    $enable_categories = $user_data['enable_categories'] ?? 0;
+    
     // Gradient presets mapping (v2.0 + v2.1)
     $gradient_presets = [
         // V2.0 Original
@@ -95,10 +99,41 @@
 
     mysqli_data_seek($result, 0);
 
+    // Fetch links and group by category if enabled
     $links = [];
+    $links_by_category = [];
+    $categories = [];
+    
     while ($row = mysqli_fetch_assoc($result)){
         if (!empty($row['link_id'])){
             $links[] = $row;
+            
+            if ($enable_categories && $row['category_id']) {
+                $cat_id = $row['category_id'];
+                
+                // Store category info
+                if (!isset($categories[$cat_id])) {
+                    $categories[$cat_id] = [
+                        'category_id' => $cat_id,
+                        'category_name' => $row['category_name'],
+                        'category_icon' => $row['category_icon'],
+                        'category_color' => $row['category_color'],
+                        'category_expanded' => $row['category_expanded']
+                    ];
+                }
+                
+                // Group links under category
+                if (!isset($links_by_category[$cat_id])) {
+                    $links_by_category[$cat_id] = [];
+                }
+                $links_by_category[$cat_id][] = $row;
+            } else {
+                // Uncategorized links
+                if (!isset($links_by_category[0])) {
+                    $links_by_category[0] = [];
+                }
+                $links_by_category[0][] = $row;
+            }
         }
     }
 
@@ -220,6 +255,13 @@
             margin: 0 auto;
             padding: 0 1rem;
             <?= $profile_layout === 'left' ? 'text-align: left;' : '' ?>
+            <?php if ($container_style === 'boxed'): ?>
+            /* Linktree-style boxed layout */
+            background: <?= $theme_name === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(30,30,30,0.98)' ?>;
+            border-radius: 20px;
+            padding: 2.5rem 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            <?php endif; ?>
         }
         
         .profile-header {
@@ -363,7 +405,40 @@
                     <i class="bi bi-inbox display-4"></i>
                     <p class="mt-3">Belum ada link yang ditambahkan</p>
                 </div>
+            <?php elseif ($enable_categories && !empty($categories)): ?>
+                <!-- CATEGORIZED VIEW -->
+                <?php foreach ($links_by_category as $cat_id => $cat_links): ?>
+                    <?php if ($cat_id > 0): ?>
+                        <!-- Category Header -->
+                        <?php $cat = $categories[$cat_id]; ?>
+                        <div class="category-header" style="border-left: 4px solid <?= $cat['category_color'] ?>; padding-left: 1rem; margin-bottom: 1rem; margin-top: 1.5rem;">
+                            <h5 style="margin-bottom: 0.5rem; color: <?= $text_color ?>;">
+                                <i class="<?= htmlspecialchars($cat['category_icon']) ?>" style="color: <?= $cat['category_color'] ?>;"></i>
+                                <?= htmlspecialchars($cat['category_name']) ?>
+                                <span style="opacity: 0.6; font-size: 0.8rem; font-weight: normal;">(<?= count($cat_links) ?>)</span>
+                            </h5>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php foreach ($cat_links as $link): ?>
+                        <a href="redirect.php?id=<?= $link['link_id'] ?>" 
+                           class="link-card" 
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <div class="link-icon" style="color: <?= $current_theme['link_text'] ?>;">
+                                <i class="<?= htmlspecialchars($link['icon_class']) ?>"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title']) ?></p>
+                            </div>
+                            <div style="color: <?= $current_theme['link_text'] ?>;">
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endforeach; ?>
             <?php else: ?>
+                <!-- FLAT VIEW (No categories) -->
                 <?php foreach ($links as $link): ?>
                     <a href="redirect.php?id=<?= $link['link_id'] ?>" 
                        class="link-card" 
