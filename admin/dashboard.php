@@ -587,11 +587,72 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Ikon (Bootstrap Icons)</label>
-                            <input type="text" class="form-control" name="icon_class"
-                                   value="bi-link-45deg"
-                                   placeholder="bi-instagram">
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">
+                                    <i id="iconPreview" class="bi-link-45deg" style="font-size: 1.5rem;"></i>
+                                </span>
+                                <input type="text" class="form-control" name="icon_class" id="iconInput"
+                                       value="bi-link-45deg"
+                                       placeholder="Example: bi-instagram">
+                            </div>
+                            <div class="alert alert-info py-2 px-3 mb-2">
+                                <small>
+                                    <strong>💡 Format:</strong> Gunakan prefix <code>bi-</code> diikuti nama icon<br>
+                                    <strong>📖 Example:</strong> <code>bi-instagram</code>, <code>bi-github</code>, <code>bi-linkedin</code>
+                                </small>
+                            </div>
+                            
+                            <!-- Popular Icons Template -->
+                            <div class="mb-2">
+                                <label class="form-label text-muted small mb-1">🔥 Popular Icons:</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-instagram" title="Instagram">
+                                        <i class="bi-instagram"></i> Instagram
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-facebook" title="Facebook">
+                                        <i class="bi-facebook"></i> Facebook
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-twitter-x" title="Twitter/X">
+                                        <i class="bi-twitter-x"></i> Twitter
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-tiktok" title="TikTok">
+                                        <i class="bi-tiktok"></i> TikTok
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-youtube" title="YouTube">
+                                        <i class="bi-youtube"></i> YouTube
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-linkedin" title="LinkedIn">
+                                        <i class="bi-linkedin"></i> LinkedIn
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-github" title="GitHub">
+                                        <i class="bi-github"></i> GitHub
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-whatsapp" title="WhatsApp">
+                                        <i class="bi-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-telegram" title="Telegram">
+                                        <i class="bi-telegram"></i> Telegram
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-discord" title="Discord">
+                                        <i class="bi-discord"></i> Discord
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-spotify" title="Spotify">
+                                        <i class="bi-spotify"></i> Spotify
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-envelope-fill" title="Email">
+                                        <i class="bi-envelope-fill"></i> Email
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-globe" title="Website">
+                                        <i class="bi-globe"></i> Website
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-link-45deg" title="Link">
+                                        <i class="bi-link-45deg"></i> Link
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <small class="text-muted">
-                                Lihat: <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a>
+                                📚 Browse more: <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons Library</a>
                             </small>
                         </div>
                     </div>
@@ -647,6 +708,33 @@
     <script src="../assets/js/exporting.js"></script>
     <script src="../assets/js/admin.js"></script>
     <script>
+        // Live icon preview
+        document.getElementById('iconInput')?.addEventListener('input', function(e) {
+            const iconClass = e.target.value.trim();
+            const preview = document.getElementById('iconPreview');
+            if (preview) {
+                preview.className = iconClass || 'bi-link-45deg';
+            }
+        });
+        
+        // Icon template selector
+        document.querySelectorAll('.icon-template').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const iconClass = this.getAttribute('data-icon');
+                const input = document.getElementById('iconInput');
+                const preview = document.getElementById('iconPreview');
+                
+                if (input) input.value = iconClass;
+                if (preview) preview.className = iconClass;
+                
+                // Visual feedback
+                document.querySelectorAll('.icon-template').forEach(b => b.classList.remove('active', 'btn-primary'));
+                document.querySelectorAll('.icon-template').forEach(b => b.classList.add('btn-outline-secondary'));
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-primary', 'active');
+            });
+        });
+        
         function editLink(link) {
             document.getElementById('edit_link_id').value = link.link_id;
             document.getElementById('edit_title').value = link.title;

@@ -322,6 +322,19 @@
     </style>
 </head>
 <body>
+    <!-- Top Action Buttons -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+        <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
+            <i class="bi bi-link-45deg" style="font-size: 1.5rem; color: #667eea;"></i>
+        </button>
+    </div>
+    
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
+            <i class="bi bi-share-fill" style="font-size: 1.2rem; color: #667eea;"></i>
+        </button>
+    </div>
+    
     <div class="profile-container">
         <!-- Profile Header -->
         <div class="profile-header">
@@ -381,5 +394,143 @@
             </p>
         </div>
     </div>
+    
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Share Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <!-- Profile Preview Card -->
+                    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+                        <div class="card-body py-4">
+                            <?php
+                            $profile_pic_path = 'uploads/profile_pics/' . $profile_pic;
+                            if (file_exists($profile_pic_path)):
+                            ?>
+                                <img src="<?= $profile_pic_path ?>" alt="Profile" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid white;">
+                            <?php else: ?>
+                                <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-person-fill" style="font-size: 2.5rem;"></i>
+                                </div>
+                            <?php endif; ?>
+                            <h5 class="text-white mb-1"><?= htmlspecialchars($profile_title) ?></h5>
+                            <p class="text-white-50 small mb-0">🌐 linkmy.iet.ovh/<?= htmlspecialchars($slug) ?></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Share Options -->
+                    <div class="d-flex justify-content-center gap-3 mb-3 flex-wrap">
+                        <a href="javascript:void(0)" onclick="copyToClipboard()" class="btn btn-outline-secondary rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;" title="Copy Link">
+                            <i class="bi bi-clipboard" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?url=<?= urlencode('https://linkmy.iet.ovh/profile.php?slug=' . $slug) ?>&text=Check out my LinkMy profile!" target="_blank" class="btn rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #000; color: white;" title="Share on X">
+                            <i class="bi bi-twitter-x" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode('https://linkmy.iet.ovh/profile.php?slug=' . $slug) ?>" target="_blank" class="btn rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #1877f2; color: white;" title="Share on Facebook">
+                            <i class="bi bi-facebook" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://wa.me/?text=Check out my LinkMy profile: <?= urlencode('https://linkmy.iet.ovh/profile.php?slug=' . $slug) ?>" target="_blank" class="btn rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #25d366; color: white;" title="Share on WhatsApp">
+                            <i class="bi bi-whatsapp" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?= urlencode('https://linkmy.iet.ovh/profile.php?slug=' . $slug) ?>" target="_blank" class="btn rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #0a66c2; color: white;" title="Share on LinkedIn">
+                            <i class="bi bi-linkedin" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://telegram.me/share/url?url=<?= urlencode('https://linkmy.iet.ovh/profile.php?slug=' . $slug) ?>&text=Check out my LinkMy profile!" target="_blank" class="btn rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #0088cc; color: white;" title="Share on Telegram">
+                            <i class="bi bi-telegram" style="font-size: 1.5rem;"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- Copy Link Input -->
+                    <div class="input-group mt-3">
+                        <input type="text" class="form-control" id="profileLink" value="https://linkmy.iet.ovh/profile.php?slug=<?= htmlspecialchars($slug) ?>" readonly style="border-radius: 10px 0 0 10px;">
+                        <button class="btn btn-primary" type="button" onclick="copyToClipboard()" style="border-radius: 0 10px 10px 0;">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    <div id="copyFeedback" class="text-success small mt-2" style="display: none;">
+                        ✅ Link copied to clipboard!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LinkMy Signup Modal -->
+    <div class="modal fade" id="linkmyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div class="modal-body text-center py-5">
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-link-45deg text-white" style="font-size: 3rem;"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">Create Your LinkMy</h3>
+                        <p class="text-muted mb-4">Join thousands of creators managing all their links in one place</p>
+                    </div>
+                    
+                    <div class="row text-start mb-4">
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">Free Forever</h6>
+                                    <p class="text-muted small mb-0">No credit card required</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="bi bi-speedometer2 text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">Track Analytics</h6>
+                                    <p class="text-muted small mb-0">See who clicks your links</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="bi bi-palette-fill text-warning" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">Custom Design</h6>
+                                    <p class="text-muted small mb-0">Match your brand style</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="register.php" class="btn btn-lg w-100 text-white fw-semibold mb-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; padding: 15px;">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
+                    </a>
+                    <p class="text-muted small mb-0">Already have an account? <a href="landing.php" class="fw-semibold">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard() {
+            const input = document.getElementById('profileLink');
+            input.select();
+            input.setSelectionRange(0, 99999); // For mobile
+            
+            navigator.clipboard.writeText(input.value).then(() => {
+                const feedback = document.getElementById('copyFeedback');
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 3000);
+            });
+        }
+    </script>
 </body>
 </html>
