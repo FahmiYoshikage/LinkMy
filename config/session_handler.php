@@ -44,9 +44,32 @@ function init_db_session() {
 
 class DatabaseSessionHandler implements SessionHandlerInterface {
     private $conn;
+    private $db_host;
+    private $db_user;
+    private $db_pass;
+    private $db_name;
     
-    public function __construct($connection) {
-        $this->conn = $connection;
+    public function __construct($connection = null) {
+        // Store database credentials for creating persistent connection
+        $this->db_host = defined('DB_HOST') ? DB_HOST : 'localhost';
+        $this->db_user = defined('DB_USER') ? DB_USER : 'root';
+        $this->db_pass = defined('DB_PASS') ? DB_PASS : '';
+        $this->db_name = defined('DB_NAME') ? DB_NAME : 'linkmy_db';
+        
+        if ($connection && mysqli_ping($connection)) {
+            $this->conn = $connection;
+        }
+    }
+    
+    private function getConnection() {
+        // Always create a fresh connection for session operations
+        if (!$this->conn || !@mysqli_ping($this->conn)) {
+            $this->conn = @mysqli_connect($this->db_host, $this->db_user, $this->db_pass, $this->db_name);
+            if ($this->conn) {
+                mysqli_set_charset($this->conn, "utf8mb4");
+            }
+        }
+        return $this->conn;
     }
     
     public function open($save_path, $session_name): bool {
@@ -54,11 +77,17 @@ class DatabaseSessionHandler implements SessionHandlerInterface {
     }
     
     public function close(): bool {
+        // Don't close the connection - let PHP handle it
         return true;
     }
     
     public function read($session_id): string|false {
-        $stmt = mysqli_prepare($this->conn, "SELECT session_data FROM sessions WHERE session_id = ? AND session_expire > ?");
+        $conn = $this->getConnection();
+        if (!$conn) return '';
+        
+        $stmt = mysqli_prepare($conn, "SELECT session_data FROM sessions WHERE session_id = ? AND session_expire > ?");
+        if (!$stmt) return '';
+        
         $current_time = time();
         mysqli_stmt_bind_param($stmt, 'si', $session_id, $current_time);
         mysqli_stmt_execute($stmt);
@@ -71,26 +100,41 @@ class DatabaseSessionHandler implements SessionHandlerInterface {
     }
     
     public function write($session_id, $session_data): bool {
+        $conn = $this->getConnection();
+        if (!$conn) return false;
+        
         $expire = time() + (int)ini_get('session.gc_maxlifetime');
         
-        $stmt = mysqli_prepare($this->conn, 
+        $stmt = mysqli_prepare($conn, 
             "INSERT INTO sessions (session_id, session_data, session_expire) 
              VALUES (?, ?, ?) 
              ON DUPLICATE KEY UPDATE session_data = ?, session_expire = ?");
+        
+        if (!$stmt) return false;
         
         mysqli_stmt_bind_param($stmt, 'ssisi', $session_id, $session_data, $expire, $session_data, $expire);
         return mysqli_stmt_execute($stmt);
     }
     
     public function destroy($session_id): bool {
-        $stmt = mysqli_prepare($this->conn, "DELETE FROM sessions WHERE session_id = ?");
+        $conn = $this->getConnection();
+        if (!$conn) return false;
+        
+        $stmt = mysqli_prepare($conn, "DELETE FROM sessions WHERE session_id = ?");
+        if (!$stmt) return false;
+        
         mysqli_stmt_bind_param($stmt, 's', $session_id);
         return mysqli_stmt_execute($stmt);
     }
     
     public function gc($maxlifetime): int|false {
+        $conn = $this->getConnection();
+        if (!$conn) return false;
+        
         $old = time();
-        $stmt = mysqli_prepare($this->conn, "DELETE FROM sessions WHERE session_expire < ?");
+        $stmt = mysqli_prepare($conn, "DELETE FROM sessions WHERE session_expire < ?");
+        if (!$stmt) return false;
+        
         mysqli_stmt_bind_param($stmt, 'i', $old);
         mysqli_stmt_execute($stmt);
         return mysqli_stmt_affected_rows($stmt);
