@@ -48,8 +48,8 @@ function create_mailer() {
         $mail->Port = MAIL_PORT;
         
         // Timeout settings (important for slow connections)
-        $mail->Timeout = 30; // 30 seconds
-        $mail->SMTPKeepAlive = true;
+        $mail->Timeout = 20; // 20 seconds (reduced for faster failure)
+        $mail->SMTPKeepAlive = false; // Disable to avoid connection reuse delays
         
         // Default sender
         $mail->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
@@ -93,7 +93,10 @@ function send_otp_email($email, $otp) {
         $mail->AltBody = "Kode OTP Anda adalah: $otp\n\nKode ini berlaku selama 10 menit.\nJangan bagikan kode ini kepada siapapun.";
         
         // Send
-        $mail->send();
+        $result = $mail->send();
+        
+        // Close connection immediately
+        $mail->smtpClose();
         
         return [
             'success' => true,
@@ -129,6 +132,9 @@ function send_password_reset_email($email, $resetToken) {
     }
     
     try {
+        // Override timeout for faster sending
+        $mail->Timeout = 15; // Faster timeout for reset emails
+        
         // Reset link - automatically detect domain
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'] ?? 'linkmy.iet.ovh';
@@ -144,7 +150,10 @@ function send_password_reset_email($email, $resetToken) {
         $mail->AltBody = "Klik link berikut untuk reset password: $resetLink\n\nLink berlaku selama 1 jam.";
         
         // Send
-        $mail->send();
+        $result = $mail->send();
+        
+        // Close connection immediately
+        $mail->smtpClose();
         
         return [
             'success' => true,
@@ -227,14 +236,14 @@ function get_password_reset_email_template($resetLink) {
     <head>
         <meta charset="UTF-8">
         <style>
-            body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; }
-            .header h1 { color: white; margin: 0; font-size: 28px; }
-            .content { padding: 40px 30px; }
-            .button { display: inline-block; background: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
-            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+            body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; }
+            .header { background: #667eea; padding: 25px; text-align: center; }
+            .header h1 { color: #fff; margin: 0; font-size: 24px; }
+            .content { padding: 30px; }
+            .button { display: inline-block; background: #667eea; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+            .warning { background: #fff3cd; padding: 12px; margin: 15px 0; border-left: 3px solid #ffc107; }
+            .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; font-size: 13px; }
         </style>
     </head>
     <body>
@@ -243,9 +252,9 @@ function get_password_reset_email_template($resetLink) {
                 <h1>🔑 Reset Password</h1>
             </div>
             <div class="content">
-                <p style="font-size: 16px; color: #333;">Halo!</p>
-                <p style="font-size: 16px; color: #666;">Kami menerima permintaan untuk reset password akun LinkMy Anda.</p>
-                <p style="font-size: 16px; color: #666;">Klik tombol di bawah untuk membuat password baru:</p>
+                <p>Halo!</p>
+                <p>Kami menerima permintaan untuk reset password akun LinkMy Anda.</p>
+                <p>Klik tombol di bawah untuk membuat password baru:</p>
                 
                 <div style="text-align: center;">
                     <a href="' . $resetLink . '" class="button">Reset Password</a>
