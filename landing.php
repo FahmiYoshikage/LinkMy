@@ -856,6 +856,7 @@
     </footer>
 
     <script src="/assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -867,6 +868,24 @@
                 }
             });
         });
+
+        // Check if user just registered
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered') === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Registrasi Berhasil!',
+                text: 'Akun Anda berhasil dibuat. Silakan login untuk melanjutkan.',
+                confirmButtonText: 'Login Sekarang',
+                confirmButtonColor: '#667eea',
+                allowOutsideClick: false,
+                timer: 3000,
+                timerProgressBar: true
+            }).then((result) => {
+                // Redirect to login page
+                window.location.href = 'login.php';
+            });
+        }
     </script>
 </body>
 </html>

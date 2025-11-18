@@ -126,7 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step3'])) {
                         unset($_SESSION['email_verified']);
                         unset($_SESSION['otp_sent_at']);
                         
-                        header('Location: index.php?registered=1');
+                        // Redirect to landing page with success message and auto-open login modal
+                        header('Location: landing.php?registered=success');
                         exit;
                     } else {
                         $error = 'Terjadi kesalahan saat registrasi. Coba lagi!';
