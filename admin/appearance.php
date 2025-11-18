@@ -227,7 +227,7 @@
             $error = 'Database prepare error: ' . mysqli_error($conn);
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
-            $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiiisi', 
+            $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiiiisi', 
                 $gradient_preset, $custom_bg_color, $custom_button_color, $custom_text_color, $custom_link_text_color,
                 $profile_layout, $container_style, $enable_categories, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $current_user_id);
             
