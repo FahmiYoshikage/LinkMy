@@ -197,12 +197,14 @@
         $custom_text_color = !empty($_POST['custom_text_color']) ? $_POST['custom_text_color'] : null;
         $custom_link_text_color = !empty($_POST['custom_link_text_color']) ? $_POST['custom_link_text_color'] : null;
         $profile_layout = !empty($_POST['profile_layout']) ? $_POST['profile_layout'] : 'centered';
+        $container_style = !empty($_POST['container_style']) ? $_POST['container_style'] : 'wide';
+        $enable_categories = isset($_POST['enable_categories']) ? 1 : 0;
         $show_profile_border = isset($_POST['show_profile_border']) ? 1 : 0;
         $enable_animations = isset($_POST['enable_animations']) ? 1 : 0;
         $enable_glass_effect = isset($_POST['enable_glass_effect']) ? 1 : 0;
         $shadow_intensity = !empty($_POST['shadow_intensity']) ? $_POST['shadow_intensity'] : 'medium';
         
-        error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
+        error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, container=$container_style, categories=$enable_categories, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
         error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
         
         $query = "UPDATE appearance SET 
@@ -212,6 +214,8 @@
                   custom_text_color = ?,
                   custom_link_text_color = ?,
                   profile_layout = ?,
+                  container_style = ?,
+                  enable_categories = ?,
                   show_profile_border = ?,
                   enable_animations = ?,
                   enable_glass_effect = ?,
@@ -223,9 +227,9 @@
             $error = 'Database prepare error: ' . mysqli_error($conn);
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
-            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiiisi', 
+            $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiiisi', 
                 $gradient_preset, $custom_bg_color, $custom_button_color, $custom_text_color, $custom_link_text_color,
-                $profile_layout, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $current_user_id);
+                $profile_layout, $container_style, $enable_categories, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $current_user_id);
             
             if (!$bind_result) {
                 $error = 'Bind param error: ' . mysqli_stmt_error($stmt);
@@ -1336,6 +1340,61 @@
                                         </div>
                                     </div>
 
+                                    <hr class="my-4">
+
+                                    <!-- Container Style (NEW - Linktree Style) -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-bounding-box text-primary me-2"></i>Container Style
+                                        <span class="badge bg-success ms-2">New!</span>
+                                    </h6>
+                                    <p class="text-muted mb-3">Pilih style container untuk halaman profile Anda</p>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="container_style" value="wide" 
+                                                       <?= ($appearance['container_style'] ?? 'wide') == 'wide' ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectContainerStyle(this)">
+                                                <div class="layout-card <?= ($appearance['container_style'] ?? 'wide') == 'wide' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="layout-preview">
+                                                        <div style="width: 100%; height: 60px; background: linear-gradient(135deg, #667eea 20%, #764ba2 80%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
+                                                            <div style="text-align: center;">
+                                                                <div style="font-weight: bold;">Wide Layout</div>
+                                                                <div style="font-size: 8px; opacity: 0.8;">Full width container</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 fw-semibold mt-2">Wide - Default</p>
+                                                    <small class="text-muted">Container lebar penuh</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="container_style" value="boxed" 
+                                                       <?= ($appearance['container_style'] ?? '') == 'boxed' ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectContainerStyle(this)">
+                                                <div class="layout-card <?= ($appearance['container_style'] ?? '') == 'boxed' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="layout-preview">
+                                                        <div style="width: 100%; height: 60px; background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px;">
+                                                            <div style="width: 70%; height: 100%; background: linear-gradient(135deg, #667eea 20%, #764ba2 80%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                                                                <div style="text-align: center;">
+                                                                    <div>Boxed</div>
+                                                                    <div style="font-size: 7px; opacity: 0.9;">Linktree Style</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 fw-semibold mt-2">Boxed - Linktree Style 🔥</p>
+                                                    <small class="text-muted">Kotak kecil di tengah background</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
                                     <!-- Additional Options -->
                                     <hr class="my-4">
                                     <h6 class="fw-bold mb-3">
@@ -1372,6 +1431,28 @@
                                                 </label>
                                             </div>
                                         </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="enable_categories" 
+                                                       id="enableCategories" <?= ($appearance['enable_categories'] ?? 0) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="enableCategories">
+                                                    <strong>Link Categories</strong> <span class="badge bg-success">New!</span><br>
+                                                    <small class="text-muted">Group links by category</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="categoriesHelp" class="alert alert-info mt-3" style="display: <?= ($appearance['enable_categories'] ?? 0) ? 'block' : 'none' ?>;">
+                                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle"></i> Cara Menggunakan Categories</h6>
+                                        <ol class="mb-2 small">
+                                            <li>Buat kategori baru di <a href="categories.php" class="alert-link fw-bold">Categories Management</a></li>
+                                            <li>Edit link Anda dan assign ke kategori tertentu</li>
+                                            <li>Links akan digroup otomatis berdasarkan kategori di profile page</li>
+                                        </ol>
+                                        <p class="mb-0 small text-muted">
+                                            <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Kategori berguna untuk membagi link social media, work projects, portfolio, dll.
+                                        </p>
                                     </div>
 
                                     <hr class="my-4">
@@ -1816,6 +1897,17 @@
             const layout = radio.value;
             const previewContent = document.getElementById('previewContent');
             previewContent.className = 'preview-phone-content';
+        }
+        
+        // Container style selection (NEW)
+        function selectContainerStyle(radio) {
+            // Remove active from all cards
+            const cards = document.querySelectorAll('input[name="container_style"] ~ .layout-card');
+            cards.forEach(card => {
+                card.classList.remove('active');
+            });
+            // Add active to clicked card
+            radio.closest('label').querySelector('.layout-card').classList.add('active');
             
             if (layout === 'left') {
                 previewContent.style.textAlign = 'left';
