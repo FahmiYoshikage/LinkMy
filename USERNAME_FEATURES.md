@@ -1,14 +1,17 @@
 # 🔑 Eksplorasi Fungsi Username di LinkMy
 
 ## Current Usage
+
 Username saat ini digunakan untuk:
-- ✅ Login credentials (alternatif dari email)
-- ✅ Default profile title
-- ✅ Display name di dashboard
+
+-   ✅ Login credentials (alternatif dari email)
+-   ✅ Default profile title
+-   ✅ Display name di dashboard
 
 ## 🚀 Potential Features to Implement
 
-### 1. **Username-based Profile URL** 
+### 1. **Username-based Profile URL**
+
 ```
 Current: linkmy.iet.ovh/profile.php?slug=KagayakuVerse
 Proposed: linkmy.iet.ovh/@username atau linkmy.iet.ovh/u/username
@@ -20,6 +23,7 @@ Benefits:
 ```
 
 **Implementation:**
+
 ```php
 // Add .htaccess rewrite rule
 RewriteRule ^@([a-zA-Z0-9_-]+)$ profile.php?username=$1 [L,QSA]
@@ -32,6 +36,7 @@ $user = get_single_row("SELECT * FROM users WHERE username = ?", [$username], 's
 ---
 
 ### 2. **Username Badge System**
+
 ```
 Show verification badge next to username for:
 - ✨ Premium users
@@ -41,6 +46,7 @@ Show verification badge next to username for:
 ```
 
 **Database Addition:**
+
 ```sql
 ALTER TABLE users ADD COLUMN badge_type ENUM('none', 'verified', 'premium', 'top', 'featured') DEFAULT 'none';
 ALTER TABLE users ADD COLUMN badge_earned_at TIMESTAMP NULL;
@@ -49,6 +55,7 @@ ALTER TABLE users ADD COLUMN badge_earned_at TIMESTAMP NULL;
 ---
 
 ### 3. **Username in Analytics**
+
 ```
 Track performance by username:
 - Top usernames by clicks
@@ -59,6 +66,7 @@ Track performance by username:
 ---
 
 ### 4. **Username Search/Directory**
+
 ```
 Public directory page:
 linkmy.iet.ovh/discover
@@ -70,14 +78,15 @@ Features:
 ```
 
 **Implementation:**
+
 ```php
 // New page: discover.php
 $search = $_GET['q'] ?? '';
 $users = get_all_rows(
-    "SELECT username, profile_title, bio, total_clicks 
-     FROM users 
-     WHERE username LIKE ? AND is_public = 1 
-     ORDER BY total_clicks DESC 
+    "SELECT username, profile_title, bio, total_clicks
+     FROM users
+     WHERE username LIKE ? AND is_public = 1
+     ORDER BY total_clicks DESC
      LIMIT 50",
     ['%' . $search . '%'],
     's'
@@ -87,6 +96,7 @@ $users = get_all_rows(
 ---
 
 ### 5. **Username Mentions & Collaboration**
+
 ```
 Allow users to:
 - Mention other LinkMy users (@username)
@@ -97,6 +107,7 @@ Allow users to:
 ---
 
 ### 6. **Username-based QR Code**
+
 ```
 Generate custom QR codes with username embedded:
 - linkmy.iet.ovh/qr/username
@@ -105,6 +116,7 @@ Generate custom QR codes with username embedded:
 ```
 
 **Implementation:**
+
 ```php
 // Use PHP QR Code library
 require 'vendor/phpqrcode/qrlib.php';
@@ -114,6 +126,7 @@ QRcode::png("https://linkmy.iet.ovh/@username", "qrcodes/$username.png");
 ---
 
 ### 7. **Username History/Change Log**
+
 ```
 Track username changes:
 - Prevent username squatting
@@ -122,6 +135,7 @@ Track username changes:
 ```
 
 **Database:**
+
 ```sql
 CREATE TABLE username_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -136,6 +150,7 @@ CREATE TABLE username_history (
 ---
 
 ### 8. **Username in Email Templates**
+
 ```
 Personalize emails with username:
 - "Hi @username, welcome to LinkMy!"
@@ -146,6 +161,7 @@ Personalize emails with username:
 ---
 
 ### 9. **Username API Access**
+
 ```
 Public API endpoint:
 GET /api/user/username/{username}
@@ -160,6 +176,7 @@ Returns:
 ---
 
 ### 10. **Username-based Subdomains** (Advanced)
+
 ```
 Premium feature:
 username.linkmy.iet.ovh
@@ -171,13 +188,14 @@ Benefits:
 ```
 
 **Technical:**
+
 ```apache
 # Apache wildcard subdomain
 <VirtualHost *:80>
     ServerName linkmy.iet.ovh
     ServerAlias *.linkmy.iet.ovh
     DocumentRoot /var/www/html
-    
+
     # Extract subdomain as username
     RewriteCond %{HTTP_HOST} ^([^.]+)\.linkmy\.iet\.ovh$
     RewriteRule ^(.*)$ profile.php?username=%1 [L,QSA]
@@ -189,65 +207,65 @@ Benefits:
 ## 🎯 Priority Implementation Order
 
 **Phase 1 (Quick Wins):**
+
 1. Username-based URL (@username format)
 2. Username in email templates
 3. Username change cooldown
 
-**Phase 2 (Medium Effort):**
-4. Username badge system
-5. Username QR code generator
-6. Username search/directory
+**Phase 2 (Medium Effort):** 4. Username badge system 5. Username QR code generator 6. Username search/directory
 
-**Phase 3 (Advanced):**
-7. Username API
-8. Username mentions & collaboration
-9. Username-based subdomains (Premium)
+**Phase 3 (Advanced):** 7. Username API 8. Username mentions & collaboration 9. Username-based subdomains (Premium)
 
 ---
 
 ## 💡 Business Value
 
 ### Free Tier:
-- Basic username features
-- @username URLs
-- Public profile listing
+
+-   Basic username features
+-   @username URLs
+-   Public profile listing
 
 ### Premium Tier ($5/month):
-- Custom subdomain (username.linkmy.iet.ovh)
-- Verified badge
-- Priority in search results
-- Advanced analytics by username
-- Remove "Powered by LinkMy" branding
+
+-   Custom subdomain (username.linkmy.iet.ovh)
+-   Verified badge
+-   Priority in search results
+-   Advanced analytics by username
+-   Remove "Powered by LinkMy" branding
 
 ---
 
 ## 🔐 Security Considerations
 
 1. **Username Validation:**
-   - Alphanumeric + underscore/dash only
-   - Min 3 chars, max 30 chars
-   - No profanity or reserved words
-   - Case-insensitive uniqueness
+
+    - Alphanumeric + underscore/dash only
+    - Min 3 chars, max 30 chars
+    - No profanity or reserved words
+    - Case-insensitive uniqueness
 
 2. **Rate Limiting:**
-   - Max 1 username change per 30 days
-   - Max 5 profile views per minute (prevent scraping)
+
+    - Max 1 username change per 30 days
+    - Max 5 profile views per minute (prevent scraping)
 
 3. **Reserved Usernames:**
-   ```php
-   $reserved = ['admin', 'api', 'www', 'support', 'help', 'register', 'login', 'logout'];
-   ```
+    ```php
+    $reserved = ['admin', 'api', 'www', 'support', 'help', 'register', 'login', 'logout'];
+    ```
 
 ---
 
 ## 📊 Analytics Tracking
 
 Track username-related metrics:
-- Username change frequency
-- Most popular usernames (for trends)
-- Username search queries
-- Username-based referrals
-- Cross-promotion clicks
+
+-   Username change frequency
+-   Most popular usernames (for trends)
+-   Username search queries
+-   Username-based referrals
+-   Cross-promotion clicks
 
 ---
 

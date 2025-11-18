@@ -517,6 +517,9 @@
         </div>
     </div>
     
+    <!-- Bootstrap JS (Required for Modals) -->
+    <script src="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         function copyToClipboard() {
             const input = document.getElementById('profileLink');
