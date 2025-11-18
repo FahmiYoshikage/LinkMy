@@ -130,6 +130,12 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="categories.php">
+                            <i class="bi bi-folder-fill"></i> Categories
+                            <span class="badge bg-success ms-1">New</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link active" href="settings.php">
                             <i class="bi bi-gear-fill"></i> Settings
                         </a>

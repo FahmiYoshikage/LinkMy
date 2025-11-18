@@ -56,14 +56,21 @@ class DatabaseSessionHandler implements SessionHandlerInterface {
         $this->db_pass = defined('DB_PASS') ? DB_PASS : '';
         $this->db_name = defined('DB_NAME') ? DB_NAME : 'linkmy_db';
         
-        if ($connection && mysqli_ping($connection)) {
-            $this->conn = $connection;
-        }
+        // Don't rely on passed connection, we'll create our own
+        $this->conn = null;
     }
     
     private function getConnection() {
-        // Always create a fresh connection for session operations
-        if (!$this->conn || !@mysqli_ping($this->conn)) {
+        // Create a fresh connection for session operations if needed
+        try {
+            if (!$this->conn || @$this->conn->ping() === false) {
+                $this->conn = @mysqli_connect($this->db_host, $this->db_user, $this->db_pass, $this->db_name);
+                if ($this->conn) {
+                    mysqli_set_charset($this->conn, "utf8mb4");
+                }
+            }
+        } catch (Exception $e) {
+            // Connection is closed, recreate it
             $this->conn = @mysqli_connect($this->db_host, $this->db_user, $this->db_pass, $this->db_name);
             if ($this->conn) {
                 mysqli_set_charset($this->conn, "utf8mb4");

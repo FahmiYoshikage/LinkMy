@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
     } else {
+        // Get last order
         $last_order = get_single_row("SELECT MAX(display_order) as max_order FROM link_categories WHERE user_id = ?", [$current_user_id], 'i');
         $new_order = ($last_order['max_order'] ?? 0) + 1;
         
@@ -55,10 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
 if (isset($_GET['delete'])) {
     $category_id = intval($_GET['delete']);
     
+    // Check if category has links
     $check = get_single_row("SELECT COUNT(*) as count FROM links WHERE category_id = ?", [$category_id], 'i');
     
     if ($check['count'] > 0) {
-        $error = 'Kategori tidak bisa dihapus karena masih ada ' . $check['count'] . ' link!';
+        $error = 'Kategori tidak bisa dihapus karena masih ada ' . $check['count'] . ' link! Pindahkan atau hapus link terlebih dahulu.';
     } else {
         $query = "DELETE FROM link_categories WHERE category_id = ? AND user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
@@ -72,6 +74,7 @@ if (isset($_GET['delete'])) {
     }
 }
 
+// Get all categories
 $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link_categories c LEFT JOIN links l ON c.category_id = l.category_id WHERE c.user_id = ? GROUP BY c.category_id ORDER BY c.display_order ASC", [$current_user_id], 'i');
 ?>
 <!DOCTYPE html>
@@ -105,6 +108,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
             padding: 1.5rem;
             margin-bottom: 1rem;
             transition: all 0.3s;
+            cursor: move;
             position: relative;
             overflow: hidden;
         }
@@ -173,6 +177,13 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
             margin-bottom: 2rem;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
+        .stats-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -180,12 +191,12 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
 
     <div class="container my-5">
         <div class="header-card">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="fw-bold mb-2">
                         <i class="bi bi-folder-fill" style="color: #667eea;"></i> Link Categories
                     </h2>
-                    <p class="text-muted mb-0">Organize your links • <?= count($categories) ?> categories</p>
+                    <p class="text-muted mb-0">Organize your links by category • <?= count($categories) ?> categories</p>
                 </div>
                 <button class="btn btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
                     <i class="bi bi-plus-circle me-2"></i> New Category
@@ -223,13 +234,16 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                 <?php else: ?>
                     <?php foreach ($categories as $cat): ?>
                         <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color']) ?>;">
-                            <div class="d-flex align-items-center flex-wrap gap-3">
-                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color']) ?>;">
+                            <div class="d-flex align-items-center">
+                                <div class="drag-handle me-3" style="cursor: grab;">
+                                    <i class="bi bi-grip-vertical fs-3" style="color: <?= htmlspecialchars($cat['category_color']) ?>; opacity: 0.5;"></i>
+                                </div>
+                                <div class="category-color-preview me-3" style="background: <?= htmlspecialchars($cat['category_color']) ?>;">
                                     <i class="<?= htmlspecialchars($cat['category_icon']) ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <h5 class="mb-1 fw-bold"><?= htmlspecialchars($cat['category_name']) ?></h5>
-                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <div class="d-flex align-items-center gap-3">
                                         <span class="badge bg-light text-dark">
                                             <i class="bi bi-link-45deg"></i> <?= $cat['link_count'] ?> links
                                         </span>
@@ -292,35 +306,36 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                             <label class="form-label fw-semibold">Icon</label>
                             <input type="text" class="form-control" name="category_icon" id="add_category_icon" value="bi-folder" required readonly>
                             <div class="icon-picker mt-2">
-                                <div class="icon-option selected" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
-                                <div class="icon-option" data-icon="bi-heart-fill"><i class="bi bi-heart-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-star-fill"><i class="bi bi-star-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-briefcase-fill"><i class="bi bi-briefcase-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-camera-fill"><i class="bi bi-camera-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-music-note-beamed"><i class="bi bi-music-note-beamed"></i></div>
-                                <div class="icon-option" data-icon="bi-palette-fill"><i class="bi bi-palette-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-controller"><i class="bi bi-controller"></i></div>
-                                <div class="icon-option" data-icon="bi-shop"><i class="bi bi-shop"></i></div>
-                                <div class="icon-option" data-icon="bi-code-slash"><i class="bi bi-code-slash"></i></div>
-                                <div class="icon-option" data-icon="bi-book-fill"><i class="bi bi-book-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-trophy-fill"><i class="bi bi-trophy-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-lightning-fill"><i class="bi bi-lightning-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-fire"><i class="bi bi-fire"></i></div>
-                                <div class="icon-option" data-icon="bi-globe"><i class="bi bi-globe"></i></div>
-                                <div class="icon-option" data-icon="bi-people-fill"><i class="bi bi-people-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-chat-dots-fill"><i class="bi bi-chat-dots-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-image-fill"><i class="bi bi-image-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-film"><i class="bi bi-film"></i></div>
-                                <div class="icon-option" data-icon="bi-bag-fill"><i class="bi bi-bag-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-gift-fill"><i class="bi bi-gift-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-rocket-takeoff-fill"><i class="bi bi-rocket-takeoff-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-cup-hot-fill"><i class="bi bi-cup-hot-fill"></i></div>
+                                <div class="icon-option selected" data-icon="bi-folder" title="Folder"><i class="bi bi-folder"></i></div>
+                                <div class="icon-option" data-icon="bi-heart-fill" title="Heart"><i class="bi bi-heart-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-star-fill" title="Star"><i class="bi bi-star-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-briefcase-fill" title="Work"><i class="bi bi-briefcase-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-camera-fill" title="Camera"><i class="bi bi-camera-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-music-note-beamed" title="Music"><i class="bi bi-music-note-beamed"></i></div>
+                                <div class="icon-option" data-icon="bi-palette-fill" title="Art"><i class="bi bi-palette-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-controller" title="Gaming"><i class="bi bi-controller"></i></div>
+                                <div class="icon-option" data-icon="bi-shop" title="Shop"><i class="bi bi-shop"></i></div>
+                                <div class="icon-option" data-icon="bi-code-slash" title="Code"><i class="bi bi-code-slash"></i></div>
+                                <div class="icon-option" data-icon="bi-book-fill" title="Book"><i class="bi bi-book-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-trophy-fill" title="Trophy"><i class="bi bi-trophy-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-lightning-fill" title="Lightning"><i class="bi bi-lightning-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-fire" title="Fire"><i class="bi bi-fire"></i></div>
+                                <div class="icon-option" data-icon="bi-globe" title="Globe"><i class="bi bi-globe"></i></div>
+                                <div class="icon-option" data-icon="bi-people-fill" title="People"><i class="bi bi-people-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-chat-dots-fill" title="Chat"><i class="bi bi-chat-dots-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-image-fill" title="Image"><i class="bi bi-image-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-film" title="Video"><i class="bi bi-film"></i></div>
+                                <div class="icon-option" data-icon="bi-bag-fill" title="Shopping"><i class="bi bi-bag-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-gift-fill" title="Gift"><i class="bi bi-gift-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-rocket-takeoff-fill" title="Rocket"><i class="bi bi-rocket-takeoff-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-cup-hot-fill" title="Coffee"><i class="bi bi-cup-hot-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-currency-dollar" title="Money"><i class="bi bi-currency-dollar"></i></div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Color</label>
-                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="d-flex gap-2 align-items-center">
                                 <input type="color" class="form-control form-control-color" name="category_color" id="add_category_color" value="#667eea">
                                 <div class="flex-grow-1">
                                     <div class="btn-group w-100" role="group">
@@ -337,38 +352,6 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="category-color-preview" id="add_preview_box" style="background: #667eea; width: 50px; height: 50px; font-size: 1.2rem;">
-                                    <i class="bi-folder" id="add_preview_icon"></i>
-                                </div>
-                                <div>
-                                    <strong>Preview</strong>
-                                    <p class="mb-0 text-muted small">How it will look</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" name="add_category" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Save
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST">
-                    <input type="hidden" name="category_id" id="edit_category_id">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-pencil-fill"></i> Edit Category
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Category Name</label>
@@ -379,35 +362,36 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                             <label class="form-label fw-semibold">Icon</label>
                             <input type="text" class="form-control" name="category_icon" id="edit_category_icon" required readonly>
                             <div class="icon-picker mt-2" id="edit_icon_picker">
-                                <div class="icon-option" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
-                                <div class="icon-option" data-icon="bi-heart-fill"><i class="bi bi-heart-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-star-fill"><i class="bi bi-star-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-briefcase-fill"><i class="bi bi-briefcase-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-camera-fill"><i class="bi bi-camera-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-music-note-beamed"><i class="bi bi-music-note-beamed"></i></div>
-                                <div class="icon-option" data-icon="bi-palette-fill"><i class="bi bi-palette-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-controller"><i class="bi bi-controller"></i></div>
-                                <div class="icon-option" data-icon="bi-shop"><i class="bi bi-shop"></i></div>
-                                <div class="icon-option" data-icon="bi-code-slash"><i class="bi bi-code-slash"></i></div>
-                                <div class="icon-option" data-icon="bi-book-fill"><i class="bi bi-book-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-trophy-fill"><i class="bi bi-trophy-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-lightning-fill"><i class="bi bi-lightning-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-fire"><i class="bi bi-fire"></i></div>
-                                <div class="icon-option" data-icon="bi-globe"><i class="bi bi-globe"></i></div>
-                                <div class="icon-option" data-icon="bi-people-fill"><i class="bi bi-people-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-chat-dots-fill"><i class="bi bi-chat-dots-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-image-fill"><i class="bi bi-image-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-film"><i class="bi bi-film"></i></div>
-                                <div class="icon-option" data-icon="bi-bag-fill"><i class="bi bi-bag-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-gift-fill"><i class="bi bi-gift-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-rocket-takeoff-fill"><i class="bi bi-rocket-takeoff-fill"></i></div>
-                                <div class="icon-option" data-icon="bi-cup-hot-fill"><i class="bi bi-cup-hot-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-folder" title="Folder"><i class="bi bi-folder"></i></div>
+                                <div class="icon-option" data-icon="bi-heart-fill" title="Heart"><i class="bi bi-heart-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-star-fill" title="Star"><i class="bi bi-star-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-briefcase-fill" title="Work"><i class="bi bi-briefcase-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-camera-fill" title="Camera"><i class="bi bi-camera-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-music-note-beamed" title="Music"><i class="bi bi-music-note-beamed"></i></div>
+                                <div class="icon-option" data-icon="bi-palette-fill" title="Art"><i class="bi bi-palette-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-controller" title="Gaming"><i class="bi bi-controller"></i></div>
+                                <div class="icon-option" data-icon="bi-shop" title="Shop"><i class="bi bi-shop"></i></div>
+                                <div class="icon-option" data-icon="bi-code-slash" title="Code"><i class="bi bi-code-slash"></i></div>
+                                <div class="icon-option" data-icon="bi-book-fill" title="Book"><i class="bi bi-book-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-trophy-fill" title="Trophy"><i class="bi bi-trophy-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-lightning-fill" title="Lightning"><i class="bi bi-lightning-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-fire" title="Fire"><i class="bi bi-fire"></i></div>
+                                <div class="icon-option" data-icon="bi-globe" title="Globe"><i class="bi bi-globe"></i></div>
+                                <div class="icon-option" data-icon="bi-people-fill" title="People"><i class="bi bi-people-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-chat-dots-fill" title="Chat"><i class="bi bi-chat-dots-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-image-fill" title="Image"><i class="bi bi-image-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-film" title="Video"><i class="bi bi-film"></i></div>
+                                <div class="icon-option" data-icon="bi-bag-fill" title="Shopping"><i class="bi bi-bag-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-gift-fill" title="Gift"><i class="bi bi-gift-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-rocket-takeoff-fill" title="Rocket"><i class="bi bi-rocket-takeoff-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-cup-hot-fill" title="Coffee"><i class="bi bi-cup-hot-fill"></i></div>
+                                <div class="icon-option" data-icon="bi-currency-dollar" title="Money"><i class="bi bi-currency-dollar"></i></div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Color</label>
-                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="d-flex gap-2 align-items-center">
                                 <input type="color" class="form-control form-control-color" name="category_color" id="edit_category_color">
                                 <div class="flex-grow-1">
                                     <div class="btn-group w-100" role="group">
@@ -428,34 +412,33 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                                 </div>
                                 <div>
                                     <strong>Preview</strong>
-                                    <p class="mb-0 text-muted small">How it will look</p>
+                                    <p class="mb-0 text-muted small">How it will look on your profile</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" name="edit_category" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Update
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
+                    </div>iv class="mb-3">
+                            <label class="form-label fw-semibold">Icon (Bootstrap Icons)</label>
+                            <input type="text" class="form-control" name="category_icon" value="bi-folder" placeholder="bi-folder">
+                            <small class="text-muted">
+                                Browse: <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a>
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Color</label>
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Icon picker
+        // Icon picker functionality
         document.querySelectorAll('.icon-option').forEach(option => {
             option.addEventListener('click', function() {
                 const icon = this.dataset.icon;
                 const modal = this.closest('.modal');
                 const isEditModal = modal && modal.id === 'editModal';
                 
+                // Remove selected from siblings
                 this.parentElement.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
                 this.classList.add('selected');
                 
+                // Update input and preview
                 if (isEditModal) {
                     document.getElementById('edit_category_icon').value = icon;
                     document.getElementById('edit_preview_icon').className = icon;
@@ -466,7 +449,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
             });
         });
         
-        // Color presets
+        // Color preset functionality
         document.querySelectorAll('.color-preset').forEach(btn => {
             btn.addEventListener('click', function() {
                 const color = this.dataset.color;
@@ -482,7 +465,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
             });
         });
         
-        // Live color preview
+        // Live preview for color
         document.getElementById('add_category_color').addEventListener('input', function() {
             document.getElementById('add_preview_box').style.background = this.value;
         });
@@ -497,15 +480,68 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
             document.getElementById('edit_category_icon').value = cat.category_icon;
             document.getElementById('edit_category_color').value = cat.category_color;
             
+            // Update preview
             document.getElementById('edit_preview_icon').className = cat.category_icon;
             document.getElementById('edit_preview_box').style.background = cat.category_color;
             
+            // Select the correct icon
             document.querySelectorAll('#edit_icon_picker .icon-option').forEach(opt => {
                 opt.classList.remove('selected');
                 if (opt.dataset.icon === cat.category_icon) {
                     opt.classList.add('selected');
                 }
             });
+            
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+    </script>/div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST">
+                    <input type="hidden" name="category_id" id="edit_category_id">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-pencil-fill"></i> Edit Category
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Category Name</label>
+                            <input type="text" class="form-control" name="category_name" id="edit_category_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Icon</label>
+                            <input type="text" class="form-control" name="category_icon" id="edit_category_icon">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Color</label>
+                            <input type="color" class="form-control form-control-color" name="category_color" id="edit_category_color">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="edit_category" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editCategory(cat) {
+            document.getElementById('edit_category_id').value = cat.category_id;
+            document.getElementById('edit_category_name').value = cat.category_name;
+            document.getElementById('edit_category_icon').value = cat.category_icon;
+            document.getElementById('edit_category_color').value = cat.category_color;
             
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
