@@ -310,6 +310,7 @@
     <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body { background: #f5f7fa; }
@@ -1029,7 +1030,7 @@
                                 <h5 class="card-title fw-bold mb-4">
                                     <i class="bi bi-person-circle text-primary"></i> Profile Picture
                                 </h5>
-                                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                                <form method="POST" enctype="multipart/form-data" id="profilePicForm" onsubmit="showLoading()">
                                     <div class="upload-area mb-3 <?= !empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png' ? 'has-image' : '' ?>" onclick="document.getElementById('profilePicInput').click()">
                                         <?php if (!empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png'): ?>
                                             <img src="../uploads/profile_pics/<?= htmlspecialchars($appearance['profile_pic_filename']) ?>" id="profilePicPreview" class="image-preview">
@@ -1039,10 +1040,14 @@
                                             <small class="text-muted">Max 2MB • JPG, PNG, GIF, WebP</small>
                                         <?php endif; ?>
                                     </div>
-                                    <input type="file" id="profilePicInput" name="profile_pic" accept="image/*" style="display: none;" onchange="previewImage(this, 'profilePicPreview')">
-                                    <button type="submit" name="upload_profile" class="btn btn-primary btn-lg w-100">
+                                    <input type="file" id="profilePicInput" name="profile_pic" accept="image/*" style="display: none;" onchange="openCropModal(this)">
+                                    <input type="hidden" id="croppedImageData" name="cropped_image_data">
+                                    <button type="submit" name="upload_profile" class="btn btn-primary btn-lg w-100" id="uploadProfileBtn" disabled>
                                         <i class="bi bi-upload me-2"></i>Upload Profile Picture
                                     </button>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="bi bi-info-circle"></i> Foto akan otomatis di-crop menjadi lingkaran. Anda bisa adjust posisi dan zoom.
+                                    </small>
                                 </form>
                             </div>
                         </div>
@@ -1070,6 +1075,88 @@
                                         <i class="bi bi-upload me-2"></i>Upload Background Image
                                     </button>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crop Modal -->
+                    <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">
+                                        <i class="bi bi-scissors"></i> Crop & Adjust Profile Picture
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="resetCropper()"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <div class="crop-container" style="max-height: 400px; overflow: hidden; background: #f8f9fa; border-radius: 10px;">
+                                                <img id="cropImage" style="max-width: 100%; display: block;">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="d-flex flex-column gap-3">
+                                                <div>
+                                                    <h6 class="fw-semibold mb-2"><i class="bi bi-eye"></i> Preview</h6>
+                                                    <div class="text-center">
+                                                        <div id="cropPreview" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 3px solid #667eea; background: #f8f9fa;"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-semibold mb-2"><i class="bi bi-sliders"></i> Controls</h6>
+                                                    <div class="btn-group w-100 mb-2" role="group">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.zoom(0.1)" title="Zoom In">
+                                                            <i class="bi bi-zoom-in"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.zoom(-0.1)" title="Zoom Out">
+                                                            <i class="bi bi-zoom-out"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.rotate(-45)" title="Rotate Left">
+                                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.rotate(45)" title="Rotate Right">
+                                                            <i class="bi bi-arrow-clockwise"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="btn-group w-100 mb-2" role="group">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.move(-10, 0)" title="Move Left">
+                                                            <i class="bi bi-arrow-left"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.move(10, 0)" title="Move Right">
+                                                            <i class="bi bi-arrow-right"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.move(0, -10)" title="Move Up">
+                                                            <i class="bi bi-arrow-up"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cropper.move(0, 10)" title="Move Down">
+                                                            <i class="bi bi-arrow-down"></i>
+                                                        </button>
+                                                    </div>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="cropper.reset()" title="Reset">
+                                                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-3 mb-0">
+                                        <small>
+                                            <i class="bi bi-info-circle"></i> <strong>Tips:</strong> 
+                                            Gunakan scroll mouse untuk zoom, drag untuk move position. 
+                                            Foto akan otomatis di-crop menjadi lingkaran sempurna.
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="resetCropper()">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="applyCrop()">
+                                        <i class="bi bi-check-circle"></i> Apply & Save
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1416,7 +1503,134 @@
     </div>
 
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
+        // Cropper.js variables
+        let cropper = null;
+        let cropModal = null;
+        
+        function openCropModal(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file size
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File terlalu besar! Maksimal 2MB.');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('cropImage');
+                    image.src = e.target.result;
+                    
+                    // Open modal
+                    cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+                    cropModal.show();
+                    
+                    // Initialize cropper after modal is shown
+                    document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        cropper = new Cropper(image, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: 'move',
+                            autoCropArea: 1,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: false,
+                            cropBoxResizable: false,
+                            toggleDragModeOnDblclick: false,
+                            ready: function() {
+                                updateCropPreview();
+                            },
+                            crop: function() {
+                                updateCropPreview();
+                            }
+                        });
+                    }, { once: true });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function updateCropPreview() {
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                imageSmoothingQuality: 'high'
+            });
+            
+            const preview = document.getElementById('cropPreview');
+            preview.innerHTML = '';
+            
+            if (canvas) {
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL();
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                preview.appendChild(img);
+            }
+        }
+        
+        function applyCrop() {
+            if (!cropper) return;
+            
+            // Get cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 500,
+                height: 500,
+                imageSmoothingQuality: 'high'
+            });
+            
+            if (canvas) {
+                // Convert to blob and create file
+                canvas.toBlob(function(blob) {
+                    // Create a new File object
+                    const file = new File([blob], 'profile_pic.jpg', { type: 'image/jpeg' });
+                    
+                    // Create a new DataTransfer to update the file input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('profilePicInput').files = dataTransfer.files;
+                    
+                    // Update preview
+                    const previewImg = document.getElementById('profilePicPreview');
+                    if (previewImg) {
+                        previewImg.src = canvas.toDataURL();
+                        previewImg.style.display = 'block';
+                    } else {
+                        const uploadArea = document.querySelector('.upload-area');
+                        uploadArea.innerHTML = '<img src="' + canvas.toDataURL() + '" id="profilePicPreview" class="image-preview">';
+                        uploadArea.classList.add('has-image');
+                    }
+                    
+                    // Enable upload button
+                    document.getElementById('uploadProfileBtn').disabled = false;
+                    
+                    // Close modal
+                    cropModal.hide();
+                    resetCropper();
+                }, 'image/jpeg', 0.9);
+            }
+        }
+        
+        function resetCropper() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+        
         // Show loading overlay
         function showLoading() {
             document.getElementById('loadingOverlay').classList.add('show');
