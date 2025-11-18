@@ -2,7 +2,45 @@
 /**
  * Database Session Handler
  * Store sessions in MySQL instead of /tmp for Docker persistence
+ * 
+ * Usage: Call init_db_session() at the start of any PHP file before session_start()
  */
+
+// Initialize database session (call this before session_start)
+function init_db_session() {
+    global $conn;
+    
+    // Only initialize once
+    if (session_status() !== PHP_SESSION_NONE) {
+        return;
+    }
+    
+    // Check if sessions table exists
+    if (!isset($conn) || !$conn) {
+        require_once __DIR__ . '/db.php';
+    }
+    
+    $check = @mysqli_query($conn, "SHOW TABLES LIKE 'sessions'");
+    if (!$check || mysqli_num_rows($check) === 0) {
+        // Sessions table doesn't exist, use default file handler
+        error_log("Sessions table not found, using default file session handler");
+        return;
+    }
+    
+    // Set up database session handler
+    $handler = new DatabaseSessionHandler($conn);
+    session_set_save_handler($handler, true);
+    
+    // Extended session lifetime (7 days)
+    ini_set('session.gc_maxlifetime', 604800);
+    session_set_cookie_params([
+        'lifetime' => 604800,
+        'path' => '/',
+        'secure' => false, // Set true if using HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+}
 
 class DatabaseSessionHandler implements SessionHandlerInterface {
     private $conn;

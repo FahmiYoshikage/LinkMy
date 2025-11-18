@@ -613,8 +613,7 @@
                             <div class="mockup-screen">
                                 <div class="text-center">
                                     <div class="bg-white rounded-circle d-inline-block p-1 mb-3">
-                                        <img src="uploads/profiles/default-avatar.png" 
-                                             onerror="this.src='https://ui-avatars.com/api/?name=You&background=667eea&color=fff&size=100'"
+                                        <img src="https://ui-avatars.com/api/?name=You&background=667eea&color=fff&size=100" 
                                              class="rounded-circle" width="80" height="80" alt="Profile">
                                     </div>
                                     <h4 class="text-white fw-bold">@username</h4>

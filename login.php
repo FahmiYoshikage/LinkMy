@@ -1,5 +1,8 @@
 <?php
+require_once 'config/session_handler.php';
+init_db_session();
 session_start();
+
 if (isset($_SESSION['user_id'])) {
     header('Location: admin/dashboard.php');
     exit;
