@@ -1,32 +1,35 @@
 <?php
 session_start();
-require_once 'config/db.php';
+require_once "config/db.php";
 
-if (!isset($_SESSION['reg_email'])) {
-    header('Location: register.php');
-    exit;
+if (!isset($_SESSION["reg_email"])) {
+    header("Location: register.php");
+    exit();
 }
 
-$email = $_SESSION['reg_email'];
-$error = '';
-$success = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $otp_input = trim($_POST['otp_code']);
-    
-    $query = "SELECT * FROM email_verifications 
-              WHERE email = ? AND otp_code = ? 
-              AND expires_at > NOW() AND is_used = 0 
+$email = $_SESSION["reg_email"];
+$error = "";
+$success = "";
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $otp_input = trim($_POST["otp_code"]);
+
+    $query = "SELECT * FROM email_verifications
+              WHERE email = ? AND otp_code = ?
+              AND expires_at > NOW() AND is_used = 0
               ORDER BY id DESC LIMIT 1";
-    $otp_record = get_single_row($query, [$email, $otp_input], 'ss');
+    $otp_record = get_single_row($query, [$email, $otp_input], "ss");
     if ($otp_record) {
-        execute_query("UPDATE email_verifications SET is_used = 1 WHERE id = ?", 
-                     [$otp_record['id']], 'i');
-        
-        $_SESSION['email_verified'] = true;
-        header('Location: register.php');
-        exit;
+        execute_query(
+            "UPDATE email_verifications SET is_used = 1 WHERE id = ?",
+            [$otp_record["id"]],
+            "i",
+        );
+
+        $_SESSION["email_verified"] = true;
+        header("Location: register.php");
+        exit();
     } else {
-        $error = 'Kode OTP salah atau sudah kadaluarsa!';
+        $error = "Kode OTP salah atau sudah kadaluarsa!";
     }
 }
 ?>
@@ -71,25 +74,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="text-muted">Kami telah mengirim kode OTP ke:</p>
                 <p class="fw-bold"><?= htmlspecialchars($email) ?></p>
             </div>
-            
+
             <?php if ($error): ?>
                 <div class="alert alert-danger"><?= $error ?></div>
             <?php endif; ?>
-            
+
             <form method="POST">
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Masukkan Kode OTP</label>
-                    <input type="text" class="form-control otp-input" name="otp_code" 
-                           placeholder="000000" maxlength="6" pattern="[0-9]{6}" 
+                    <input type="text" class="form-control otp-input" name="otp_code"
+                           placeholder="000000" maxlength="6" pattern="[0-9]{6}"
                            required autofocus>
                     <small class="text-muted">Kode 6 digit yang dikirim ke email Anda</small>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary w-100 mb-3">
                     <i class="bi bi-check-circle"></i> Verifikasi
                 </button>
             </form>
-            
+
             <div class="text-center">
                 <p class="mb-2 small">Tidak menerima kode?</p>
                 <a href="resend-otp.php" class="btn btn-outline-secondary btn-sm">
@@ -101,19 +104,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    
+
     <script>
         // Countdown timer
         let timeLeft = 600; // 10 minutes
         const timerElement = document.getElementById('timer');
-        
+
         setInterval(() => {
             if (timeLeft > 0) {
                 timeLeft--;
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
-                timerElement.textContent = 
-                    String(minutes).padStart(2, '0') + ':' + 
+                timerElement.textContent =
+                    String(minutes).padStart(2, '0') + ':' +
                     String(seconds).padStart(2, '0');
             } else {
                 timerElement.textContent = 'Kadaluarsa!';
