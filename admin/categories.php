@@ -89,7 +89,6 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body { background: #f5f7fa; }
-        .navbar-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .card { border: none; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
         .category-card {
             border: 2px solid #e9ecef;

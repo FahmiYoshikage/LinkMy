@@ -403,6 +403,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="categories.php">
+                            <i class="bi bi-folder-fill"></i> Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="settings.php">
                             <i class="bi bi-gear-fill"></i> Settings
                         </a>

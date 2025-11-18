@@ -251,17 +251,34 @@
         <?php endif; ?>
         
         .profile-container {
-            max-width: <?= $profile_layout === 'minimal' ? '480px' : '680px' ?>;
-            margin: 0 auto;
-            padding: 0 1rem;
-            <?= $profile_layout === 'left' ? 'text-align: left;' : '' ?>
             <?php if ($container_style === 'boxed'): ?>
-            /* Linktree-style boxed layout */
+            /* Linktree-style: Small centered box on desktop */
+            max-width: 480px;
             background: <?= $theme_name === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(30,30,30,0.98)' ?>;
-            border-radius: 20px;
-            padding: 2.5rem 1.5rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-radius: 25px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            margin: 2rem auto;
+            <?php else: ?>
+            /* Wide layout: Full width container */
+            max-width: <?= $profile_layout === 'minimal' ? '480px' : '680px' ?>;
+            padding: 0 1rem;
             <?php endif; ?>
+            margin-left: auto;
+            margin-right: auto;
+            <?= $profile_layout === 'left' ? 'text-align: left;' : '' ?>
+        }
+        
+        /* Mobile responsiveness for boxed */
+        @media (max-width: 576px) {
+            .profile-container {
+                <?php if ($container_style === 'boxed'): ?>
+                max-width: 100%;
+                margin: 0.5rem;
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
+                <?php endif; ?>
+            }
         }
         
         .profile-header {
