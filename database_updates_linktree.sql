@@ -20,10 +20,29 @@ CREATE TABLE IF NOT EXISTS link_categories (
     INDEX idx_user_order (user_id, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Add category_id to links table
-ALTER TABLE links 
-ADD COLUMN category_id INT NULL COMMENT 'NULL for uncategorized' AFTER user_id,
-ADD FOREIGN KEY (category_id) REFERENCES link_categories(category_id) ON DELETE SET NULL;
+-- 3. Add category_id to links table (SAFE - checks if exists)
+SET @exist := (SELECT COUNT(*) FROM information_schema.COLUMNS 
+               WHERE TABLE_SCHEMA = DATABASE() 
+               AND TABLE_NAME = 'links' 
+               AND COLUMN_NAME = 'category_id');
+
+SET @sqlstmt := IF(@exist = 0, 
+    'ALTER TABLE links ADD COLUMN category_id INT NULL COMMENT ''NULL for uncategorized'' AFTER user_id',
+    'SELECT ''Column category_id already exists'' AS message');
+PREPARE stmt FROM @sqlstmt;
+EXECUTE stmt;
+
+-- Add foreign key if not exists
+SET @fk_exist := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS 
+                  WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'links' 
+                  AND CONSTRAINT_NAME = 'links_ibfk_category');
+
+SET @fk_stmt := IF(@fk_exist = 0,
+    'ALTER TABLE links ADD CONSTRAINT links_ibfk_category FOREIGN KEY (category_id) REFERENCES link_categories(category_id) ON DELETE SET NULL',
+    'SELECT ''Foreign key already exists'' AS message');
+PREPARE fk_stmt FROM @fk_stmt;
+EXECUTE fk_stmt;
 
 -- 4. Create view for profile with categories
 CREATE OR REPLACE VIEW v_public_page_data_with_categories AS

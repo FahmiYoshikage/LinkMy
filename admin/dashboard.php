@@ -18,17 +18,37 @@
             $last_order = $last_order_row['max_order'] ?? 0;
             $new_order = $last_order + 1;
 
-            $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = mysqli_prepare($conn, $query);
-            if ($stmt){
-                mysqli_stmt_bind_param($stmt, 'isssii', $current_user_id, $title, $url, $icon_class, $category_id, $new_order);
-                if (mysqli_stmt_execute($stmt)){
-                    $success = 'Link berhasil ditambahkan';
+            // Check if category_id column exists
+            $check_col = mysqli_query($conn, "SHOW COLUMNS FROM links LIKE 'category_id'");
+            $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
+
+            if ($has_categories) {
+                $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $query);
+                if ($stmt){
+                    mysqli_stmt_bind_param($stmt, 'isssii', $current_user_id, $title, $url, $icon_class, $category_id, $new_order);
+                    if (mysqli_stmt_execute($stmt)){
+                        $success = 'Link berhasil ditambahkan';
+                    } else {
+                        $error = 'Gagal menambahkan link';
+                    }
                 } else {
-                    $error = 'Gagal menambahkan link';
+                    $error = 'Gagal menyiapkan statement';
                 }
             } else {
-                $error = 'Gagal menyiapkan statement';
+                // Fallback to old schema without category_id
+                $query = "INSERT INTO links (user_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $query);
+                if ($stmt){
+                    mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $title, $url, $icon_class, $new_order);
+                    if (mysqli_stmt_execute($stmt)){
+                        $success = 'Link berhasil ditambahkan';
+                    } else {
+                        $error = 'Gagal menambahkan link';
+                    }
+                } else {
+                    $error = 'Gagal menyiapkan statement';
+                }
             }
         }
     }
@@ -43,9 +63,20 @@
         if (empty($title) || empty($url)) {
             $error = 'Judul dan URL harus diisi!';
         } else {
-            $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND user_id = ?";
-            $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $current_user_id);
+            // Check if category_id column exists
+            $check_col = mysqli_query($conn, "SHOW COLUMNS FROM links LIKE 'category_id'");
+            $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
+
+            if ($has_categories) {
+                $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND user_id = ?";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $current_user_id);
+            } else {
+                // Fallback to old schema
+                $query = "UPDATE links SET title = ?, url = ?, icon_class = ? WHERE link_id = ? AND user_id = ?";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'sssii', $title, $url, $icon_class, $link_id, $current_user_id);
+            }
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Link berhasil diupdate!';
@@ -97,12 +128,22 @@
         'i'
     );
     
-    // Get user categories for dropdown
-    $user_categories = get_all_rows(
-        "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE user_id = ? ORDER BY display_order ASC",
-        [$current_user_id],
-        'i'
-    );
+    // Get user categories for dropdown (with error handling)
+    $user_categories = [];
+    try {
+        // Check if table exists first
+        $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'link_categories'");
+        if ($check_table && mysqli_num_rows($check_table) > 0) {
+            $user_categories = get_all_rows(
+                "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE user_id = ? ORDER BY display_order ASC",
+                [$current_user_id],
+                'i'
+            ) ?? [];
+        }
+    } catch (Exception $e) {
+        // Silently fail if categories not available yet
+        $user_categories = [];
+    }
 
     // Get daily clicks for last 7 days
     $daily_clicks = get_all_rows(
