@@ -88,9 +88,26 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
         body { 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             min-height: 100vh;
-            padding-top: 80px;
         }
-        .container { padding-bottom: 3rem; }
+        
+        /* Fix navbar positioning */
+        .navbar-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+        }
+        
+        /* Add padding to body to account for fixed navbar */
+        body {
+            padding-top: 76px;
+        }
+        
+        .container { 
+            padding-bottom: 3rem;
+            margin-top: 1rem;
+        }
         .card { 
             border: none; 
             border-radius: 20px; 
