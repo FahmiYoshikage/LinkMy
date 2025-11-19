@@ -206,9 +206,6 @@
             background: #f5f7fa;
             padding-top: 76px;
         }
-        .navbar-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
         .card {
             border: none;
             border-radius: 15px;
