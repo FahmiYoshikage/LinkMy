@@ -405,6 +405,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="categories.php">
                             <i class="bi bi-folder-fill"></i> Categories
+                            <span class="badge bg-success ms-1">New</span>
                         </a>
                     </li>
                     <li class="nav-item">

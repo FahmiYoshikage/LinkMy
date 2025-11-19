@@ -53,13 +53,3 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </div>
     </div>
 </nav>
-
-<style>
-.navbar-custom {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-.navbar-custom .nav-link.active {
-    background: rgba(255,255,255,0.2);
-    border-radius: 5px;
-}
-</style>
