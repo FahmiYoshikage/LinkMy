@@ -108,15 +108,21 @@
         'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
     ];
 
-    mysqli_data_seek($result, 0);
-
-    // Fetch links and group by category if enabled
+    // Fetch links separately
+    $links_query = "SELECT l.*, c.name as category_name, c.icon as category_icon, 
+                    c.color as category_color, c.is_expanded as category_expanded
+                    FROM links l
+                    LEFT JOIN categories c ON l.category_id = c.id
+                    WHERE l.user_id = ? AND l.is_visible = 1
+                    ORDER BY l.display_order ASC";
+    $links_result = execute_query($links_query, [$user_id], 'i');
+    
     $links = [];
     $links_by_category = [];
     $categories = [];
     
-    while ($row = mysqli_fetch_assoc($result)){
-        if (!empty($row['link_id'])){
+    if ($links_result) {
+        while ($row = mysqli_fetch_assoc($links_result)){
             $links[] = $row;
             
             if ($enable_categories && $row['category_id']) {
