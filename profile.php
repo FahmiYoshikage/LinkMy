@@ -1,5 +1,11 @@
 <?php
+    // Enable error reporting for debugging
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
+    
     require_once 'config/db.php';
+    
     $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
     if (empty($slug)){
         die('Page not found!');
