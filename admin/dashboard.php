@@ -412,7 +412,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../profile.php?slug=<?= $current_page_slug ?>" target="_blank">
+                        <a class="nav-link" href="../<?= $current_page_slug ?>" target="_blank">
                             <i class="bi bi-eye-fill"></i> View Page
                         </a>
                     </li>

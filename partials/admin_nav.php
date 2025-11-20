@@ -40,7 +40,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="../profile.php?slug=<?= htmlspecialchars($current_page_slug) ?>" target="_blank">
+                    <a class="nav-link" href="../<?= htmlspecialchars($current_page_slug) ?>" target="_blank">
                         <i class="bi bi-eye-fill"></i> View Page
                     </a>
                 </li>

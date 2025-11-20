@@ -837,7 +837,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../profile.php?slug=<?= $current_page_slug ?>" target="_blank">
+                        <a class="nav-link" href="../<?= $current_page_slug ?>" target="_blank">
                             <i class="bi bi-eye-fill"></i> View Page
                         </a>
                     </li>
@@ -1559,7 +1559,7 @@
                                                    id="boxedLayoutEnable" value="1" 
                                                    <?= ($appearance['boxed_layout'] ?? 0) ? 'checked' : '' ?>>
                                             <label class="form-check-label fw-semibold" for="boxedLayoutEnable">
-                                                <i class="bi bi-toggle-on text-success"></i> Enable Boxed Layout
+                                                Enable Boxed Layout
                                             </label>
                                         </div>
                                         <small class="text-muted d-block mt-2">
@@ -1635,6 +1635,20 @@
                                             <div class="card-body">
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Container Background</label>
+                                                    
+                                                    <!-- Quick Presets -->
+                                                    <div class="btn-group w-100 mb-2" role="group">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('#ffffff')">
+                                                            <i class="bi bi-circle-fill text-white border"></i> White
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('current')">
+                                                            <i class="bi bi-palette-fill"></i> Current BG
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('rgba(255,255,255,0.9)')">
+                                                            <i class="bi bi-transparency"></i> Glass
+                                                        </button>
+                                                    </div>
+                                                    
                                                     <div class="input-group">
                                                         <input type="color" class="form-control form-control-color" 
                                                                name="container_bg_color" id="containerBgColor"
@@ -2413,6 +2427,39 @@
         document.getElementById('containerShadow')?.addEventListener('change', function() {
             updateBoxedPreview();
         });
+        
+        // Set container background (with 'current' background option)
+        function setContainerBg(value) {
+            const containerBgColor = document.getElementById('containerBgColor');
+            const containerBgColorHex = document.getElementById('containerBgColorHex');
+            
+            if (value === 'current') {
+                // Get current background from gradient preset or custom bg
+                const gradientPreset = document.querySelector('input[name="gradient_preset"]:checked');
+                const customBg = document.getElementById('customBgColor');
+                
+                if (gradientPreset && gradientPreset.value) {
+                    // Use gradient - set to white with transparency for better visibility
+                    value = 'rgba(255, 255, 255, 0.95)';
+                    alert('💡 Tip: Container background set to semi-transparent white for better readability with gradient outer background');
+                } else if (customBg && customBg.value) {
+                    value = customBg.value;
+                } else {
+                    value = '#ffffff';
+                }
+            }
+            
+            // Handle rgba values
+            if (value.startsWith('rgba')) {
+                containerBgColorHex.value = value;
+                // Can't set rgba to color input, so keep it at current
+            } else {
+                containerBgColor.value = value;
+                containerBgColorHex.value = value;
+            }
+            
+            updateBoxedPreview();
+        }
         
         // Scroll to alert and switch to Advanced tab after page load (if success/error exists)
         window.addEventListener('DOMContentLoaded', function() {
