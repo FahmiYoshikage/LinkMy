@@ -115,18 +115,40 @@
     ];
 
     // Fetch links separately using mysqli_prepare
-    $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
-                    c.name as category_name, c.icon as category_icon, 
-                    c.color as category_color, c.is_expanded as category_expanded
-                    FROM links l
-                    LEFT JOIN categories c ON l.category_id = c.id
-                    WHERE l.user_id = ? AND l.is_visible = 1
-                    ORDER BY l.display_order ASC";
+    // Check if categories table exists first
+    $categories_exists = false;
+    $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories'");
+    if ($check_table && mysqli_num_rows($check_table) > 0) {
+        $categories_exists = true;
+    }
+    
+    // Build query based on whether categories table exists
+    if ($categories_exists && $enable_categories) {
+        $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
+                        c.name as category_name, c.icon as category_icon, 
+                        c.color as category_color, c.is_expanded as category_expanded
+                        FROM links l
+                        LEFT JOIN categories c ON l.category_id = c.id
+                        WHERE l.user_id = ? AND l.is_visible = 1
+                        ORDER BY l.display_order ASC";
+    } else {
+        // Simple query without categories
+        $links_query = "SELECT id as link_id, title, url, icon, display_order
+                        FROM links
+                        WHERE user_id = ? AND is_visible = 1
+                        ORDER BY display_order ASC";
+    }
     
     $stmt_links = mysqli_prepare($conn, $links_query);
-    mysqli_stmt_bind_param($stmt_links, 'i', $user_id);
-    mysqli_stmt_execute($stmt_links);
-    $links_result = mysqli_stmt_get_result($stmt_links);
+    if (!$stmt_links) {
+        // If query fails, show error and continue without links
+        error_log("Error preparing links query: " . mysqli_error($conn));
+        $links_result = false;
+    } else {
+        mysqli_stmt_bind_param($stmt_links, 'i', $user_id);
+        mysqli_stmt_execute($stmt_links);
+        $links_result = mysqli_stmt_get_result($stmt_links);
+    }
     
     $links = [];
     $links_by_category = [];
@@ -136,17 +158,17 @@
         while ($row = mysqli_fetch_assoc($links_result)){
             $links[] = $row;
             
-            if ($enable_categories && $row['category_id']) {
+            if ($categories_exists && $enable_categories && isset($row['category_id']) && $row['category_id']) {
                 $cat_id = $row['category_id'];
                 
-                // Store category info
+                // Store category info (only if we have category data)
                 if (!isset($categories[$cat_id])) {
                     $categories[$cat_id] = [
                         'category_id' => $cat_id,
-                        'category_name' => $row['category_name'],
-                        'category_icon' => $row['category_icon'],
-                        'category_color' => $row['category_color'],
-                        'category_expanded' => $row['category_expanded']
+                        'category_name' => $row['category_name'] ?? 'Uncategorized',
+                        'category_icon' => $row['category_icon'] ?? 'bi-folder',
+                        'category_color' => $row['category_color'] ?? '#667eea',
+                        'category_expanded' => $row['category_expanded'] ?? 1
                     ];
                 }
                 
@@ -156,7 +178,7 @@
                 }
                 $links_by_category[$cat_id][] = $row;
             } else {
-                // Uncategorized links
+                // Uncategorized links (default)
                 if (!isset($links_by_category[0])) {
                     $links_by_category[0] = [];
                 }
