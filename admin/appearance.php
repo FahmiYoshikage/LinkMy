@@ -282,7 +282,7 @@
                   container_shadow = ?
                   WHERE user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'isssssiii', 
+        mysqli_stmt_bind_param($stmt, 'isssssiiii', 
             $boxed_layout, $outer_bg_type, $outer_bg_color, 
             $outer_bg_gradient_start, $outer_bg_gradient_end, 
             $container_bg_color, $container_max_width, 
