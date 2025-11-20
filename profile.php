@@ -109,13 +109,22 @@
     ];
 
     // Fetch links separately
-    $links_query = "SELECT l.*, c.name as category_name, c.icon as category_icon, 
+    $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
+                    c.name as category_name, c.icon as category_icon, 
                     c.color as category_color, c.is_expanded as category_expanded
                     FROM links l
                     LEFT JOIN categories c ON l.category_id = c.id
                     WHERE l.user_id = ? AND l.is_visible = 1
                     ORDER BY l.display_order ASC";
-    $links_result = execute_query($links_query, [$user_id], 'i');
+    
+    $stmt = mysqli_prepare($conn, $links_query);
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, 'i', $user_id);
+        mysqli_stmt_execute($stmt);
+        $links_result = mysqli_stmt_get_result($stmt);
+    } else {
+        $links_result = false;
+    }
     
     $links = [];
     $links_by_category = [];
@@ -152,6 +161,7 @@
                 $links_by_category[0][] = $row;
             }
         }
+        mysqli_stmt_close($stmt);
     }
 
     // Determine background based on priority: gradient_preset > custom_bg_color > theme_name
