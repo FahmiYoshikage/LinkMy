@@ -80,6 +80,7 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
     <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body {
             background: #f5f7fa;
