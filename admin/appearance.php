@@ -258,6 +258,46 @@
         }
     }
 
+    // Handle Boxed Layout Update
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_boxed_layout'])) {
+        $boxed_layout = isset($_POST['boxed_layout']) ? 1 : 0;
+        $outer_bg_type = $_POST['outer_bg_type'] ?? 'gradient';
+        $outer_bg_color = $_POST['outer_bg_color'] ?? '#667eea';
+        $outer_bg_gradient_start = $_POST['outer_bg_gradient_start'] ?? '#667eea';
+        $outer_bg_gradient_end = $_POST['outer_bg_gradient_end'] ?? '#764ba2';
+        $container_bg_color = $_POST['container_bg_color'] ?? '#ffffff';
+        $container_max_width = intval($_POST['container_max_width'] ?? 480);
+        $container_border_radius = intval($_POST['container_border_radius'] ?? 30);
+        $container_shadow = isset($_POST['container_shadow']) ? 1 : 0;
+        
+        $query = "UPDATE appearance SET 
+                  boxed_layout = ?,
+                  outer_bg_type = ?,
+                  outer_bg_color = ?,
+                  outer_bg_gradient_start = ?,
+                  outer_bg_gradient_end = ?,
+                  container_bg_color = ?,
+                  container_max_width = ?,
+                  container_border_radius = ?,
+                  container_shadow = ?
+                  WHERE user_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'isssssiii', 
+            $boxed_layout, $outer_bg_type, $outer_bg_color, 
+            $outer_bg_gradient_start, $outer_bg_gradient_end, 
+            $container_bg_color, $container_max_width, 
+            $container_border_radius, $container_shadow, $current_user_id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success = '✅ Boxed Layout berhasil disimpan!';
+            $appearance = get_single_row("SELECT * FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
+            $_SESSION['show_boxed_tab'] = true;
+        } else {
+            $error = 'Gagal menyimpan Boxed Layout!';
+        }
+        mysqli_stmt_close($stmt);
+    }
+
     // Fetch gradient presets
     $gradient_presets = get_all_rows("SELECT * FROM gradient_presets WHERE is_default = 1 ORDER BY preset_name", [], '');
     
@@ -888,7 +928,12 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#advanced-tab">
                             <i class="bi bi-magic me-2"></i>Advanced
-                            <span class="badge bg-primary ms-1">New</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#boxed-layout-tab">
+                            <i class="bi bi-bounding-box me-2"></i>Boxed Layout
+                            <span class="badge bg-success ms-1">New</span>
                         </a>
                     </li>
                 </ul>
@@ -1491,6 +1536,182 @@
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boxed Layout Tab -->
+                    <div class="tab-pane fade" id="boxed-layout-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3">
+                                    <i class="bi bi-bounding-box text-primary"></i> Boxed Layout Mode
+                                </h5>
+                                <p class="text-muted mb-4">
+                                    Tampilkan profil Anda dalam kotak dengan background luar yang dapat dikustomisasi - gaya Linktree!
+                                </p>
+
+                                <form method="POST" id="boxedLayoutForm">
+                                    <!-- Enable Boxed Layout -->
+                                    <div class="mb-4 p-3 bg-light rounded">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="boxed_layout" 
+                                                   id="boxedLayoutEnable" value="1" 
+                                                   <?= ($appearance['boxed_layout'] ?? 0) ? 'checked' : '' ?>>
+                                            <label class="form-check-label fw-semibold" for="boxedLayoutEnable">
+                                                <i class="bi bi-toggle-on text-success"></i> Enable Boxed Layout
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">
+                                            Aktifkan untuk menampilkan konten dalam kotak dengan background luar
+                                        </small>
+                                    </div>
+
+                                    <div id="boxedLayoutSettings" style="display: <?= ($appearance['boxed_layout'] ?? 0) ? 'block' : 'none' ?>;">
+                                        <!-- Outer Background Settings -->
+                                        <div class="card mb-3 border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <i class="bi bi-image"></i> Outer Background
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Background Type</label>
+                                                    <select class="form-select" name="outer_bg_type" id="outerBgType">
+                                                        <option value="color" <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'color' ? 'selected' : '' ?>>Solid Color</option>
+                                                        <option value="gradient" <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'selected' : '' ?>>Gradient</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Solid Color Option -->
+                                                <div id="solidColorOption" style="display: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'color' ? 'block' : 'none' ?>;">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Background Color</label>
+                                                        <div class="input-group">
+                                                            <input type="color" class="form-control form-control-color" 
+                                                                   name="outer_bg_color" id="outerBgColor"
+                                                                   value="<?= $appearance['outer_bg_color'] ?? '#667eea' ?>">
+                                                            <input type="text" class="form-control" 
+                                                                   value="<?= $appearance['outer_bg_color'] ?? '#667eea' ?>"
+                                                                   id="outerBgColorHex" readonly>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Gradient Option -->
+                                                <div id="gradientOption" style="display: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'block' : 'none' ?>;">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">Gradient Start</label>
+                                                            <div class="input-group">
+                                                                <input type="color" class="form-control form-control-color" 
+                                                                       name="outer_bg_gradient_start" id="gradientStart"
+                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#667eea' ?>">
+                                                                <input type="text" class="form-control" 
+                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#667eea' ?>"
+                                                                       id="gradientStartHex" readonly>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">Gradient End</label>
+                                                            <div class="input-group">
+                                                                <input type="color" class="form-control form-control-color" 
+                                                                       name="outer_bg_gradient_end" id="gradientEnd"
+                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#764ba2' ?>">
+                                                                <input type="text" class="form-control" 
+                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#764ba2' ?>"
+                                                                       id="gradientEndHex" readonly>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Container Settings -->
+                                        <div class="card mb-3 border-info">
+                                            <div class="card-header bg-info text-white">
+                                                <i class="bi bi-box"></i> Container Settings
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Container Background</label>
+                                                    <div class="input-group">
+                                                        <input type="color" class="form-control form-control-color" 
+                                                               name="container_bg_color" id="containerBgColor"
+                                                               value="<?= $appearance['container_bg_color'] ?? '#ffffff' ?>">
+                                                        <input type="text" class="form-control" 
+                                                               value="<?= $appearance['container_bg_color'] ?? '#ffffff' ?>"
+                                                               id="containerBgColorHex" readonly>
+                                                    </div>
+                                                    <small class="text-muted">Warna latar belakang kotak konten</small>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Container Width</label>
+                                                    <div class="input-group">
+                                                        <input type="range" class="form-range" name="container_max_width" 
+                                                               id="containerWidth" min="320" max="600" step="10"
+                                                               value="<?= $appearance['container_max_width'] ?? 480 ?>">
+                                                        <span class="input-group-text" id="containerWidthValue">
+                                                            <?= $appearance['container_max_width'] ?? 480 ?>px
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted">Lebar maksimal container (320-600px)</small>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Border Radius</label>
+                                                    <div class="input-group">
+                                                        <input type="range" class="form-range" name="container_border_radius" 
+                                                               id="containerRadius" min="0" max="50" step="5"
+                                                               value="<?= $appearance['container_border_radius'] ?? 30 ?>">
+                                                        <span class="input-group-text" id="containerRadiusValue">
+                                                            <?= $appearance['container_border_radius'] ?? 30 ?>px
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted">Kelengkungan sudut container</small>
+                                                </div>
+
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" name="container_shadow" 
+                                                           id="containerShadow" value="1"
+                                                           <?= ($appearance['container_shadow'] ?? 1) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="containerShadow">
+                                                        <strong>Container Shadow</strong><br>
+                                                        <small class="text-muted">Tambahkan bayangan pada container</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Preview Box -->
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="fw-bold mb-3 text-center">
+                                                    <i class="bi bi-eye"></i> Preview
+                                                </h6>
+                                                <div id="boxedPreview" class="mx-auto" style="height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#667eea') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#764ba2') . ')' : ($appearance['outer_bg_color'] ?? '#667eea') ?>;">
+                                                    <div style="width: <?= $appearance['container_max_width'] ?? 480 ?>px; max-width: 90%; background: <?= $appearance['container_bg_color'] ?? '#ffffff' ?>; padding: 30px; border-radius: <?= $appearance['container_border_radius'] ?? 30 ?>px; <?= ($appearance['container_shadow'] ?? 1) ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.2);' : '' ?>">
+                                                        <div class="text-center">
+                                                            <div class="bg-secondary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px;"></div>
+                                                            <h6 class="fw-bold">Your Name</h6>
+                                                            <p class="text-muted small mb-3">Your bio here</p>
+                                                            <div class="bg-light rounded p-2 mb-2">Sample Link</div>
+                                                            <div class="bg-light rounded p-2">Sample Link</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <input type="hidden" name="update_boxed_layout" value="1">
+                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                        <i class="bi bi-save me-2"></i>Save Boxed Layout Settings
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -2111,6 +2332,88 @@
             });
         }
         
+        // ===== BOXED LAYOUT JAVASCRIPT =====
+        
+        // Toggle boxed layout settings visibility
+        document.getElementById('boxedLayoutEnable')?.addEventListener('change', function() {
+            document.getElementById('boxedLayoutSettings').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Toggle background type options
+        document.getElementById('outerBgType')?.addEventListener('change', function() {
+            if (this.value === 'color') {
+                document.getElementById('solidColorOption').style.display = 'block';
+                document.getElementById('gradientOption').style.display = 'none';
+                updateBoxedPreview();
+            } else {
+                document.getElementById('solidColorOption').style.display = 'none';
+                document.getElementById('gradientOption').style.display = 'block';
+                updateBoxedPreview();
+            }
+        });
+        
+        // Update preview for all boxed layout inputs
+        function updateBoxedPreview() {
+            const preview = document.getElementById('boxedPreview');
+            const bgType = document.getElementById('outerBgType').value;
+            
+            if (bgType === 'gradient') {
+                const start = document.getElementById('gradientStart').value;
+                const end = document.getElementById('gradientEnd').value;
+                preview.style.background = `linear-gradient(135deg, ${start}, ${end})`;
+            } else {
+                const color = document.getElementById('outerBgColor').value;
+                preview.style.background = color;
+            }
+            
+            const containerBg = document.getElementById('containerBgColor').value;
+            const containerWidth = document.getElementById('containerWidth').value;
+            const containerRadius = document.getElementById('containerRadius').value;
+            const containerShadow = document.getElementById('containerShadow').checked;
+            
+            const container = preview.querySelector('div');
+            container.style.background = containerBg;
+            container.style.width = containerWidth + 'px';
+            container.style.borderRadius = containerRadius + 'px';
+            container.style.boxShadow = containerShadow ? '0 10px 40px rgba(0,0,0,0.2)' : 'none';
+        }
+        
+        // Color pickers with hex display for boxed layout
+        document.getElementById('outerBgColor')?.addEventListener('input', function() {
+            document.getElementById('outerBgColorHex').value = this.value;
+            updateBoxedPreview();
+        });
+        
+        document.getElementById('gradientStart')?.addEventListener('input', function() {
+            document.getElementById('gradientStartHex').value = this.value;
+            updateBoxedPreview();
+        });
+        
+        document.getElementById('gradientEnd')?.addEventListener('input', function() {
+            document.getElementById('gradientEndHex').value = this.value;
+            updateBoxedPreview();
+        });
+        
+        document.getElementById('containerBgColor')?.addEventListener('input', function() {
+            document.getElementById('containerBgColorHex').value = this.value;
+            updateBoxedPreview();
+        });
+        
+        // Sliders with value display
+        document.getElementById('containerWidth')?.addEventListener('input', function() {
+            document.getElementById('containerWidthValue').textContent = this.value + 'px';
+            updateBoxedPreview();
+        });
+        
+        document.getElementById('containerRadius')?.addEventListener('input', function() {
+            document.getElementById('containerRadiusValue').textContent = this.value + 'px';
+            updateBoxedPreview();
+        });
+        
+        document.getElementById('containerShadow')?.addEventListener('change', function() {
+            updateBoxedPreview();
+        });
+        
         // Scroll to alert and switch to Advanced tab after page load (if success/error exists)
         window.addEventListener('DOMContentLoaded', function() {
             <?php if (isset($_SESSION['show_advanced_tab'])): ?>
@@ -2122,6 +2425,18 @@
             }
             <?php 
                 unset($_SESSION['show_advanced_tab']); 
+            endif; 
+            ?>
+            
+            <?php if (isset($_SESSION['show_boxed_tab'])): ?>
+            // Switch to Boxed Layout tab
+            const boxedTab = document.querySelector('[href="#boxed-layout-tab"]');
+            if (boxedTab) {
+                const tab = new bootstrap.Tab(boxedTab);
+                tab.show();
+            }
+            <?php 
+                unset($_SESSION['show_boxed_tab']); 
             endif; 
             ?>
             

@@ -67,6 +67,17 @@
     $container_style = $user_data['container_style'] ?? 'wide';
     $enable_categories = $user_data['enable_categories'] ?? 0;
     
+    // V2.3 Boxed Layout Features
+    $boxed_layout = $user_data['boxed_layout'] ?? 0;
+    $outer_bg_type = $user_data['outer_bg_type'] ?? 'gradient';
+    $outer_bg_color = $user_data['outer_bg_color'] ?? '#667eea';
+    $outer_bg_gradient_start = $user_data['outer_bg_gradient_start'] ?? '#667eea';
+    $outer_bg_gradient_end = $user_data['outer_bg_gradient_end'] ?? '#764ba2';
+    $container_bg_color = $user_data['container_bg_color'] ?? '#ffffff';
+    $container_max_width = $user_data['container_max_width'] ?? 480;
+    $container_border_radius = $user_data['container_border_radius'] ?? 30;
+    $container_shadow = $user_data['container_shadow'] ?? 1;
+    
     // Gradient presets mapping (v2.0 + v2.1)
     $gradient_presets = [
         // V2.0 Original
@@ -378,21 +389,89 @@
         .footer-branding a:hover {
             text-decoration: underline;
         }
+        /* Boxed Layout Styles */
+        <?php if ($boxed_layout): ?>
+        body {
+            <?php if ($outer_bg_type == 'gradient'): ?>
+            background: linear-gradient(135deg, <?= $outer_bg_gradient_start ?>, <?= $outer_bg_gradient_end ?>) !important;
+            <?php else: ?>
+            background: <?= $outer_bg_color ?> !important;
+            <?php endif; ?>
+            background-attachment: fixed !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem 0.5rem;
+        }
+        .boxed-wrapper {
+            background: <?= $container_bg_color ?>;
+            max-width: <?= $container_max_width ?>px;
+            width: 100%;
+            border-radius: <?= $container_border_radius ?>px;
+            <?php if ($container_shadow): ?>
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            <?php endif; ?>
+            padding: 2.5rem 2rem;
+            margin: 0 auto;
+            position: relative;
+        }
+        .profile-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+        /* Adjust buttons for boxed layout */
+        .boxed-wrapper .btn-top-action {
+            position: absolute !important;
+            top: 20px !important;
+        }
+        .boxed-wrapper .btn-top-action.left {
+            left: 20px !important;
+        }
+        .boxed-wrapper .btn-top-action.right {
+            right: 20px !important;
+        }
+        @media (max-width: 576px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+            .boxed-wrapper {
+                padding: 2rem 1.5rem;
+                border-radius: <?= max(15, $container_border_radius - 10) ?>px;
+            }
+        }
+        <?php endif; ?>
     </style>
 </head>
 <body>
-    <!-- Top Action Buttons -->
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
-        <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
-            <i class="bi bi-link-45deg" style="font-size: 1.5rem; color: #667eea;"></i>
-        </button>
-    </div>
-    
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-        <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
-            <i class="bi bi-share-fill" style="font-size: 1.2rem; color: #667eea;"></i>
-        </button>
-    </div>
+    <?php if ($boxed_layout): ?>
+    <div class="boxed-wrapper">
+        <!-- Top Action Buttons Inside Boxed Wrapper -->
+        <div class="btn-top-action left">
+            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
+                <i class="bi bi-link-45deg" style="font-size: 1.3rem; color: #667eea;"></i>
+            </button>
+        </div>
+        
+        <div class="btn-top-action right">
+            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
+                <i class="bi bi-share-fill" style="font-size: 1.1rem; color: #667eea;"></i>
+            </button>
+        </div>
+    <?php else: ?>
+        <!-- Top Action Buttons Fixed Position -->
+        <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+            <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
+                <i class="bi bi-link-45deg" style="font-size: 1.5rem; color: #667eea;"></i>
+            </button>
+        </div>
+        
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+            <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
+                <i class="bi bi-share-fill" style="font-size: 1.2rem; color: #667eea;"></i>
+            </button>
+        </div>
+    <?php endif; ?>
     
     <div class="profile-container">
         <!-- Profile Header -->
@@ -627,5 +706,9 @@
             });
         }
     </script>
+    
+    <?php if ($boxed_layout): ?>
+    </div> <!-- Close boxed-wrapper -->
+    <?php endif; ?>
 </body>
 </html>
