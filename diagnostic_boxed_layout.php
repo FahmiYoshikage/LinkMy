@@ -6,8 +6,29 @@
 
 require_once 'config/db.php';
 
-// Get user ID from query parameter or use first user
-$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 1;
+// Get user ID from query parameter or auto-detect from page_slug
+if (isset($_GET['user_id'])) {
+    $user_id = intval($_GET['user_id']);
+} elseif (isset($_GET['slug'])) {
+    // Get user_id from slug
+    $query = "SELECT user_id FROM users WHERE page_slug = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 's', $_GET['slug']);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    $user_id = $row ? $row['user_id'] : null;
+    
+    if (!$user_id) {
+        die('<div style="color: red; padding: 20px;">User not found with slug: ' . htmlspecialchars($_GET['slug']) . '</div>');
+    }
+} else {
+    // Auto-detect: use the user with appearance data
+    $query = "SELECT user_id FROM appearance LIMIT 1";
+    $result = mysqli_query($conn, $query);
+    $row = mysqli_fetch_assoc($result);
+    $user_id = $row ? $row['user_id'] : 1;
+}
 
 ?>
 <!DOCTYPE html>
@@ -112,7 +133,23 @@ $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 1;
 <body>
     <div class="container">
         <h1>🔍 LinkMy Diagnostic Tool</h1>
-        <p>Checking User ID: <strong><?= $user_id ?></strong> | <a href="?user_id=<?= $user_id ?>" style="color: #569cd6;">Refresh</a></p>
+        
+        <?php
+        // Get username for display
+        $query = "SELECT username, page_slug FROM users WHERE user_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'i', $user_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $user_info = mysqli_fetch_assoc($result);
+        ?>
+        
+        <p>Checking User: <strong><?= $user_info['username'] ?? 'Unknown' ?></strong> (ID: <?= $user_id ?>, Slug: <?= $user_info['page_slug'] ?? 'N/A' ?>)</p>
+        <p style="font-size: 14px; color: #858585;">
+            Quick links: 
+            <a href="?" style="color: #569cd6;">Auto-detect</a> | 
+            <a href="?slug=<?= $user_info['page_slug'] ?? '' ?>" style="color: #569cd6;">Refresh</a>
+        </p>
 
         <?php
         $all_ok = true;
