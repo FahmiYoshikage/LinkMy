@@ -3,6 +3,7 @@
 ## Quick Commands to Run on VPS
 
 ### 1. View Real-Time Logs
+
 ```bash
 # Follow Apache error log
 docker logs -f linkmy_web
@@ -15,6 +16,7 @@ docker exec linkmy_web tail -f /var/log/apache2/error.log
 ```
 
 ### 2. Check PHP Configuration
+
 ```bash
 # Check PHP version and modules
 docker exec linkmy_web php -v
@@ -26,6 +28,7 @@ docker exec linkmy_web ls -la /var/www/html/config/db.php
 ```
 
 ### 3. Test Database Connection
+
 ```bash
 # Test MySQL connection from web container
 docker exec linkmy_web php -r "
@@ -36,12 +39,14 @@ echo 'Connection: ' . (mysqli_ping(\$conn) ? 'OK' : 'FAILED') . PHP_EOL;
 ```
 
 ### 4. Check File Permissions
+
 ```bash
 docker exec linkmy_web ls -la /var/www/html/*.php
 docker exec linkmy_web stat /var/www/html/profile.php
 ```
 
 ### 5. Test Profile Page Directly
+
 ```bash
 # Run PHP directly to see errors
 docker exec linkmy_web php /var/www/html/debug_profile.php
@@ -52,6 +57,7 @@ curl -v https://linkmy.iet.ovh/view_errors.php
 ```
 
 ### 6. Check Apache Configuration
+
 ```bash
 # View Apache error log
 docker exec linkmy_web cat /var/log/apache2/error.log | tail -50
@@ -64,6 +70,7 @@ docker exec linkmy_web apache2ctl configtest
 ```
 
 ### 7. Restart Services
+
 ```bash
 # Restart container
 docker compose restart linkmy_web
@@ -77,6 +84,7 @@ docker compose up -d linkmy_web
 ```
 
 ### 8. Check Container Status
+
 ```bash
 # List all containers
 docker ps
@@ -93,28 +101,33 @@ docker stats linkmy_web --no-stream
 After `git pull`, access these URLs:
 
 1. **Debug Profile Page:**
-   ```
-   https://linkmy.iet.ovh/debug_profile.php?slug=fahmi
-   ```
-   Shows step-by-step execution and catches PHP errors
+
+    ```
+    https://linkmy.iet.ovh/debug_profile.php?slug=fahmi
+    ```
+
+    Shows step-by-step execution and catches PHP errors
 
 2. **View Error Logs:**
-   ```
-   https://linkmy.iet.ovh/view_errors.php
-   ```
-   Displays PHP error log locations and recent errors
+
+    ```
+    https://linkmy.iet.ovh/view_errors.php
+    ```
+
+    Displays PHP error log locations and recent errors
 
 3. **Diagnostic Tool:**
-   ```
-   https://linkmy.iet.ovh/diagnostic_boxed_layout.php?slug=fahmi
-   ```
-   Checks database structure and data integrity
+    ```
+    https://linkmy.iet.ovh/diagnostic_boxed_layout.php?slug=fahmi
+    ```
+    Checks database structure and data integrity
 
 ## Common Issues and Solutions
 
 ### Issue: 500 Internal Server Error
 
 **Check:**
+
 ```bash
 # View last 20 errors
 docker logs linkmy_web --tail 20
@@ -124,14 +137,16 @@ docker exec linkmy_web grep "PHP Fatal" /var/log/apache2/error.log
 ```
 
 **Common Causes:**
-- PHP syntax error
-- Missing function or file
-- Database connection failed
-- File permissions issue
+
+-   PHP syntax error
+-   Missing function or file
+-   Database connection failed
+-   File permissions issue
 
 ### Issue: Blank White Page
 
 **Check:**
+
 ```bash
 # Enable error display temporarily
 docker exec linkmy_web php -r "
@@ -144,6 +159,7 @@ require '/var/www/html/profile.php';
 ### Issue: Database Connection Failed
 
 **Check:**
+
 ```bash
 # Test MySQL container
 docker exec linkmy_mysql mysql -u root -p -e "SHOW DATABASES;"
@@ -158,6 +174,7 @@ docker exec linkmy_web env | grep DB_
 ### Issue: File Not Found (404)
 
 **Check:**
+
 ```bash
 # Verify file exists
 docker exec linkmy_web ls -la /var/www/html/profile.php
@@ -172,43 +189,49 @@ docker exec linkmy_web apache2ctl -M | grep rewrite
 ## Quick Fix Workflow
 
 1. **Pull latest code:**
-   ```bash
-   cd /opt/LinkMy
-   git pull origin master
-   ```
+
+    ```bash
+    cd /opt/LinkMy
+    git pull origin master
+    ```
 
 2. **Check what changed:**
-   ```bash
-   git log --oneline -5
-   git diff HEAD~1 profile.php
-   ```
+
+    ```bash
+    git log --oneline -5
+    git diff HEAD~1 profile.php
+    ```
 
 3. **Rebuild container:**
-   ```bash
-   docker compose up -d --build
-   ```
+
+    ```bash
+    docker compose up -d --build
+    ```
 
 4. **Monitor logs in real-time:**
-   ```bash
-   docker logs -f linkmy_web
-   ```
+
+    ```bash
+    docker logs -f linkmy_web
+    ```
 
 5. **Test in browser:**
-   ```
-   https://linkmy.iet.ovh/debug_profile.php?slug=fahmi
-   ```
+
+    ```
+    https://linkmy.iet.ovh/debug_profile.php?slug=fahmi
+    ```
 
 6. **If still broken, check detailed errors:**
-   ```
-   https://linkmy.iet.ovh/view_errors.php
-   ```
+
+    ```
+    https://linkmy.iet.ovh/view_errors.php
+    ```
 
 7. **Get container shell for deep debugging:**
-   ```bash
-   docker exec -it linkmy_web bash
-   cd /var/www/html
-   php debug_profile.php
-   ```
+    ```bash
+    docker exec -it linkmy_web bash
+    cd /var/www/html
+    php debug_profile.php
+    ```
 
 ## Emergency Rollback
 
@@ -247,8 +270,8 @@ docker exec linkmy_web ps aux
 
 ## Notes
 
-- Always `git pull` before debugging
-- Always `docker compose restart` after code changes
-- Check both Apache logs AND PHP error logs
-- Use debug_profile.php for step-by-step diagnosis
-- Navbar issue might be CSS caching - try Ctrl+Shift+R in browser
+-   Always `git pull` before debugging
+-   Always `docker compose restart` after code changes
+-   Check both Apache logs AND PHP error logs
+-   Use debug_profile.php for step-by-step diagnosis
+-   Navbar issue might be CSS caching - try Ctrl+Shift+R in browser

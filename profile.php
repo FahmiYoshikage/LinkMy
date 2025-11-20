@@ -124,16 +124,15 @@
     
     // Build query based on whether categories table exists
     if ($categories_exists && $enable_categories) {
-        $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
-                        c.name as category_name, c.icon as category_icon, 
+        $links_query = "SELECT l.*, c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         LEFT JOIN categories c ON l.category_id = c.id
                         WHERE l.user_id = ? AND l.is_visible = 1
                         ORDER BY l.display_order ASC";
     } else {
-        // Simple query without categories
-        $links_query = "SELECT id as link_id, title, url, icon, display_order
+        // Simple query without categories - select all columns
+        $links_query = "SELECT *
                         FROM links
                         WHERE user_id = ? AND is_visible = 1
                         ORDER BY display_order ASC";
@@ -156,6 +155,24 @@
     
     if ($links_result) {
         while ($row = mysqli_fetch_assoc($links_result)){
+            // Normalize column names for compatibility
+            // Handle different possible primary key names
+            if (!isset($row['link_id'])) {
+                if (isset($row['id'])) {
+                    $row['link_id'] = $row['id'];
+                } elseif (isset($row['link_unique_id'])) {
+                    $row['link_id'] = $row['link_unique_id'];
+                }
+            }
+            
+            // Normalize other column names
+            if (!isset($row['link_title']) && isset($row['title'])) {
+                $row['link_title'] = $row['title'];
+            }
+            if (!isset($row['icon_class']) && isset($row['icon'])) {
+                $row['icon_class'] = $row['icon'];
+            }
+            
             $links[] = $row;
             
             if ($categories_exists && $enable_categories && isset($row['category_id']) && $row['category_id']) {
