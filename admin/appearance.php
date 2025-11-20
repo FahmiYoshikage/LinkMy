@@ -765,7 +765,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
                 <i class="bi bi-link-45deg"></i> LinkMy
