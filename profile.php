@@ -108,7 +108,7 @@
         'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
     ];
 
-    // Fetch links separately
+    // Fetch links separately using mysqli_prepare
     $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
                     c.name as category_name, c.icon as category_icon, 
                     c.color as category_color, c.is_expanded as category_expanded
@@ -117,14 +117,10 @@
                     WHERE l.user_id = ? AND l.is_visible = 1
                     ORDER BY l.display_order ASC";
     
-    $stmt = mysqli_prepare($conn, $links_query);
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, 'i', $user_id);
-        mysqli_stmt_execute($stmt);
-        $links_result = mysqli_stmt_get_result($stmt);
-    } else {
-        $links_result = false;
-    }
+    $stmt_links = mysqli_prepare($conn, $links_query);
+    mysqli_stmt_bind_param($stmt_links, 'i', $user_id);
+    mysqli_stmt_execute($stmt_links);
+    $links_result = mysqli_stmt_get_result($stmt_links);
     
     $links = [];
     $links_by_category = [];
@@ -161,7 +157,11 @@
                 $links_by_category[0][] = $row;
             }
         }
-        mysqli_stmt_close($stmt);
+    }
+    
+    // Close prepared statement
+    if (isset($stmt_links)) {
+        mysqli_stmt_close($stmt_links);
     }
 
     // Determine background based on priority: gradient_preset > custom_bg_color > theme_name
