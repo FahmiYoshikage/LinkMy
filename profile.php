@@ -114,52 +114,33 @@
         'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
     ];
 
-    // Fetch links separately - first check what columns actually exist
-    $categories_exists = false;
-    $is_visible_exists = false;
-    $display_order_exists = false;
+    // Fetch links with correct column names from VPS database structure
+    // Column mapping: link_id (PK), user_id, title, url, order_index, icon_class, is_active, category_id
     
-    // Check if categories table exists
+    $categories_exists = false;
     $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories'");
     if ($check_table && mysqli_num_rows($check_table) > 0) {
         $categories_exists = true;
     }
     
-    // Check which columns exist in links table
-    $columns_result = mysqli_query($conn, "SHOW COLUMNS FROM links");
-    if ($columns_result) {
-        while ($col = mysqli_fetch_assoc($columns_result)) {
-            if ($col['Field'] == 'is_visible') $is_visible_exists = true;
-            if ($col['Field'] == 'display_order') $display_order_exists = true;
-        }
-    }
-    
-    // Build query based on whether categories table exists
+    // Build query with actual column names from database
     if ($categories_exists && $enable_categories) {
-        // Query with categories - use table prefix for all columns
-        $where_parts = ["l.user_id = ?"];
-        if ($is_visible_exists) {
-            $where_parts[] = "l.is_visible = 1";
-        }
-        $where_clause = implode(" AND ", $where_parts);
-        $order_by = $display_order_exists ? "l.display_order ASC" : "l.id ASC";
-        
-        $links_query = "SELECT l.*, c.name as category_name, c.icon as category_icon, 
+        // Query with categories JOIN
+        $links_query = "SELECT l.link_id, l.user_id, l.title, l.url, l.order_index, 
+                        l.icon_class, l.click_count, l.is_active, l.created_at, l.category_id,
+                        c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         LEFT JOIN categories c ON l.category_id = c.id
-                        WHERE $where_clause
-                        ORDER BY $order_by";
+                        WHERE l.user_id = ? AND l.is_active = 1
+                        ORDER BY l.order_index ASC, l.link_id ASC";
     } else {
-        // Simple query without categories - no table prefix needed
-        $where_parts = ["user_id = ?"];
-        if ($is_visible_exists) {
-            $where_parts[] = "is_visible = 1";
-        }
-        $where_clause = implode(" AND ", $where_parts);
-        $order_by = $display_order_exists ? "display_order ASC" : "id ASC";
-        
-        $links_query = "SELECT * FROM links WHERE $where_clause ORDER BY $order_by";
+        // Simple query without categories
+        $links_query = "SELECT link_id, user_id, title, url, order_index, 
+                        icon_class, click_count, is_active, created_at, category_id
+                        FROM links
+                        WHERE user_id = ? AND is_active = 1
+                        ORDER BY order_index ASC, link_id ASC";
     }
     
     $stmt_links = mysqli_prepare($conn, $links_query);
@@ -179,23 +160,10 @@
     
     if ($links_result) {
         while ($row = mysqli_fetch_assoc($links_result)){
-            // Normalize column names for compatibility
-            // Handle different possible primary key names
-            if (!isset($row['link_id'])) {
-                if (isset($row['id'])) {
-                    $row['link_id'] = $row['id'];
-                } elseif (isset($row['link_unique_id'])) {
-                    $row['link_id'] = $row['link_unique_id'];
-                }
-            }
-            
-            // Normalize other column names
-            if (!isset($row['link_title']) && isset($row['title'])) {
-                $row['link_title'] = $row['title'];
-            }
-            if (!isset($row['icon_class']) && isset($row['icon'])) {
-                $row['icon_class'] = $row['icon'];
-            }
+            // Add alias for compatibility with profile rendering code
+            // Database uses: link_id, title, icon_class
+            // Code expects: link_id, link_title, icon_class
+            $row['link_title'] = $row['title'];
             
             $links[] = $row;
             
