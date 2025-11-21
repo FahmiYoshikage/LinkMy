@@ -265,7 +265,6 @@
         $outer_bg_color = $_POST['outer_bg_color'] ?? '#667eea';
         $outer_bg_gradient_start = $_POST['outer_bg_gradient_start'] ?? '#667eea';
         $outer_bg_gradient_end = $_POST['outer_bg_gradient_end'] ?? '#764ba2';
-        $container_bg_color = $_POST['container_bg_color'] ?? '#ffffff';
         $container_max_width = intval($_POST['container_max_width'] ?? 480);
         $container_border_radius = intval($_POST['container_border_radius'] ?? 30);
         $container_shadow = isset($_POST['container_shadow']) ? 1 : 0;
@@ -276,17 +275,16 @@
                   outer_bg_color = ?,
                   outer_bg_gradient_start = ?,
                   outer_bg_gradient_end = ?,
-                  container_bg_color = ?,
                   container_max_width = ?,
                   container_border_radius = ?,
                   container_shadow = ?
                   WHERE user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'isssssiiii', 
+        mysqli_stmt_bind_param($stmt, 'issssiiii', 
             $boxed_layout, $outer_bg_type, $outer_bg_color, 
             $outer_bg_gradient_start, $outer_bg_gradient_end, 
-            $container_bg_color, $container_max_width, 
-            $container_border_radius, $container_shadow, $current_user_id);
+            $container_max_width, $container_border_radius, 
+            $container_shadow, $current_user_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = '✅ Boxed Layout berhasil disimpan!';
@@ -1639,31 +1637,8 @@
                                                 <i class="bi bi-box"></i> Container Settings
                                             </div>
                                             <div class="card-body">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Container Background</label>
-                                                    
-                                                    <!-- Quick Presets -->
-                                                    <div class="btn-group w-100 mb-2" role="group">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('#ffffff')">
-                                                            <i class="bi bi-circle-fill text-white border"></i> White
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('current')">
-                                                            <i class="bi bi-palette-fill"></i> Current BG
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setContainerBg('rgba(255,255,255,0.9)')">
-                                                            <i class="bi bi-transparency"></i> Glass
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <div class="input-group">
-                                                        <input type="color" class="form-control form-control-color" 
-                                                               name="container_bg_color" id="containerBgColor"
-                                                               value="<?= $appearance['container_bg_color'] ?? '#ffffff' ?>">
-                                                        <input type="text" class="form-control" 
-                                                               value="<?= $appearance['container_bg_color'] ?? '#ffffff' ?>"
-                                                               id="containerBgColorHex" readonly>
-                                                    </div>
-                                                    <small class="text-muted">Warna latar belakang kotak konten</small>
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle"></i> <strong>Catatan:</strong> Warna background container menggunakan pengaturan dari tab "Tema & Warna". Boxed layout hanya mengatur ukuran dan border.
                                                 </div>
 
                                                 <div class="mb-3">
@@ -1711,7 +1686,7 @@
                                                     <i class="bi bi-eye"></i> Preview
                                                 </h6>
                                                 <div id="boxedPreview" class="mx-auto" style="height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#667eea') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#764ba2') . ')' : ($appearance['outer_bg_color'] ?? '#667eea') ?>;">
-                                                    <div style="width: <?= $appearance['container_max_width'] ?? 480 ?>px; max-width: 90%; background: <?= $appearance['container_bg_color'] ?? '#ffffff' ?>; padding: 30px; border-radius: <?= $appearance['container_border_radius'] ?? 30 ?>px; <?= ($appearance['container_shadow'] ?? 1) ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.2);' : '' ?>">
+                                                    <div id="boxedPreviewInner" style="width: <?= $appearance['container_max_width'] ?? 480 ?>px; max-width: 90%; background: <?= !empty($appearance['gradient_preset']) ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : ($appearance['custom_bg_color'] ?? '#ffffff') ?>; padding: 30px; border-radius: <?= $appearance['container_border_radius'] ?? 30 ?>px; <?= ($appearance['container_shadow'] ?? 1) ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.2);' : '' ?>">
                                                         <div class="text-center">
                                                             <div class="bg-secondary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px;"></div>
                                                             <h6 class="fw-bold">Your Name</h6>
@@ -2386,13 +2361,12 @@
                 preview.style.background = color;
             }
             
-            const containerBg = document.getElementById('containerBgColor').value;
             const containerWidth = document.getElementById('containerWidth').value;
             const containerRadius = document.getElementById('containerRadius').value;
             const containerShadow = document.getElementById('containerShadow').checked;
             
-            const container = preview.querySelector('div');
-            container.style.background = containerBg;
+            const container = document.getElementById('boxedPreviewInner');
+            // Note: Container background uses main background from Theme tab
             container.style.width = containerWidth + 'px';
             container.style.borderRadius = containerRadius + 'px';
             container.style.boxShadow = containerShadow ? '0 10px 40px rgba(0,0,0,0.2)' : 'none';
@@ -2411,11 +2385,6 @@
         
         document.getElementById('gradientEnd')?.addEventListener('input', function() {
             document.getElementById('gradientEndHex').value = this.value;
-            updateBoxedPreview();
-        });
-        
-        document.getElementById('containerBgColor')?.addEventListener('input', function() {
-            document.getElementById('containerBgColorHex').value = this.value;
             updateBoxedPreview();
         });
         
@@ -2442,57 +2411,6 @@
                 indicator.innerHTML = `<i class="bi bi-palette-fill"></i> Current: ${bgType === 'gradient' ? 'Gradient' : 'Solid Color'}`;
                 indicator.className = bgType === 'gradient' ? 'badge bg-info' : 'badge bg-primary';
             }
-        }
-        
-        // Set container background (with 'current' background option)
-        function setContainerBg(value) {
-            const containerBgColor = document.getElementById('containerBgColor');
-            const containerBgColorHex = document.getElementById('containerBgColorHex');
-            
-            if (value === 'current') {
-                // Get OUTER background (from Boxed Layout settings)
-                const outerBgType = document.getElementById('outerBgType');
-                
-                if (outerBgType && outerBgType.value === 'gradient') {
-                    // Using gradient outer background
-                    const gradStart = document.getElementById('outerBgGradientStart');
-                    const gradEnd = document.getElementById('outerBgGradientEnd');
-                    
-                    if (gradStart && gradEnd && gradStart.value && gradEnd.value) {
-                        // Create gradient string for container
-                        value = `linear-gradient(135deg, ${gradStart.value}, ${gradEnd.value})`;
-                        containerBgColorHex.value = value;
-                        alert(`✅ Container background set to match outer gradient: ${gradStart.value} → ${gradEnd.value}`);
-                    } else {
-                        value = 'rgba(255, 255, 255, 0.95)';
-                        containerBgColorHex.value = value;
-                    }
-                } else {
-                    // Using solid color outer background
-                    const outerColor = document.getElementById('outerBgColor');
-                    if (outerColor && outerColor.value) {
-                        value = outerColor.value;
-                        containerBgColor.value = value;
-                        containerBgColorHex.value = value;
-                        alert(`✅ Container background set to match outer color: ${value}`);
-                    } else {
-                        value = '#ffffff';
-                        containerBgColor.value = value;
-                        containerBgColorHex.value = value;
-                    }
-                }
-            } else {
-                // Handle rgba/gradient values
-                if (value.startsWith('rgba') || value.startsWith('linear-gradient')) {
-                    containerBgColorHex.value = value;
-                    // Can't set rgba/gradient to color input
-                } else {
-                    containerBgColor.value = value;
-                    containerBgColorHex.value = value;
-                }
-            }
-            
-            updateBoxedPreview();
         }
         
         // Scroll to alert and switch to Advanced tab after page load (if success/error exists)

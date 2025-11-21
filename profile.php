@@ -125,13 +125,13 @@
     
     // Build query with actual column names from database
     if ($categories_exists && $enable_categories) {
-        // Query with categories JOIN
+        // Query with categories JOIN using correct link_categories table structure
         $links_query = "SELECT l.link_id, l.user_id, l.title, l.url, l.order_index, 
                         l.icon_class, l.click_count, l.is_active, l.created_at, l.category_id,
-                        c.name as category_name, c.icon as category_icon, 
-                        c.color as category_color, c.is_expanded as category_expanded
+                        c.category_name as category_name, c.category_icon as category_icon, 
+                        c.category_color as category_color, c.is_expanded as category_expanded
                         FROM links l
-                        LEFT JOIN categories c ON l.category_id = c.id
+                        LEFT JOIN link_categories c ON l.category_id = c.category_id
                         WHERE l.user_id = ? AND l.is_active = 1
                         ORDER BY l.order_index ASC, l.link_id ASC";
     } else {
@@ -458,7 +458,7 @@
             padding: 2rem 0.5rem;
         }
         .boxed-wrapper {
-            background: <?= $container_bg_color ?>;
+            background: <?= $background_css ?>;
             max-width: <?= $container_max_width ?>px;
             width: 100%;
             border-radius: <?= $container_border_radius ?>px;

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db:3306
--- Generation Time: Nov 20, 2025 at 10:38 PM
+-- Generation Time: Nov 21, 2025 at 01:23 AM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.27
 
@@ -75,6 +75,23 @@ INSERT INTO `appearance` (`appearance_id`, `user_id`, `profile_title`, `bio`, `p
 (11, 11, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 17:08:12', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
 (12, 12, 'Fahmi', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-20 15:55:35', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Pink Lemonade', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#5d75df', '#872ce2', NULL, '#ffffff', 480, 30, 1),
 (13, 13, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-18 03:59:27', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `categories`
+--
+
+CREATE TABLE `categories` (
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'bi-folder',
+  `color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#667eea',
+  `is_expanded` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -199,7 +216,7 @@ INSERT INTO `links` (`link_id`, `user_id`, `title`, `url`, `order_index`, `icon_
 (12, 10, 'ss', 'https://ibehelp.gt.tc/', 2, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:29', NULL),
 (13, 10, 'se', 'https://ibehelp.gt.tc/', 3, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:37', NULL),
 (14, 10, 'ss', 'https://ibehelp.gt.tc/', 4, 'bi-link-45deg', 1, 1, '2025-11-16 15:29:45', NULL),
-(16, 12, 'INSTAGRAM', 'https://www.instagram.com/fahmi.ilham06/', 1, 'bi-instagram', 0, 1, '2025-11-18 05:38:56', 19),
+(16, 12, 'INSTAGRAM', 'https://www.instagram.com/fahmi.ilham06/', 1, 'bi-instagram', 1, 1, '2025-11-18 05:38:56', 19),
 (17, 12, 'Toko Ngawi', 'https://shopee.co.id/', 2, 'bi-shop', 1, 1, '2025-11-18 06:27:04', 19);
 
 -- --------------------------------------------------------
@@ -246,8 +263,7 @@ INSERT INTO `link_categories` (`category_id`, `user_id`, `category_name`, `categ
 (10, 7, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
 (15, 1, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
 (17, 7, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
-(19, 12, 'Social Media', 'bi-folder', '#ff4000', 1, 1, '2025-11-18 23:32:10'),
-(20, 12, 'Project', 'bi-book-fill', '#ffffff', 2, 1, '2025-11-19 00:17:19');
+(19, 12, 'Social Media', 'bi-folder', '#667eea', 1, 1, '2025-11-18 23:32:10');
 
 -- --------------------------------------------------------
 
@@ -320,7 +336,7 @@ INSERT INTO `sessions` (`session_id`, `session_data`, `session_expire`) VALUES
 ('b00bb622c5f3a16fb07f61d08116fa94', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763643470;', 1764248270),
 ('b05fdf8d0a44e15e4209daab3884b3ed', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763579816;', 1764184616),
 ('b568e22a74c3633bcb5d20d7b97027f5', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763513922;', 1764118722),
-('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763677892;', 1764282692),
+('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763687499;', 1764292299),
 ('eab6c29612c6b7ff768941d3cf20dd34', '', 1764123882);
 
 -- --------------------------------------------------------
@@ -489,6 +505,13 @@ ALTER TABLE `appearance`
   ADD UNIQUE KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `email_verifications`
 --
 ALTER TABLE `email_verifications`
@@ -572,6 +595,12 @@ ALTER TABLE `appearance`
   MODIFY `appearance_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT for table `categories`
+--
+ALTER TABLE `categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `email_verifications`
 --
 ALTER TABLE `email_verifications`
@@ -646,6 +675,12 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_publi
 --
 ALTER TABLE `appearance`
   ADD CONSTRAINT `appearance_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `categories`
+--
+ALTER TABLE `categories`
+  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `links`
