@@ -212,7 +212,7 @@
 .navbar-custom .navbar-brand {
     font-size: 1.4rem;
     padding: 0.5rem 1rem;
-    color: white !important;
+    color: #ffffff !important;
 }
 
 .navbar-custom .nav-link {
@@ -223,7 +223,17 @@
     display: flex;
     align-items: center;
     white-space: nowrap;
-    color: white !important;
+    color: #ffffff !important;
+}
+
+.navbar-custom .nav-link span,
+.navbar-custom .nav-link .badge {
+    color: inherit;
+}
+
+.navbar-custom .nav-link span,
+.navbar-custom .nav-link .badge {
+    color: inherit;
 }
 
 .navbar-custom .nav-link:hover {

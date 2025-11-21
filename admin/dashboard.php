@@ -782,8 +782,8 @@
 
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/jquery-3.7.1.min.js"></script>
-    <script src="../assets/js/highcharts.js"></script>
-    <script src="../assets/js/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="../assets/js/admin.js"></script>
     <script>
         // Live icon preview

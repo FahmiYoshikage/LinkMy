@@ -277,8 +277,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($profile_title) ?> - LinkMy</title>
+    
+    <!-- Performance: Preconnect to CDN -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Critical CSS: Load Bootstrap first -->
     <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Defer non-critical CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"></noscript>
+    
     <link href="assets/css/public.css" rel="stylesheet">
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <style>
@@ -540,7 +549,12 @@
                 </div>
             <?php endif; ?>
             
-            <h1 class="profile-title"><?= htmlspecialchars($profile_title) ?></h1>
+            <h1 class="profile-title">
+                <?= htmlspecialchars($profile_title) ?>
+                <?php if (isset($user_data['is_verified']) && $user_data['is_verified'] == 1): ?>
+                <i class="bi bi-patch-check-fill" style="color: #1DA1F2; font-size: 0.8em; vertical-align: middle;" title="Verified Founder"></i>
+                <?php endif; ?>
+            </h1>
             
             <?php if (!empty($bio)): ?>
                 <p class="profile-bio"><?= nl2br(htmlspecialchars($bio)) ?></p>
@@ -741,10 +755,10 @@
         </div>
     </div>
     
-    <!-- Bootstrap JS (Required for Modals) -->
-    <script src="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS (Required for Modals) - Deferred for performance -->
+    <script src="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js" defer></script>
     
-    <script>
+    <script defer>
         function copyToClipboard() {
             const input = document.getElementById('profileLink');
             input.select();
