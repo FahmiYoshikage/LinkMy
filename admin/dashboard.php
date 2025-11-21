@@ -1066,12 +1066,16 @@
                 name: 'Traffic Share',
                 colorByPoint: true,
                 data: [
-                    <?php foreach ($click_by_referrer as $source): ?>
-                    ,{
-                        name: '<?= htmlspecialchars($source['source']) ?>',
-                        y: <?= intval($source['clicks']) ?>
-                    },
-                    <?php endforeach; ?>
+                    <?php 
+                    $sources_data = [];
+                    foreach ($click_by_referrer as $source) {
+                        $sources_data[] = '{
+                            name: "' . htmlspecialchars($source['source']) . '",
+                            y: ' . intval($source['clicks']) . '
+                        }';
+                    }
+                    echo implode(',', $sources_data);
+                    ?>
                 ]
             }],
             exporting: {
