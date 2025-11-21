@@ -145,14 +145,16 @@
         $user_categories = [];
     }
 
-    // Get daily clicks for last 7 days
+    // Get daily clicks for last 7 days (including today for realtime updates)
     $daily_clicks = get_all_rows(
         "SELECT 
             DATE(clicked_at) as date,
             COUNT(*) as clicks
         FROM link_analytics la
         INNER JOIN links l ON la.link_id = l.link_id
-        WHERE l.user_id = ? AND clicked_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        WHERE l.user_id = ? 
+          AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          AND DATE(clicked_at) <= CURDATE()
         GROUP BY DATE(clicked_at)
         ORDER BY date ASC",
         [$current_user_id],
@@ -170,26 +172,44 @@
         $dates_range[$row['date']] = intval($row['clicks']);
     }
     
-    // Get click distribution by referrer
-    $click_by_referrer = get_all_rows(
+    // Get click distribution by geographic location (city + country)
+    $click_by_location = get_all_rows(
         "SELECT 
             CASE 
-                WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
-                WHEN referrer LIKE '%instagram%' THEN 'Instagram'
-                WHEN referrer LIKE '%facebook%' THEN 'Facebook'
-                WHEN referrer LIKE '%twitter%' OR referrer LIKE '%x.com%' THEN 'Twitter/X'
-                WHEN referrer LIKE '%tiktok%' THEN 'TikTok'
-                ELSE 'Others'
-            END as source,
+                WHEN city IS NOT NULL AND city != '' THEN CONCAT(city, ', ', COALESCE(country, 'Unknown'))
+                ELSE COALESCE(NULLIF(country, ''), 'Unknown')
+            END as location,
             COUNT(*) as clicks
         FROM link_analytics la
         INNER JOIN links l ON la.link_id = l.link_id
         WHERE l.user_id = ?
-        GROUP BY source
-        ORDER BY clicks DESC",
+        GROUP BY location
+        ORDER BY clicks DESC
+        LIMIT 10",
         [$current_user_id],
         'i'
     );
+    
+    // If no country data, show IP-based location summary
+    if (empty($click_by_location)) {
+        $click_by_location = get_all_rows(
+            "SELECT 
+                CASE 
+                    WHEN ip_address LIKE '172.%' OR ip_address LIKE '192.168.%' THEN 'Local Network'
+                    WHEN ip_address IS NULL OR ip_address = '' THEN 'Unknown'
+                    ELSE CONCAT('IP: ', SUBSTRING(ip_address, 1, 10), '...')
+                END as location,
+                COUNT(*) as clicks
+            FROM link_analytics la
+            INNER JOIN links l ON la.link_id = l.link_id
+            WHERE l.user_id = ?
+            GROUP BY location
+            ORDER BY clicks DESC
+            LIMIT 10",
+            [$current_user_id],
+            'i'
+        );
+    }
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1014,7 +1034,7 @@
                 }
             },
             title: {
-                text: 'Traffic Sources Distribution',
+                text: 'Traffic by Location',
                 align: 'left',
                 style: {
                     fontSize: '18px',
@@ -1022,7 +1042,7 @@
                 }
             },
             subtitle: {
-                text: 'Where your visitors are coming from',
+                text: 'Geographic distribution of your visitors',
                 align: 'left'
             },
             tooltip: {
@@ -1068,10 +1088,10 @@
                 data: [
                     <?php 
                     $sources_data = [];
-                    foreach ($click_by_referrer as $source) {
+                    foreach ($click_by_location as $location) {
                         $sources_data[] = '{
-                            name: "' . htmlspecialchars($source['source']) . '",
-                            y: ' . intval($source['clicks']) . '
+                            name: "' . htmlspecialchars($location['location']) . '",
+                            y: ' . intval($location['clicks']) . '
                         }';
                     }
                     echo implode(',', $sources_data);
