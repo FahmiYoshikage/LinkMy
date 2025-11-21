@@ -134,26 +134,31 @@
         }
     }
     
-    // Build WHERE clause based on available columns
-    $where_parts = ["user_id = ?"];
-    if ($is_visible_exists) {
-        $where_parts[] = "is_visible = 1";
-    }
-    $where_clause = implode(" AND ", $where_parts);
-    
-    // Build ORDER BY clause
-    $order_by = $display_order_exists ? "display_order ASC" : "id ASC";
-    
     // Build query based on whether categories table exists
     if ($categories_exists && $enable_categories) {
+        // Query with categories - use table prefix for all columns
+        $where_parts = ["l.user_id = ?"];
+        if ($is_visible_exists) {
+            $where_parts[] = "l.is_visible = 1";
+        }
+        $where_clause = implode(" AND ", $where_parts);
+        $order_by = $display_order_exists ? "l.display_order ASC" : "l.id ASC";
+        
         $links_query = "SELECT l.*, c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         LEFT JOIN categories c ON l.category_id = c.id
                         WHERE $where_clause
-                        ORDER BY l.$order_by";
+                        ORDER BY $order_by";
     } else {
-        // Simple query without categories
+        // Simple query without categories - no table prefix needed
+        $where_parts = ["user_id = ?"];
+        if ($is_visible_exists) {
+            $where_parts[] = "is_visible = 1";
+        }
+        $where_clause = implode(" AND ", $where_parts);
+        $order_by = $display_order_exists ? "display_order ASC" : "id ASC";
+        
         $links_query = "SELECT * FROM links WHERE $where_clause ORDER BY $order_by";
     }
     
