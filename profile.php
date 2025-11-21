@@ -114,13 +114,35 @@
         'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
     ];
 
-    // Fetch links separately using mysqli_prepare
-    // Check if categories table exists first
+    // Fetch links separately - first check what columns actually exist
     $categories_exists = false;
+    $is_visible_exists = false;
+    $display_order_exists = false;
+    
+    // Check if categories table exists
     $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories'");
     if ($check_table && mysqli_num_rows($check_table) > 0) {
         $categories_exists = true;
     }
+    
+    // Check which columns exist in links table
+    $columns_result = mysqli_query($conn, "SHOW COLUMNS FROM links");
+    if ($columns_result) {
+        while ($col = mysqli_fetch_assoc($columns_result)) {
+            if ($col['Field'] == 'is_visible') $is_visible_exists = true;
+            if ($col['Field'] == 'display_order') $display_order_exists = true;
+        }
+    }
+    
+    // Build WHERE clause based on available columns
+    $where_parts = ["user_id = ?"];
+    if ($is_visible_exists) {
+        $where_parts[] = "is_visible = 1";
+    }
+    $where_clause = implode(" AND ", $where_parts);
+    
+    // Build ORDER BY clause
+    $order_by = $display_order_exists ? "display_order ASC" : "id ASC";
     
     // Build query based on whether categories table exists
     if ($categories_exists && $enable_categories) {
@@ -128,14 +150,11 @@
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         LEFT JOIN categories c ON l.category_id = c.id
-                        WHERE l.user_id = ? AND l.is_visible = 1
-                        ORDER BY l.display_order ASC";
+                        WHERE $where_clause
+                        ORDER BY l.$order_by";
     } else {
-        // Simple query without categories - select all columns
-        $links_query = "SELECT *
-                        FROM links
-                        WHERE user_id = ? AND is_visible = 1
-                        ORDER BY display_order ASC";
+        // Simple query without categories
+        $links_query = "SELECT * FROM links WHERE $where_clause ORDER BY $order_by";
     }
     
     $stmt_links = mysqli_prepare($conn, $links_query);
