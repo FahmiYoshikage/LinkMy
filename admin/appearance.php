@@ -1576,7 +1576,13 @@
                                             <div class="card-body">
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Background Type</label>
-                                                    <select class="form-select" name="outer_bg_type" id="outerBgType">
+                                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                                        <span class="badge bg-info" id="bgTypeIndicator">
+                                                            <i class="bi bi-palette-fill"></i> 
+                                                            Current: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'Gradient' : 'Solid Color' ?>
+                                                        </span>
+                                                    </div>
+                                                    <select class="form-select" name="outer_bg_type" id="outerBgType" onchange="updateBgTypeIndicator()">
                                                         <option value="color" <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'color' ? 'selected' : '' ?>>Solid Color</option>
                                                         <option value="gradient" <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'selected' : '' ?>>Gradient</option>
                                                     </select>
@@ -2428,34 +2434,62 @@
             updateBoxedPreview();
         });
         
+        // Update background type indicator
+        function updateBgTypeIndicator() {
+            const bgType = document.getElementById('outerBgType').value;
+            const indicator = document.getElementById('bgTypeIndicator');
+            if (indicator) {
+                indicator.innerHTML = `<i class="bi bi-palette-fill"></i> Current: ${bgType === 'gradient' ? 'Gradient' : 'Solid Color'}`;
+                indicator.className = bgType === 'gradient' ? 'badge bg-info' : 'badge bg-primary';
+            }
+        }
+        
         // Set container background (with 'current' background option)
         function setContainerBg(value) {
             const containerBgColor = document.getElementById('containerBgColor');
             const containerBgColorHex = document.getElementById('containerBgColorHex');
             
             if (value === 'current') {
-                // Get current background from gradient preset or custom bg
-                const gradientPreset = document.querySelector('input[name="gradient_preset"]:checked');
-                const customBg = document.getElementById('customBgColor');
+                // Get OUTER background (from Boxed Layout settings)
+                const outerBgType = document.getElementById('outerBgType');
                 
-                if (gradientPreset && gradientPreset.value) {
-                    // Use gradient - set to white with transparency for better visibility
-                    value = 'rgba(255, 255, 255, 0.95)';
-                    alert('💡 Tip: Container background set to semi-transparent white for better readability with gradient outer background');
-                } else if (customBg && customBg.value) {
-                    value = customBg.value;
+                if (outerBgType && outerBgType.value === 'gradient') {
+                    // Using gradient outer background
+                    const gradStart = document.getElementById('outerBgGradientStart');
+                    const gradEnd = document.getElementById('outerBgGradientEnd');
+                    
+                    if (gradStart && gradEnd && gradStart.value && gradEnd.value) {
+                        // Create gradient string for container
+                        value = `linear-gradient(135deg, ${gradStart.value}, ${gradEnd.value})`;
+                        containerBgColorHex.value = value;
+                        alert(`✅ Container background set to match outer gradient: ${gradStart.value} → ${gradEnd.value}`);
+                    } else {
+                        value = 'rgba(255, 255, 255, 0.95)';
+                        containerBgColorHex.value = value;
+                    }
                 } else {
-                    value = '#ffffff';
+                    // Using solid color outer background
+                    const outerColor = document.getElementById('outerBgColor');
+                    if (outerColor && outerColor.value) {
+                        value = outerColor.value;
+                        containerBgColor.value = value;
+                        containerBgColorHex.value = value;
+                        alert(`✅ Container background set to match outer color: ${value}`);
+                    } else {
+                        value = '#ffffff';
+                        containerBgColor.value = value;
+                        containerBgColorHex.value = value;
+                    }
                 }
-            }
-            
-            // Handle rgba values
-            if (value.startsWith('rgba')) {
-                containerBgColorHex.value = value;
-                // Can't set rgba to color input, so keep it at current
             } else {
-                containerBgColor.value = value;
-                containerBgColorHex.value = value;
+                // Handle rgba/gradient values
+                if (value.startsWith('rgba') || value.startsWith('linear-gradient')) {
+                    containerBgColorHex.value = value;
+                    // Can't set rgba/gradient to color input
+                } else {
+                    containerBgColor.value = value;
+                    containerBgColorHex.value = value;
+                }
             }
             
             updateBoxedPreview();
