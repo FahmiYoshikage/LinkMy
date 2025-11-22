@@ -1,20 +1,24 @@
 User-agent: *
 Allow: /
 Allow: /landing.php
+Allow: /fahmi.php
 Allow: /register.php
 Allow: /login.php
 Allow: /assets/
 
 Disallow: /admin/
 Disallow: /config/
+Disallow: /libs/
 Disallow: /uploads/
 Disallow: /logout.php
 Disallow: /redirect.php
+Disallow: /diagnostic.php
+Disallow: /test-favicon.php
 
-# Sitemap
+# Sitemap Location
 Sitemap: https://linkmy.iet.ovh/sitemap.xml
 
-# Crawl delay (1 second between requests)
+# Crawl delay for politeness (1 second between requests)
 Crawl-delay: 1
 
 # Block bad bots

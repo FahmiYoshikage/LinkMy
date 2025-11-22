@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
@@ -7,33 +8,47 @@
     <!-- Homepage / Landing Page -->
     <url>
         <loc>https://linkmy.iet.ovh/</loc>
-        <lastmod><?php echo date('Y-m-d'); ?></lastmod>
-        <changefreq>weekly</changefreq>
+        <lastmod>2024-11-22</lastmod>
+        <changefreq>daily</changefreq>
         <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="id" href="https://linkmy.iet.ovh/" />
+        <xhtml:link rel="alternate" hreflang="en" href="https://linkmy.iet.ovh/" />
     </url>
     
     <!-- Landing Page -->
     <url>
         <loc>https://linkmy.iet.ovh/landing.php</loc>
-        <lastmod><?php echo date('Y-m-d'); ?></lastmod>
-        <changefreq>weekly</changefreq>
+        <lastmod>2024-11-22</lastmod>
+        <changefreq>daily</changefreq>
         <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="id" href="https://linkmy.iet.ovh/landing.php" />
+    </url>
+    
+    <!-- Founder Page - Fahmi Yoshikage -->
+    <url>
+        <loc>https://linkmy.iet.ovh/fahmi.php</loc>
+        <lastmod>2024-11-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.95</priority>
+        <xhtml:link rel="alternate" hreflang="id" href="https://linkmy.iet.ovh/fahmi.php" />
     </url>
     
     <!-- Registration -->
     <url>
         <loc>https://linkmy.iet.ovh/register.php</loc>
-        <lastmod><?php echo date('Y-m-d'); ?></lastmod>
+        <lastmod>2024-11-22</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <priority>0.9</priority>
+        <xhtml:link rel="alternate" hreflang="id" href="https://linkmy.iet.ovh/register.php" />
     </url>
     
     <!-- Login -->
     <url>
         <loc>https://linkmy.iet.ovh/login.php</loc>
-        <lastmod><?php echo date('Y-m-d'); ?></lastmod>
+        <lastmod>2024-11-22</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
+        <xhtml:link rel="alternate" hreflang="id" href="https://linkmy.iet.ovh/login.php" />
     </url>
 
 </urlset>

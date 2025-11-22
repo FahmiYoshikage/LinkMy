@@ -8,56 +8,130 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Primary Meta Tags -->
-    <title>LinkMy - Platform Link Management Gratis | Kelola Semua Link Anda dalam Satu Tempat</title>
-    <meta name="title" content="LinkMy - Platform Link Management Gratis | Kelola Semua Link Anda dalam Satu Tempat">
-    <meta name="description" content="LinkMy adalah platform gratis untuk mengelola semua link penting Anda dalam satu halaman. Buat bio link profesional, pantau analytics, dan bagikan dengan mudah. Gratis selamanya!">
-    <meta name="keywords" content="link management, bio link, linktree alternative, link organizer, link in bio, social media links, link management tool, free link manager, Indonesia, URL shortener">
-    <meta name="author" content="LinkMy">
+    <title>LinkMy by Fahmi - Bio Link Manager Gratis Indonesia | Alternatif Linktree Terbaik</title>
+    <meta name="title" content="LinkMy by Fahmi - Bio Link Manager Gratis Indonesia | Alternatif Linktree Terbaik">
+    <meta name="description" content="Platform bio link manager gratis Indonesia by Fahmi Yoshikage. Kelola semua link sosial media Anda dalam satu halaman. Alternatif Linktree terbaik untuk content creator dan UMKM Indonesia. Gratis selamanya!">
+    <meta name="keywords" content="LinkMy Fahmi, Fahmi LinkMy, bio link gratis Indonesia, link in bio, alternatif linktree Indonesia, link manager Fahmi Yoshikage, profile link builder, social media aggregator, UMKM link tool, content creator bio link, LinkMy Indonesia, Fahmi Yoshikage LinkMy">
+    <meta name="author" content="Fahmi Yoshikage">
     <meta name="robots" content="index, follow">
     <meta name="language" content="Indonesian">
     <meta name="revisit-after" content="7 days">
+    <meta name="geo.region" content="ID">
+    <meta name="geo.placename" content="Indonesia">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://linkmy.iet.ovh/">
-    <meta property="og:title" content="LinkMy - Platform Link Management Gratis">
-    <meta property="og:description" content="Kelola semua link penting Anda dalam satu tempat. Gratis, mudah, dan profesional.">
+    <meta property="og:title" content="LinkMy by Fahmi - Bio Link Manager Gratis Indonesia">
+    <meta property="og:description" content="Platform bio link manager gratis Indonesia by Fahmi Yoshikage. Kelola semua link sosial media dalam satu halaman. Alternatif Linktree terbaik!">
     <meta property="og:image" content="https://linkmy.iet.ovh/assets/images/og-image.svg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:site_name" content="LinkMy">
+    <meta property="og:site_name" content="LinkMy by Fahmi">
     <meta property="og:locale" content="id_ID">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://linkmy.iet.ovh/">
-    <meta property="twitter:title" content="LinkMy - Platform Link Management Gratis">
-    <meta property="twitter:description" content="Kelola semua link penting Anda dalam satu tempat. Gratis, mudah, dan profesional.">
+    <meta property="twitter:title" content="LinkMy by Fahmi - Bio Link Manager Indonesia">
+    <meta property="twitter:description" content="Platform bio link gratis Indonesia by Fahmi Yoshikage. Alternatif Linktree terbaik untuk content creator & UMKM.">
     <meta property="twitter:image" content="https://linkmy.iet.ovh/assets/images/og-image.svg">
+    <meta property="twitter:creator" content="@FahmiYoshikage">
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://linkmy.iet.ovh/">
     
-    <!-- Schema.org structured data -->
+    <!-- Schema.org structured data - WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "LinkMy",
-      "description": "Platform gratis untuk mengelola semua link penting Anda dalam satu halaman",
+      "name": "LinkMy by Fahmi",
+      "alternateName": "Fahmi LinkMy",
       "url": "https://linkmy.iet.ovh/",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
+      "description": "Platform bio link manager gratis Indonesia by Fahmi Yoshikage. Alternatif terbaik Linktree untuk content creator dan UMKM Indonesia.",
+      "applicationCategory": "WebApplication",
+      "operatingSystem": "Any",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "IDR"
       },
+      "creator": {
+        "@type": "Person",
+        "name": "Fahmi Yoshikage",
+        "url": "https://linkmy.iet.ovh/fahmi.php",
+        "sameAs": [
+          "https://github.com/FahmiYoshikage",
+          "mailto:fahmiilham029@gmail.com"
+        ]
+      },
+      "inLanguage": "id-ID",
+      "availableLanguage": ["Indonesian", "English"],
+      "featureList": [
+        "Bio link gratis",
+        "Link analytics dengan geolocation",
+        "Custom appearance & boxed layout",
+        "QR code generator",
+        "Link categories",
+        "Verified badge",
+        "Drag & drop reordering",
+        "Email OTP verification",
+        "Password reset system"
+      ],
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.8",
         "ratingCount": "127"
       }
+    }
+    </script>
+    
+    <!-- Schema.org - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "LinkMy by Fahmi",
+      "url": "https://linkmy.iet.ovh/",
+      "logo": "https://linkmy.iet.ovh/assets/images/logo.png",
+      "founder": {
+        "@type": "Person",
+        "name": "Fahmi Yoshikage",
+        "email": "fahmiilham029@gmail.com"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "fahmiilham029@gmail.com",
+        "contactType": "Customer Support"
+      },
+      "sameAs": [
+        "https://github.com/FahmiYoshikage/LinkMy"
+      ]
+    }
+    </script>
+    
+    <!-- Schema.org - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://linkmy.iet.ovh/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Tentang Fahmi",
+        "item": "https://linkmy.iet.ovh/fahmi.php"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Daftar",
+        "item": "https://linkmy.iet.ovh/register.php"
+      }]
     }
     </script>
     
@@ -811,45 +885,60 @@
             <div class="row">
                 <div class="col-md-4 mb-4">
                     <h5 class="fw-bold mb-3">
-                        <i class="bi bi-link-45deg"></i> LinkMy
+                        <i class="bi bi-link-45deg"></i> LinkMy by Fahmi
                     </h5>
                     <p class="text-white-50">
-                        Platform link-in-bio yang powerful untuk menghubungkan semua profil online Anda dalam satu tempat.
+                        Platform bio link manager gratis Indonesia untuk menghubungkan semua profil online Anda dalam satu tempat. 
+                        Alternatif Linktree terbaik untuk content creator dan UMKM.
+                    </p>
+                    <p class="text-white-50 small">
+                        <strong>Keywords:</strong> LinkMy Fahmi, bio link gratis Indonesia, link in bio, alternatif linktree Indonesia, 
+                        Fahmi LinkMy, profile link builder, social media aggregator
                     </p>
                 </div>
                 <div class="col-md-4 mb-4">
                     <h6 class="fw-bold mb-3">Quick Links</h6>
                     <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/">Home</a></li>
                         <li class="mb-2"><a href="#features">Fitur</a></li>
                         <li class="mb-2"><a href="#how-it-works">Cara Kerja</a></li>
+                        <li class="mb-2"><a href="/fahmi.php">Tentang Fahmi</a></li>
                         <li class="mb-2"><a href="login.php">Login</a></li>
-                        <li class="mb-2"><a href="register.php">Daftar</a></li>
+                        <li class="mb-2"><a href="register.php">Daftar Gratis</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <h6 class="fw-bold mb-3">Connect</h6>
-                    <div class="d-flex gap-2">
-                        <a href="https://www.instagram.com/fahmi.ilham06/" class="btn btn-outline-light btn-sm rounded-circle">
+                    <h6 class="fw-bold mb-3">Connect with Fahmi</h6>
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="https://www.instagram.com/fahmi.ilham06/" class="btn btn-outline-light btn-sm rounded-circle" title="Instagram">
                             <i class="bi bi-instagram"></i>
                         </a>
-                        <a href="https://x.com/FahmiVoldigoad" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://x.com/FahmiVoldigoad" class="btn btn-outline-light btn-sm rounded-circle" title="Twitter">
                             <i class="bi bi-twitter"></i>
                         </a>
-                        <a href="https://www.facebook.com/Fahmi1lham" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://www.facebook.com/Fahmi1lham" class="btn btn-outline-light btn-sm rounded-circle" title="Facebook">
                             <i class="bi bi-facebook"></i>
                         </a>
-                        <a href="https://github.com/FahmiYoshikage" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://github.com/FahmiYoshikage" class="btn btn-outline-light btn-sm rounded-circle" title="GitHub">
                             <i class="bi bi-github"></i>
                         </a>
-                        <a href="https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/" class="btn btn-outline-light btn-sm rounded-circle">
+                        <a href="https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/" class="btn btn-outline-light btn-sm rounded-circle" title="LinkedIn">
                             <i class="bi bi-linkedin"></i>
                         </a>
                     </div>
+                    <p class="text-white-50 small">
+                        <i class="bi bi-envelope"></i> fahmiilham029@gmail.com
+                    </p>
                 </div>
             </div>
             <hr class="border-secondary">
             <div class="text-center text-white-50">
-                <small>&copy; 2025 LinkMy. Made with <i class="bi bi-heart-fill text-danger"></i> for all creators everywhere.</small>
+                <p class="mb-2">
+                    <small>&copy; 2024 LinkMy by Fahmi Yoshikage | Bio Link Manager Indonesia</small>
+                </p>
+                <p class="mb-0">
+                    <small>Made with <i class="bi bi-heart-fill text-danger"></i> for content creators, UMKM, and professionals in Indonesia</small>
+                </p>
             </div>
         </div>
     </footer>
