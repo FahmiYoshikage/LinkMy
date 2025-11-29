@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db:3306
--- Generation Time: Nov 21, 2025 at 01:23 AM
+-- Generation Time: Nov 29, 2025 at 10:40 AM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.27
 
@@ -73,7 +73,7 @@ INSERT INTO `appearance` (`appearance_id`, `user_id`, `profile_title`, `bio`, `p
 (9, 9, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'dark', 'rounded', 'Inter', '2025-11-16 15:16:57', '#ffffff', '#667eea', '#333333', '#333333', 'Midnight Blue', 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
 (10, 10, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 15:16:41', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
 (11, 11, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 17:08:12', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(12, 12, 'Fahmi', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-20 15:55:35', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Pink Lemonade', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#5d75df', '#872ce2', NULL, '#ffffff', 480, 30, 1),
+(12, 12, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-26 06:54:36', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Rose Petal', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#334fcc', '#452862', NULL, '#ffffff', 600, 15, 1),
 (13, 13, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-18 03:59:27', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
 
 -- --------------------------------------------------------
@@ -216,8 +216,17 @@ INSERT INTO `links` (`link_id`, `user_id`, `title`, `url`, `order_index`, `icon_
 (12, 10, 'ss', 'https://ibehelp.gt.tc/', 2, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:29', NULL),
 (13, 10, 'se', 'https://ibehelp.gt.tc/', 3, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:37', NULL),
 (14, 10, 'ss', 'https://ibehelp.gt.tc/', 4, 'bi-link-45deg', 1, 1, '2025-11-16 15:29:45', NULL),
-(16, 12, 'INSTAGRAM', 'https://www.instagram.com/fahmi.ilham06/', 1, 'bi-instagram', 1, 1, '2025-11-18 05:38:56', 19),
-(17, 12, 'Toko Ngawi', 'https://shopee.co.id/', 2, 'bi-shop', 1, 1, '2025-11-18 06:27:04', 19);
+(16, 12, 'Instagram', 'https://www.instagram.com/fahmi.ilham06/', 6, 'bi-instagram', 3, 1, '2025-11-18 05:38:56', 19),
+(17, 12, 'Github', 'https://github.com/FahmiYoshikage', 5, 'bi-github', 7, 1, '2025-11-18 06:27:04', 19),
+(18, 12, 'LinkMy', 'https://linkmy.iet.ovh/', 1, 'bi-globe', 2, 1, '2025-11-21 01:50:07', 21),
+(19, 12, 'Kas Triforce', 'https://triforce.fahmi.app/', 2, 'bi-globe', 5, 1, '2025-11-21 01:50:43', 21),
+(20, 12, 'Linkedin', 'https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/', 4, 'bi-linkedin', 4, 1, '2025-11-21 01:53:28', 19),
+(22, 12, 'Twitter / X', 'https://x.com/FahmiVoldigoad', 7, 'bi-twitter-x', 2, 1, '2025-11-21 01:55:52', 19),
+(24, 12, 'Facebook', 'https://www.facebook.com/Fahmi1lham/', 8, 'bi-facebook', 4, 1, '2025-11-21 02:06:05', 19),
+(25, 12, 'Shopee', 'https://shopee.co.id/', 3, 'bi-shop-window', 3, 1, '2025-11-21 02:12:18', 22),
+(26, 12, 'Netdata', 'https://monitor.fahmi.app', 9, 'bi-speedometer', 2, 1, '2025-11-27 12:42:33', 23),
+(27, 12, 'Affine', 'https://affine.fahmi.app', 10, 'bi-journal-text', 4, 1, '2025-11-27 12:43:31', 23),
+(28, 12, 'Dozzle', 'https://dozzle.fahmi.app', 11, 'bi-activity', 3, 1, '2025-11-27 12:44:56', 23);
 
 -- --------------------------------------------------------
 
@@ -232,8 +241,48 @@ CREATE TABLE `link_analytics` (
   `referrer` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `user_agent` text COLLATE utf8mb4_general_ci,
   `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `country` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL
+  `country` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `city` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `link_analytics`
+--
+
+INSERT INTO `link_analytics` (`analytics_id`, `link_id`, `clicked_at`, `referrer`, `user_agent`, `ip_address`, `country`, `city`) VALUES
+(1, 24, '2025-11-21 10:14:22', '', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(2, 20, '2025-11-21 12:21:41', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(3, 17, '2025-11-21 12:21:48', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(4, 22, '2025-11-21 12:24:06', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(5, 24, '2025-11-21 12:24:22', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(6, 17, '2025-11-21 12:24:32', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(7, 16, '2025-11-21 12:24:39', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(8, 17, '2025-11-21 13:36:32', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36', '157.20.32.163', 'Indonesia', 'Jakarta'),
+(9, 20, '2025-11-21 13:37:45', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36', '157.20.32.163', 'Indonesia', 'Jakarta'),
+(10, 25, '2025-11-21 13:39:13', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36', '157.20.32.163', 'Indonesia', 'Jakarta'),
+(11, 19, '2025-11-21 15:52:31', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(12, 19, '2025-11-21 17:48:34', '', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(13, 19, '2025-11-22 06:42:57', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.167', 'Indonesia', 'Surabaya'),
+(14, 24, '2025-11-23 11:51:11', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.185', 'Indonesia', 'Surabaya'),
+(15, 18, '2025-11-25 14:04:01', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(16, 19, '2025-11-25 14:04:08', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(17, 25, '2025-11-25 14:04:26', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(18, 20, '2025-11-25 14:04:30', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(19, 17, '2025-11-25 14:04:50', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(20, 16, '2025-11-25 14:04:53', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(21, 24, '2025-11-25 14:05:12', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(22, 22, '2025-11-25 14:05:15', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.123.112', 'Indonesia', 'Sidoarjo'),
+(23, 26, '2025-11-27 12:42:37', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(24, 27, '2025-11-27 12:46:58', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(25, 28, '2025-11-27 12:48:38', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(26, 28, '2025-11-27 12:51:06', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(27, 27, '2025-11-27 12:51:17', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(28, 27, '2025-11-27 13:02:10', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(29, 26, '2025-11-27 14:45:37', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(30, 28, '2025-11-27 21:06:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
+(31, 25, '2025-11-27 22:14:13', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
+(32, 20, '2025-11-27 22:14:46', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
+(33, 27, '2025-11-29 04:53:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2404:c0:b602:702a:a190:1b2d:2066:e7f3', 'Indonesia', 'Surabaya');
 
 -- --------------------------------------------------------
 
@@ -263,7 +312,10 @@ INSERT INTO `link_categories` (`category_id`, `user_id`, `category_name`, `categ
 (10, 7, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
 (15, 1, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
 (17, 7, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
-(19, 12, 'Social Media', 'bi-folder', '#667eea', 1, 1, '2025-11-18 23:32:10');
+(19, 12, 'Social Media', 'bi-folder', '#667eea', 1, 1, '2025-11-18 23:32:10'),
+(21, 12, 'Project', 'bi-code-slash', '#667eea', 2, 1, '2025-11-21 01:49:18'),
+(22, 12, 'Marketplace', 'bi-shop', '#667eea', 3, 1, '2025-11-21 02:09:03'),
+(23, 12, 'Personal-Services', 'bi-globe', '#667eea', 4, 1, '2025-11-27 12:40:29');
 
 -- --------------------------------------------------------
 
@@ -313,7 +365,10 @@ INSERT INTO `password_resets` (`id`, `email`, `reset_token`, `created_at`, `expi
 (25, 'fahmiilham029@gmail.com', '1d5784438aea80749fc8e1171143a225f4a16b898453139451475516675d09b1', '2025-11-18 04:07:02', '2025-11-18 05:07:02', 1, '172.22.0.1'),
 (26, 'fahmiilham029@gmail.com', '26f24651d5214724b1c0001bb089b8d84d986a86649ac65794e7bedd3d030783', '2025-11-18 04:14:13', '2025-11-18 05:14:13', 0, '172.22.0.1'),
 (27, 'fahmiilham029@gmail.com', '60e4e862d3283bb97256ced568b9c69bd55a8ecbafa5bd5db37a4cd42da9f1dc', '2025-11-18 04:15:03', '2025-11-18 05:15:03', 0, '172.22.0.1'),
-(28, 'fahmiilham029@gmail.com', '4d5826078ac029d00486e7c81b486874747403938097309c56684812a91ecbf2', '2025-11-18 04:15:06', '2025-11-18 05:15:06', 0, '172.22.0.1');
+(28, 'fahmiilham029@gmail.com', '4d5826078ac029d00486e7c81b486874747403938097309c56684812a91ecbf2', '2025-11-18 04:15:06', '2025-11-18 05:15:06', 0, '172.22.0.1'),
+(29, 'fahmiilham029@gmail.com', '26d01466f60b1fe9a66cfe9d6bf1c4bb856e1cc1756addf6a66cdbea4e3ed9d3', '2025-11-28 09:34:46', '2025-11-28 10:34:46', 0, '172.22.0.1'),
+(30, 'fahmiilham029@gmail.com', '2905a9fb416d32fb719150f2036c14f3e6d435332466c9370cc4ab08b795eb6a', '2025-11-28 09:34:50', '2025-11-28 10:34:50', 0, '172.22.0.1'),
+(31, 'vivoy12gweh@gmail.com', '8a9842726456d505770e609331377a65acbb58402e90d5e00784f178193dd1b3', '2025-11-29 09:00:57', '2025-11-29 10:00:57', 1, '172.22.0.1');
 
 -- --------------------------------------------------------
 
@@ -332,12 +387,22 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`session_id`, `session_data`, `session_expire`) VALUES
+('357e69b4ead77d8286dcb76be75a5c04', '', 1764326589),
+('40b2ac013508b9a282f72499265e3cee', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322476;', 1764927276),
+('434c81bbb4d93028b2cde774641a72eb', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764247834;', 1764852634),
+('44b43abeabe97ff2a5538fc3612384a0', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763727890;', 1764332690),
+('6121170c67155c822c9e1dc9f7a56bbf', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322602;', 1764927402),
 ('70081f39c6e0dce8332fa6de9efd1903', '', 1764228865),
+('787b19de3a31e945c7cc31df27e4be8c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764146178;', 1764750978),
+('9100985f5871e6f4716ca56a3dc36829', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763709869;', 1764314669),
+('9b83bc05e30cd7aff61f38d4567bf44c', 'user_id|i:13;username|s:8:\"naganiga\";page_slug|s:8:\"naganiga\";last_activity|i:1764412724;', 1765017524),
 ('b00bb622c5f3a16fb07f61d08116fa94', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763643470;', 1764248270),
 ('b05fdf8d0a44e15e4209daab3884b3ed', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763579816;', 1764184616),
 ('b568e22a74c3633bcb5d20d7b97027f5', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763513922;', 1764118722),
-('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763687499;', 1764292299),
-('eab6c29612c6b7ff768941d3cf20dd34', '', 1764123882);
+('dd325598a8a14f30c8812cd98aadd135', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763690599;', 1764295399),
+('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763856883;', 1764461683),
+('eab6c29612c6b7ff768941d3cf20dd34', '', 1764123882),
+('f13d54b8565758d170650c2aef2df590', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763709812;', 1764314612);
 
 -- --------------------------------------------------------
 
@@ -392,22 +457,23 @@ CREATE TABLE `users` (
   `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
   `email_verified` tinyint(1) DEFAULT '0',
   `email_verified_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_verified` tinyint(1) DEFAULT '0' COMMENT 'Verified badge (1=verified founder/influencer)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `username`, `password_hash`, `page_slug`, `email`, `email_verified`, `email_verified_at`, `created_at`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'admin@linkmy.com', 0, NULL, '2025-11-10 23:29:30'),
-(7, 'mandatori', '$2y$10$2KHGnWqmaE09y6rBkTGeYOgBhor2mHbzJHcxL24HCim3CmSrdqpaO', 'heheheha', 'kunalmr40@gmail.com', 1, '2025-11-13 01:05:43', '2025-11-13 01:05:43'),
-(8, 'Nyla', '$2y$10$a3IhdC22rwMIkhr4rofyAeXW3J.2pSoQTDbcPAld9zUYdxrPmymTi', 'nylaa', 'nilaanidia@gmail.com', 1, '2025-11-16 14:58:17', '2025-11-16 14:58:17'),
-(9, 'MalingPangsit', '$2y$10$xjejtjDgzhGgOwu5sO3es.WJq9Tge6I5XpKTWqrdoWLPd88uXStpq', 'MalingPangsit', 'irfannazrildebian@gmail.com', 1, '2025-11-16 15:06:11', '2025-11-16 15:06:11'),
-(10, 'sumber_air_su_dekat', '$2y$10$xMfhL6qCj7FyqBczv.gdOutuEpb/CQJfqHTy4RfnhfnRud79ZNlEq', 'tulongg', 'yogazogo@gmail.com', 1, '2025-11-16 15:16:41', '2025-11-16 15:16:41'),
-(11, 'AjiSantoso', '$2y$10$eM6Fi50ax/DPgbCqkJOWKOKccKk.Lmq0xsFDeuh/Sp1Z.wrUinM1S', 'ajilahsapalagi', 'jagajagaketiga@gmail.com', 1, '2025-11-16 17:08:12', '2025-11-16 17:08:12'),
-(12, 'fahmi', '$2y$10$N7EAhQe57LT7a.yzLH7WbeYsB/8/.ySFY/RY8Co54RdyW558HEQbe', 'fahmi', 'fahmiilham029@gmail.com', 1, '2025-11-18 03:56:37', '2025-11-18 03:56:37'),
-(13, 'naganiga', '$2y$10$CTMt1mHEgKlhnlgo3my32eg2TqYqir4PLAA/xNrIONsfPplkWWb/u', 'naganiga', 'vivoy12gweh@gmail.com', 1, '2025-11-18 03:59:27', '2025-11-18 03:59:27');
+INSERT INTO `users` (`user_id`, `username`, `password_hash`, `page_slug`, `email`, `email_verified`, `email_verified_at`, `created_at`, `is_verified`) VALUES
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'admin@linkmy.com', 0, NULL, '2025-11-10 23:29:30', 0),
+(7, 'mandatori', '$2y$10$2KHGnWqmaE09y6rBkTGeYOgBhor2mHbzJHcxL24HCim3CmSrdqpaO', 'heheheha', 'kunalmr40@gmail.com', 1, '2025-11-13 01:05:43', '2025-11-13 01:05:43', 0),
+(8, 'Nyla', '$2y$10$a3IhdC22rwMIkhr4rofyAeXW3J.2pSoQTDbcPAld9zUYdxrPmymTi', 'nylaa', 'nilaanidia@gmail.com', 1, '2025-11-16 14:58:17', '2025-11-16 14:58:17', 0),
+(9, 'MalingPangsit', '$2y$10$xjejtjDgzhGgOwu5sO3es.WJq9Tge6I5XpKTWqrdoWLPd88uXStpq', 'MalingPangsit', 'irfannazrildebian@gmail.com', 1, '2025-11-16 15:06:11', '2025-11-16 15:06:11', 0),
+(10, 'sumber_air_su_dekat', '$2y$10$xMfhL6qCj7FyqBczv.gdOutuEpb/CQJfqHTy4RfnhfnRud79ZNlEq', 'tulongg', 'yogazogo@gmail.com', 1, '2025-11-16 15:16:41', '2025-11-16 15:16:41', 0),
+(11, 'AjiSantoso', '$2y$10$eM6Fi50ax/DPgbCqkJOWKOKccKk.Lmq0xsFDeuh/Sp1Z.wrUinM1S', 'ajilahsapalagi', 'jagajagaketiga@gmail.com', 1, '2025-11-16 17:08:12', '2025-11-16 17:08:12', 0),
+(12, 'fahmi', '$2y$10$N7EAhQe57LT7a.yzLH7WbeYsB/8/.ySFY/RY8Co54RdyW558HEQbe', 'fahmi', 'fahmiilham029@gmail.com', 1, '2025-11-18 03:56:37', '2025-11-18 03:56:37', 1),
+(13, 'naganiga', '$2y$10$IkhZqrb5qxaitJkjVobgUuVGincqnp0neGwXmS.BWmLgLtdTfQOnO', 'naganiga', 'vivoy12gweh@gmail.com', 1, '2025-11-18 03:59:27', '2025-11-18 03:59:27', 0);
 
 -- --------------------------------------------------------
 
@@ -434,6 +500,7 @@ CREATE TABLE `v_public_page_data` (
 ,`enable_glass_effect` tinyint(1)
 ,`font_family` varchar(50)
 ,`gradient_preset` varchar(50)
+,`is_verified` tinyint(1)
 ,`outer_bg_color` varchar(50)
 ,`outer_bg_gradient_end` varchar(50)
 ,`outer_bg_gradient_start` varchar(50)
@@ -540,7 +607,8 @@ ALTER TABLE `links`
 ALTER TABLE `link_analytics`
   ADD PRIMARY KEY (`analytics_id`),
   ADD KEY `link_id` (`link_id`),
-  ADD KEY `clicked_at` (`clicked_at`);
+  ADD KEY `clicked_at` (`clicked_at`),
+  ADD KEY `idx_location` (`country`,`city`);
 
 --
 -- Indexes for table `link_categories`
@@ -582,7 +650,8 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`),
   ADD UNIQUE KEY `page_slug` (`page_slug`),
   ADD UNIQUE KEY `unique_email` (`email`),
-  ADD KEY `idx_email` (`email`);
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_verified` (`is_verified`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -616,25 +685,25 @@ ALTER TABLE `gradient_presets`
 -- AUTO_INCREMENT for table `links`
 --
 ALTER TABLE `links`
-  MODIFY `link_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `link_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `link_analytics`
 --
 ALTER TABLE `link_analytics`
-  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `link_categories`
 --
 ALTER TABLE `link_categories`
-  MODIFY `category_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `category_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `social_icons`
@@ -655,7 +724,7 @@ ALTER TABLE `users`
 --
 DROP TABLE IF EXISTS `v_public_page_data`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data`  AS SELECT `u`.`user_id` AS `user_id`, `u`.`username` AS `username`, `u`.`page_slug` AS `page_slug`, `a`.`profile_title` AS `profile_title`, `a`.`bio` AS `bio`, `a`.`profile_pic_filename` AS `profile_pic_filename`, `a`.`bg_image_filename` AS `bg_image_filename`, `a`.`theme_name` AS `theme_name`, `a`.`button_style` AS `button_style`, `a`.`font_family` AS `font_family`, `a`.`custom_bg_color` AS `custom_bg_color`, `a`.`custom_button_color` AS `custom_button_color`, `a`.`custom_text_color` AS `custom_text_color`, `a`.`custom_link_text_color` AS `custom_link_text_color`, `a`.`gradient_preset` AS `gradient_preset`, `a`.`profile_layout` AS `profile_layout`, `a`.`container_style` AS `container_style`, `a`.`show_profile_border` AS `show_profile_border`, `a`.`enable_animations` AS `enable_animations`, `a`.`enable_glass_effect` AS `enable_glass_effect`, `a`.`shadow_intensity` AS `shadow_intensity`, `a`.`enable_categories` AS `enable_categories`, `a`.`boxed_layout` AS `boxed_layout`, `a`.`outer_bg_type` AS `outer_bg_type`, `a`.`outer_bg_color` AS `outer_bg_color`, `a`.`outer_bg_gradient_start` AS `outer_bg_gradient_start`, `a`.`outer_bg_gradient_end` AS `outer_bg_gradient_end`, `a`.`outer_bg_image` AS `outer_bg_image`, `a`.`container_bg_color` AS `container_bg_color`, `a`.`container_max_width` AS `container_max_width`, `a`.`container_border_radius` AS `container_border_radius`, `a`.`container_shadow` AS `container_shadow` FROM (`users` `u` join `appearance` `a` on((`u`.`user_id` = `a`.`user_id`))) WHERE (`u`.`email_verified` = 1) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data`  AS SELECT `u`.`user_id` AS `user_id`, `u`.`username` AS `username`, `u`.`page_slug` AS `page_slug`, `u`.`is_verified` AS `is_verified`, `a`.`profile_title` AS `profile_title`, `a`.`bio` AS `bio`, `a`.`profile_pic_filename` AS `profile_pic_filename`, `a`.`bg_image_filename` AS `bg_image_filename`, `a`.`theme_name` AS `theme_name`, `a`.`button_style` AS `button_style`, `a`.`font_family` AS `font_family`, `a`.`custom_bg_color` AS `custom_bg_color`, `a`.`custom_button_color` AS `custom_button_color`, `a`.`custom_text_color` AS `custom_text_color`, `a`.`custom_link_text_color` AS `custom_link_text_color`, `a`.`gradient_preset` AS `gradient_preset`, `a`.`profile_layout` AS `profile_layout`, `a`.`container_style` AS `container_style`, `a`.`show_profile_border` AS `show_profile_border`, `a`.`enable_animations` AS `enable_animations`, `a`.`enable_glass_effect` AS `enable_glass_effect`, `a`.`shadow_intensity` AS `shadow_intensity`, `a`.`enable_categories` AS `enable_categories`, `a`.`boxed_layout` AS `boxed_layout`, `a`.`outer_bg_type` AS `outer_bg_type`, `a`.`outer_bg_color` AS `outer_bg_color`, `a`.`outer_bg_gradient_start` AS `outer_bg_gradient_start`, `a`.`outer_bg_gradient_end` AS `outer_bg_gradient_end`, `a`.`outer_bg_image` AS `outer_bg_image`, `a`.`container_bg_color` AS `container_bg_color`, `a`.`container_max_width` AS `container_max_width`, `a`.`container_border_radius` AS `container_border_radius`, `a`.`container_shadow` AS `container_shadow` FROM (`users` `u` join `appearance` `a` on((`u`.`user_id` = `a`.`user_id`))) WHERE (`u`.`email_verified` = 1) ;
 
 -- --------------------------------------------------------
 

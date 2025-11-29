@@ -1,7 +1,6 @@
 ﻿# TUGAS KAMPUS - Dokumentasi 12 Fitur Wajib + Fitur Tambahan
 
 ## Informasi Project
-
 **Nama Project:** LinkMy - Bio Link Manager  
 **Teknologi:** PHP 8.1, MySQL 8.0, Bootstrap 5.3.8, Highcharts  
 **Deployment:** Docker + VPS Ubuntu  
@@ -11,23 +10,22 @@
 
 ## A. 12 FITUR WAJIB TUGAS KAMPUS
 
-### 1. Penggunaan HTML, PHP, dan Database ✅
+### 1. Penggunaan HTML, PHP, dan Database 
 
 **Lokasi Implementasi:** Semua file .php di project
 
 **File Utama:**
-
--   index.php - Landing page dengan HTML5 semantic
--   login.php - Form login dengan PHP processing
--   register.php - Form registrasi + validation
--   profile.php - Public profile page (HTML + PHP dynamic)
--   admin/dashboard.php - Admin panel dengan chart
--   config/db.php - Database connection handler
+- index.php - Landing page dengan HTML5 semantic
+- login.php - Form login dengan PHP processing
+- 
+egister.php - Form registrasi + validation
+- profile.php - Public profile page (HTML + PHP dynamic)
+- dmin/dashboard.php - Admin panel dengan chart
+- config/db.php - Database connection handler
 
 **Cara Kerja Teknikal:**
 
 **HTML Structure:**
-
 ```html
 <!DOCTYPE html>
 <html lang="id">
@@ -44,7 +42,6 @@
 ```
 
 **PHP Database Connection:**
-
 ```php
 // config/db.php
 $servername = "localhost";
@@ -60,7 +57,6 @@ if (!$conn) {
 ```
 
 **PHP-HTML Integration:**
-
 ```php
 <!-- profile.php -->
 <?php
@@ -74,23 +70,21 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
 
 ---
 
-### 2. Penggunaan CSS ✅
+### 2. Penggunaan CSS 
 
 **Lokasi Implementasi:**
-
--   assets/css/admin.css - Admin panel styling (284 lines)
--   assets/css/public.css - Public profile styling
--   Inline CSS di profile.php - Dynamic styling dari database
+- ssets/css/admin.css - Admin panel styling (284 lines)
+- ssets/css/public.css - Public profile styling
+- Inline CSS di profile.php - Dynamic styling dari database
 
 **Cara Kerja Teknikal:**
 
 **External CSS:**
-
 ```css
 /* assets/css/admin.css */
 .navbar-custom {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .navbar-custom .nav-link {
@@ -103,12 +97,11 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
     background: white;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 ```
 
 **Dynamic CSS dari Database:**
-
 ```php
 <!-- profile.php - Dynamic styling -->
 <style>
@@ -116,11 +109,11 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
         --bg-color: <?php echo $user_data['background_color']; ?>;
         --button-style: <?php echo $user_data['button_style']; ?>;
     }
-
+    
     .profile-container {
         background: var(--bg-color);
     }
-
+    
     <?php if ($user_data['background_type'] === 'image'): ?>
     .outer-background {
         background-image: url('<?php echo $user_data['background_image']; ?>');
@@ -131,7 +124,6 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
 ```
 
 **Responsive CSS:**
-
 ```css
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
@@ -139,7 +131,7 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
         max-width: 100%;
         padding: 20px 15px;
     }
-
+    
     .link-button {
         font-size: 14px;
     }
@@ -148,17 +140,15 @@ $user_data = get_single_row("SELECT * FROM v_public_page_data WHERE username = ?
 
 ---
 
-### 3. Penggunaan Chart ✅
+### 3. Penggunaan Chart 
 
 **Lokasi Implementasi:**
-
--   admin/dashboard.php lines 783-1100
--   Library: **Highcharts** dari CDN
+- dmin/dashboard.php lines 783-1100
+- Library: **Highcharts** dari CDN
 
 **Cara Kerja Teknikal:**
 
 **Chart 1: Click Trends (Area Chart)**
-
 ```php
 <!-- Load Highcharts CDN -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -177,7 +167,7 @@ Highcharts.chart('clickTrendsChart', {
     },
     xAxis: {
         categories: [
-            <?php
+            <?php 
             foreach ($dates_range as $date => $clicks) {
                 echo "'" . date('d M', strtotime($date)) . "',";
             }
@@ -198,7 +188,6 @@ Highcharts.chart('clickTrendsChart', {
 ```
 
 **Chart 2: Traffic by Location (Donut Chart)**
-
 ```php
 <div id="trafficSourcesChart" style="height: 400px;"></div>
 
@@ -228,7 +217,7 @@ Highcharts.chart('trafficSourcesChart', {
         name: 'Traffic Share',
         colorByPoint: true,
         data: [
-            <?php
+            <?php 
             foreach ($click_by_location as $loc) {
                 echo "{ name: '" . htmlspecialchars($loc['location']) . "', ";
                 echo "y: " . intval($loc['clicks']) . " },";
@@ -241,14 +230,13 @@ Highcharts.chart('trafficSourcesChart', {
 ```
 
 **Query Data untuk Chart:**
-
 ```php
 // Click Trends - Last 7 days including today
 $daily_clicks = get_all_rows(
     "SELECT DATE(clicked_at) as date, COUNT(*) as clicks
      FROM link_analytics la
      INNER JOIN links l ON la.link_id = l.link_id
-     WHERE l.user_id = ?
+     WHERE l.user_id = ? 
        AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
        AND DATE(clicked_at) <= CURDATE()
      GROUP BY DATE(clicked_at)
@@ -258,8 +246,8 @@ $daily_clicks = get_all_rows(
 
 // Traffic by Location - Top 10 countries/cities
 $click_by_location = get_all_rows(
-    "SELECT
-        CASE
+    "SELECT 
+        CASE 
             WHEN city IS NOT NULL AND city != '' THEN CONCAT(city, ', ', COALESCE(country, 'Unknown'))
             ELSE COALESCE(NULLIF(country, ''), 'Unknown')
         END as location,
@@ -276,14 +264,13 @@ $click_by_location = get_all_rows(
 
 ---
 
-### 4. Penggunaan Table Relasi ✅
+### 4. Penggunaan Table Relasi 
 
 **Lokasi Implementasi:** Database linkmy_db
 
 **Cara Kerja Teknikal:**
 
-**Relasi 1: users ↔ appearance (One-to-One)**
-
+**Relasi 1: users  appearance (One-to-One)**
 ```sql
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -310,8 +297,7 @@ CREATE TABLE appearance (
 );
 ```
 
-**Relasi 2: users ↔ links (One-to-Many)**
-
+**Relasi 2: users  links (One-to-Many)**
 ```sql
 CREATE TABLE links (
     link_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -329,8 +315,7 @@ CREATE TABLE links (
 );
 ```
 
-**Relasi 3: links ↔ link_analytics (One-to-Many)**
-
+**Relasi 3: links  link_analytics (One-to-Many)**
 ```sql
 CREATE TABLE link_analytics (
     analytics_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -345,8 +330,7 @@ CREATE TABLE link_analytics (
 );
 ```
 
-**Relasi 4: users ↔ link_categories ↔ links (Many-to-Many via category)**
-
+**Relasi 4: users  link_categories  links (Many-to-Many via category)**
 ```sql
 CREATE TABLE link_categories (
     category_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -366,38 +350,35 @@ ORDER BY lc.order_index, l.order_index;
 ```
 
 **Diagram Relasi:**
-
-```
-users (1) ↔ (1) appearance
-  ↓
-  (1) ↔ (*) links
-              ↓
-              (1) ↔ (*) link_analytics
-  ↓
-  (1) ↔ (*) link_categories
-                ↓
-                (1) ↔ (*) links
-```
+`
+users (1)  (1) appearance
+  
+   (1)  (*) links
+                    
+                     (1)  (*) link_analytics
+  
+   (1)  (*) link_categories
+                       
+                        (1)  (*) links
+`
 
 ---
 
-### 5. Implementasi View Database ✅
+### 5. Implementasi View Database 
 
 **Lokasi Implementasi:**
-
--   database_update_view_verified.sql
--   Digunakan di: profile.php line 14
+- database_update_view_verified.sql
+- Digunakan di: profile.php line 14
 
 **Cara Kerja Teknikal:**
 
 **View 1: v_public_page_data**
-
 ```sql
 -- Menggabungkan data users + appearance untuk public profile
 DROP VIEW IF EXISTS v_public_page_data;
 
 CREATE VIEW v_public_page_data AS
-SELECT
+SELECT 
     u.user_id,
     u.username,
     u.page_slug,
@@ -425,7 +406,6 @@ WHERE u.email_verified = 1;
 ```
 
 **Penggunaan View di PHP:**
-
 ```php
 // profile.php
 $page_slug = $_GET['username'] ?? '';
@@ -448,7 +428,6 @@ echo $user_data['is_verified']; // dari users
 ```
 
 **Keuntungan View:**
-
 1. **Query lebih simple** - Tidak perlu JOIN berulang kali
 2. **Konsistensi** - Logic JOIN terpusat di VIEW
 3. **Security** - Bisa filter data yang boleh diakses (WHERE email_verified = 1)
@@ -456,47 +435,47 @@ echo $user_data['is_verified']; // dari users
 
 ---
 
-### 6. Implementasi Insert Database ✅
+### 6. Implementasi Insert Database 
 
 **Lokasi Implementasi:**
-
--   register.php - Insert user baru
--   admin/dashboard.php - Insert link baru (AJAX)
--   redirect.php - Insert analytics tracking
+- 
+egister.php - Insert user baru
+- dmin/dashboard.php - Insert link baru (AJAX)
+- 
+edirect.php - Insert analytics tracking
 
 **Cara Kerja Teknikal:**
 
 **Insert 1: User Registration**
-
 ```php
 // register.php
 if ($_POST['action'] === 'register') {
     $username = sanitize_input($_POST['username']);
     $email = sanitize_input($_POST['email']);
     $password = $_POST['password'];
-
+    
     // Hash password dengan bcrypt
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
+    
     // Generate unique page slug
     $page_slug = strtolower($username) . rand(100, 999);
-
+    
     // Insert user (dengan prepared statement)
-    $query = "INSERT INTO users (username, email, password, page_slug, email_verified)
+    $query = "INSERT INTO users (username, email, password, page_slug, email_verified) 
                 VALUES (?, ?, ?, ?, 0)";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, 'ssss', $username, $email, $hashed_password, $page_slug);
-
+    
     if (mysqli_stmt_execute($stmt)) {
         $user_id = mysqli_insert_id($conn);
-
+        
         // Insert default appearance
-        $query2 = "INSERT INTO appearance (user_id, display_name, background_color)
+        $query2 = "INSERT INTO appearance (user_id, display_name, background_color) 
                      VALUES (?, ?, '#ffffff')";
         $stmt2 = mysqli_prepare($conn, $query2);
         mysqli_stmt_bind_param($stmt2, 'is', $user_id, $username);
         mysqli_stmt_execute($stmt2);
-
+        
         // Redirect to verify email
         header('Location: verify-otp.php');
     }
@@ -504,7 +483,6 @@ if ($_POST['action'] === 'register') {
 ```
 
 **Insert 2: Add Link (AJAX)**
-
 ```php
 // admin/dashboard.php
 if ($_POST['action'] === 'add_link') {
@@ -512,30 +490,29 @@ if ($_POST['action'] === 'add_link') {
     $url = sanitize_input($_POST['url']);
     $icon_class = sanitize_input($_POST['icon_class']);
     $category_id = intval($_POST['category_id']);
-
+    
     // Auto-add https
     if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
         $url = "https://" . $url;
     }
-
+    
     // Get next order index
     $max_order = get_single_row(
         "SELECT MAX(order_index) as max FROM links WHERE user_id = ?",
         [$current_user_id], 'i'
     );
     $order_index = ($max_order['max'] ?? 0) + 1;
-
+    
     // Insert link
-    $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index, is_active, click_count)
+    $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index, is_active, click_count) 
                 VALUES (?, ?, ?, ?, ?, ?, 1, 0)";
-    execute_query($query, [$current_user_id, $title, $url, $icon_class, $category_id, $order_index], 'isssii');
-
+    execute_query($query, [$current_user_id, $	itle, $url, $icon_class, $category_id, $order_index], 'isssii');
+    
     echo json_encode(['success' => true, 'link_id' => mysqli_insert_id($conn)]);
 }
 ```
 
 **Insert 3: Analytics Tracking (Realtime)**
-
 ```php
 // redirect.php
 $link_id = intval($_GET['id']);
@@ -550,100 +527,96 @@ $country = $geo['country'] ?? 'Unknown';
 $city = $geo['city'] ?? '';
 
 // Insert analytics
-$query = "INSERT INTO link_analytics (link_id, referrer, user_agent, ip_address, country, city, clicked_at)
+$query = "INSERT INTO link_analytics (link_id, referrer, user_agent, ip_address, country, city, clicked_at) 
             VALUES (?, ?, ?, ?, ?, ?, NOW())";
 $stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, 'isssss', $link_id, $referrer, $user_agent, $ip_address, $country, $city);
+mysqli_stmt_bind_param($stmt, 'isssss', $link_id, $
+eferrer, $user_agent, $ip_address, $country, $city);
 mysqli_stmt_execute($stmt);
 ```
 
 ---
 
-### 7. Implementasi Update Database ✅
+### 7. Implementasi Update Database 
 
 **Lokasi Implementasi:**
-
--   admin/appearance.php - Update profile/background
--   admin/dashboard.php - Update link (AJAX)
--   admin/settings.php - Update account info
+- dmin/appearance.php - Update profile/background
+- dmin/dashboard.php - Update link (AJAX)
+- dmin/settings.php - Update account info
 
 **Cara Kerja Teknikal:**
 
 **Update 1: Profile Appearance**
-
 ```php
 // admin/appearance.php
 if ($_POST['action'] === 'update_appearance') {
     $display_name = sanitize_input($_POST['display_name']);
-    $bio = sanitize_input($_POST['bio']);
-    $background_type = $_POST['background_type'];
-    $background_color = sanitize_input($_POST['background_color']);
-
-    $query = "UPDATE appearance
-                SET display_name = ?,
-                    bio = ?,
-                    background_type = ?,
+    $io = sanitize_input($_POST['bio']);
+    $ackground_type = $_POST['background_type'];
+    $ackground_color = sanitize_input($_POST['background_color']);
+    
+    $query = "UPDATE appearance 
+                SET display_name = ?, 
+                    bio = ?, 
+                    background_type = ?, 
                     background_color = ?
                 WHERE user_id = ?";
-
-    execute_query($query,
-        [$display_name, $bio, $background_type, $background_color, $current_user_id],
+    
+    execute_query($query, 
+        [$display_name, $io, $ackground_type, $ackground_color, $current_user_id],
         'ssssi'
     );
-
+    
     $_SESSION['success'] = 'Appearance updated successfully!';
     header('Location: appearance.php');
 }
 ```
 
 **Update 2: Edit Link**
-
 ```php
 // admin/dashboard.php (AJAX endpoint)
 if ($_POST['action'] === 'update_link') {
     $link_id = intval($_POST['link_id']);
-    $title = sanitize_input($_POST['title']);
+    $	itle = sanitize_input($_POST['title']);
     $url = sanitize_input($_POST['url']);
     $icon_class = sanitize_input($_POST['icon_class']);
     $category_id = intval($_POST['category_id']);
-
+    
     // Validate ownership
     $check = get_single_row(
         "SELECT user_id FROM links WHERE link_id = ?",
         [$link_id], 'i'
     );
-
+    
     if ($check['user_id'] !== $current_user_id) {
         die('Unauthorized');
     }
-
-    $query = "UPDATE links
+    
+    $query = "UPDATE links 
                 SET title = ?, url = ?, icon_class = ?, category_id = ?
                 WHERE link_id = ? AND user_id = ?";
-
-    execute_query($query, [$title, $url, $icon_class, $category_id, $link_id, $current_user_id], 'sssiii');
-
+    
+    execute_query($query, [$	itle, $url, $icon_class, $category_id, $link_id, $current_user_id], 'sssiii');
+    
     echo json_encode(['success' => true]);
 }
 ```
 
 **Update 3: Toggle Link Status**
-
 ```php
 // admin/dashboard.php
 if ($_POST['action'] === 'toggle_link_status') {
     $link_id = intval($_POST['link_id']);
     $is_active = intval($_POST['is_active']); // 0 or 1
-
+    
     $query = "UPDATE links SET is_active = ? WHERE link_id = ? AND user_id = ?";
     execute_query($query, [$is_active, $link_id, $current_user_id], 'iii');
-
+    
     echo json_encode(['success' => true]);
 }
 ```
 
 **Update 4: Click Counter (Auto Increment)**
-
 ```php
 // redirect.php
 // Update click count setiap link diklik
@@ -655,52 +628,49 @@ mysqli_stmt_execute($stmt);
 
 ---
 
-### 8. Implementasi Delete Database ✅
+### 8. Implementasi Delete Database 
 
 **Lokasi Implementasi:**
-
--   admin/dashboard.php - Delete link (AJAX)
--   admin/categories.php - Delete category
--   admin/settings.php - Delete account (CASCADE)
+- dmin/dashboard.php - Delete link (AJAX)
+- dmin/categories.php - Delete category
+- dmin/settings.php - Delete account (CASCADE)
 
 **Cara Kerja Teknikal:**
 
 **Delete 1: Delete Link**
-
 ```php
 // admin/dashboard.php (AJAX endpoint)
 if ($_POST['action'] === 'delete_link') {
     $link_id = intval($_POST['link_id']);
-
+    
     // Validate ownership
     $check = get_single_row(
         "SELECT user_id FROM links WHERE link_id = ?",
         [$link_id], 'i'
     );
-
+    
     if ($check['user_id'] !== $current_user_id) {
         die('Unauthorized');
     }
-
+    
     // Delete link (CASCADE akan auto-delete analytics)
     $query = "DELETE FROM links WHERE link_id = ? AND user_id = ?";
     execute_query($query, [$link_id, $current_user_id], 'ii');
-
+    
     echo json_encode(['success' => true, 'message' => 'Link deleted']);
 }
 ```
 
 **Delete 2: Delete Category**
-
 ```php
 // admin/categories.php
 if ($_POST['action'] === 'delete_category') {
     $category_id = intval($_POST['category_id']);
-
+    
     // Set links in this category to NULL (ON DELETE SET NULL)
     $query = "DELETE FROM link_categories WHERE category_id = ? AND user_id = ?";
     execute_query($query, [$category_id, $current_user_id], 'ii');
-
+    
     // Links dengan category_id ini akan auto set ke NULL
     $_SESSION['success'] = 'Category deleted';
     header('Location: categories.php');
@@ -708,20 +678,19 @@ if ($_POST['action'] === 'delete_category') {
 ```
 
 **Delete 3: Delete Account (CASCADE)**
-
 ```php
 // admin/settings.php
 if ($_POST['action'] === 'delete_account' && isset($_POST['confirm'])) {
     $password = $_POST['password'];
-
+    
     // Verify password
     $user = get_single_row("SELECT password FROM users WHERE user_id = ?", [$current_user_id], 'i');
-
+    
     if (password_verify($password, $user['password'])) {
         // Delete user (CASCADE akan delete semua data terkait)
         $query = "DELETE FROM users WHERE user_id = ?";
         execute_query($query, [$current_user_id], 'i');
-
+        
         // Logout
         session_destroy();
         header('Location: ../index.php?deleted=1');
@@ -730,7 +699,6 @@ if ($_POST['action'] === 'delete_account' && isset($_POST['confirm'])) {
 ```
 
 **Cascade Delete Behavior:**
-
 ```sql
 -- Ketika user dihapus, otomatis hapus:
 -- 1. appearance (ON DELETE CASCADE)
@@ -739,7 +707,7 @@ if ($_POST['action'] === 'delete_account' && isset($_POST['confirm'])) {
 -- 4. link_analytics (CASCADE via links)
 
 ALTER TABLE appearance
-ADD CONSTRAINT fk_appearance_user
+ADD CONSTRAINT fk_appearance_user 
 FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
 
 ALTER TABLE links
@@ -753,62 +721,60 @@ FOREIGN KEY (link_id) REFERENCES links(link_id) ON DELETE CASCADE;
 
 ---
 
-### 9. Hosting Website ✅
+### 9. Hosting Website 
 
 **Lokasi Implementasi:** VPS Ubuntu dengan Docker
 
 **Cara Kerja Teknikal:**
 
 **Setup 1: Docker Compose**
-
 ```yaml
 # docker-compose.yml
 version: '3.8'
 
 services:
-    web:
-        build: .
-        container_name: linkmy_web
-        ports:
-            - '80:80'
-            - '443:443'
-        volumes:
-            - ./:/var/www/html
-            - ./uploads:/var/www/html/uploads
-        environment:
-            - MYSQL_HOST=db
-            - MYSQL_DATABASE=linkmy_db
-            - MYSQL_USER=root
-            - MYSQL_PASSWORD=your_password
-        depends_on:
-            - db
-        networks:
-            - linkmy_network
+  web:
+    build: .
+    container_name: linkmy_web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www/html
+      - ./uploads:/var/www/html/uploads
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=linkmy_db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=your_password
+    depends_on:
+      - db
+    networks:
+      - linkmy_network
 
-    db:
-        image: mysql:8.0
-        container_name: linkmy_db
-        environment:
-            MYSQL_ROOT_PASSWORD: your_password
-            MYSQL_DATABASE: linkmy_db
-        volumes:
-            - db_data:/var/lib/mysql
-            - ./linkmy_db.sql:/docker-entrypoint-initdb.d/init.sql
-        ports:
-            - '3306:3306'
-        networks:
-            - linkmy_network
+  db:
+    image: mysql:8.0
+    container_name: linkmy_db
+    environment:
+      MYSQL_ROOT_PASSWORD: your_password
+      MYSQL_DATABASE: linkmy_db
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./linkmy_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - linkmy_network
 
 volumes:
-    db_data:
+  db_data:
 
 networks:
-    linkmy_network:
-        driver: bridge
+  linkmy_network:
+    driver: bridge
 ```
 
 **Setup 2: Dockerfile**
-
 ```dockerfile
 # Dockerfile
 FROM php:8.1-apache
@@ -830,44 +796,41 @@ EXPOSE 80 443
 ```
 
 **Setup 3: Apache Config**
-
 ```apache
 # apache-config.conf
 <VirtualHost *:80>
     ServerName yourdomain.com
     ServerAlias www.yourdomain.com
-
+    
     DocumentRoot /var/www/html
-
+    
     <Directory /var/www/html>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
-
+    
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
 
 **Setup 4: .htaccess (URL Rewrite)**
-
 ```apache
 # .htaccess
 RewriteEngine On
 
 # Redirect www to non-www
 RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+RewriteRule ^(.*)$ http://%1/ [R=301,L]
 
 # Clean URL untuk profile
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([a-zA-Z0-9_-]+)$ profile.php?username=$1 [L,QSA]
+RewriteRule ^([a-zA-Z0-9_-]+)$ profile.php?username= [L,QSA]
 ```
 
 **Deployment Steps:**
-
 ```bash
 # 1. Clone repo ke VPS
 git clone https://github.com/FahmiYoshikage/LinkMy.git
@@ -891,7 +854,6 @@ docker-compose ps
 ```
 
 **Domain & SSL:**
-
 ```bash
 # Install Certbot untuk SSL
 sudo apt install certbot python3-certbot-apache
@@ -905,63 +867,61 @@ sudo certbot renew --dry-run
 
 ---
 
-### 10. Upload Foto ✅
+### 10. Upload Foto 
 
 **Lokasi Implementasi:**
-
--   admin/appearance.php - Profile picture & background upload
--   uploads/ directory structure
+- dmin/appearance.php - Profile picture & background upload
+- uploads/ directory structure
 
 **Cara Kerja Teknikal:**
 
 **Upload 1: Profile Picture**
-
 ```php
 // admin/appearance.php
 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === 0) {
-    $file = $_FILES['profile_picture'];
-
+    $ile = $_FILES['profile_picture'];
+    
     // 1. Validate file type
-    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime_type = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    if (!in_array($mime_type, $allowed_types)) {
+    $llowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $info = finfo_open(FILEINFO_MIME_TYPE);
+    $mime_type = finfo_file($info, $ile['tmp_name']);
+    finfo_close($info);
+    
+    if (!in_array($mime_type, $llowed_types)) {
         $_SESSION['error'] = 'Invalid file type. Only JPG, PNG, GIF, WEBP allowed.';
         exit;
     }
-
+    
     // 2. Validate file size (max 2MB)
-    if ($file['size'] > 2 * 1024 * 1024) {
+    if ($ile['size'] > 2 * 1024 * 1024) {
         $_SESSION['error'] = 'File too large. Max 2MB.';
         exit;
     }
-
+    
     // 3. Generate unique filename
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'profile_' . $current_user_id . '_' . time() . '.' . $ext;
+    $ext = pathinfo($ile['name'], PATHINFO_EXTENSION);
+    $ilename = 'profile_' . $current_user_id . '_' . time() . '.' . $ext;
     $upload_dir = '../uploads/profile_pics/';
-    $upload_path = $upload_dir . $filename;
-
+    $upload_path = $upload_dir . $ilename;
+    
     // 4. Create directory if not exists
     if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
     }
-
+    
     // 5. Delete old profile picture
     $old_pic = get_single_row("SELECT profile_picture FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
     if ($old_pic['profile_picture'] && file_exists('../' . $old_pic['profile_picture'])) {
         unlink('../' . $old_pic['profile_picture']);
     }
-
+    
     // 6. Move uploaded file
-    if (move_uploaded_file($file['tmp_name'], $upload_path)) {
+    if (move_uploaded_file($ile['tmp_name'], $upload_path)) {
         // 7. Update database
-        $db_path = 'uploads/profile_pics/' . $filename;
+        $db_path = 'uploads/profile_pics/' . $ilename;
         $query = "UPDATE appearance SET profile_picture = ? WHERE user_id = ?";
         execute_query($query, [$db_path, $current_user_id], 'si');
-
+        
         $_SESSION['success'] = 'Profile picture updated!';
     } else {
         $_SESSION['error'] = 'Upload failed';
@@ -970,23 +930,22 @@ if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] ===
 ```
 
 **Upload 2: Background Image**
-
 ```php
 // admin/appearance.php
 if (isset($_FILES['background_image']) && $_FILES['background_image']['error'] === 0) {
-    $file = $_FILES['background_image'];
-
+    $ile = $_FILES['background_image'];
+    
     // Validation (same as profile picture)
     // ...
-
-    $filename = 'bg_' . $current_user_id . '_' . time() . '.' . $ext;
+    
+    $ilename = 'bg_' . $current_user_id . '_' . time() . '.' . $ext;
     $upload_dir = '../uploads/backgrounds/';
-    $upload_path = $upload_dir . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-        $db_path = 'uploads/backgrounds/' . $filename;
-        $query = "UPDATE appearance
-                    SET background_type = 'image', background_image = ?
+    $upload_path = $upload_dir . $ilename;
+    
+    if (move_uploaded_file($ile['tmp_name'], $upload_path)) {
+        $db_path = 'uploads/backgrounds/' . $ilename;
+        $query = "UPDATE appearance 
+                    SET background_type = 'image', background_image = ? 
                     WHERE user_id = ?";
         execute_query($query, [$db_path, $current_user_id], 'si');
     }
@@ -994,50 +953,43 @@ if (isset($_FILES['background_image']) && $_FILES['background_image']['error'] =
 ```
 
 **Upload Form HTML:**
-
 ```html
 <form method="POST" enctype="multipart/form-data">
     <div class="mb-3">
         <label for="profile_picture" class="form-label">Profile Picture</label>
-        <input
-            type="file"
-            class="form-control"
-            id="profile_picture"
-            name="profile_picture"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-        />
+        <input type="file" 
+               class="form-control" 
+               id="profile_picture" 
+               name="profile_picture" 
+               accept="image/jpeg,image/png,image/gif,image/webp">
         <small class="text-muted">Max 2MB. JPG, PNG, GIF, or WEBP.</small>
     </div>
-
+    
     <!-- Preview -->
     <div id="preview">
-        <img
-            src="<?php echo $user_data['profile_picture']; ?>"
-            alt="Current"
-            style="max-width: 150px; border-radius: 50%;"
-        />
+        <img src="<?php echo $user_data['profile_picture']; ?>" 
+             alt="Current" 
+             style="max-width: 150px; border-radius: 50%;">
     </div>
-
+    
     <button type="submit" class="btn btn-primary">Upload</button>
 </form>
 ```
 
 **Directory Structure:**
-
-```
+`
 uploads/
-├── profile_pics/
-│   ├── profile_1_1699999999.jpg
-│   ├── profile_2_1699999998.png
-│   └── .htaccess (allow images only)
-├── backgrounds/
-│   ├── bg_1_1699999997.jpg
-│   └── bg_2_1699999996.png
-└── folder_pics/ (for future use)
-```
+ profile_pics/
+    profile_1_1699999999.jpg
+    profile_2_1699999998.png
+    .htaccess (allow images only)
+ backgrounds/
+    bg_1_1699999997.jpg
+    bg_2_1699999996.png
+ folder_pics/ (for future use)
+`
 
 **Security .htaccess:**
-
 ```apache
 # uploads/.htaccess
 # Only allow image access
@@ -1055,18 +1007,16 @@ uploads/
 
 ---
 
-### 11. Penggunaan Session Login ✅
+### 11. Penggunaan Session Login 
 
 **Lokasi Implementasi:**
-
--   login.php - Session creation
--   config/auth_check.php - Session validation
--   Semua file di admin/ - Protected pages
+- login.php - Session creation
+- config/auth_check.php - Session validation
+- Semua file di dmin/ - Protected pages
 
 **Cara Kerja Teknikal:**
 
 **Login Process:**
-
 ```php
 // login.php
 session_start();
@@ -1074,13 +1024,13 @@ session_start();
 if ($_POST['action'] === 'login') {
     $email = sanitize_input($_POST['email']);
     $password = $_POST['password'];
-
+    
     // 1. Get user from database
     $user = get_single_row(
         "SELECT user_id, username, password, email_verified FROM users WHERE email = ?",
         [$email], 's'
     );
-
+    
     if (!$user) {
         $error = 'Invalid email or password';
     } else {
@@ -1097,10 +1047,10 @@ if ($_POST['action'] === 'login') {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['login_time'] = time();
                 $_SESSION['last_activity'] = time();
-
+                
                 // 5. Regenerate session ID (security)
                 session_regenerate_id(true);
-
+                
                 // 6. Redirect to dashboard
                 header('Location: admin/dashboard.php');
                 exit;
@@ -1113,7 +1063,6 @@ if ($_POST['action'] === 'login') {
 ```
 
 **Session Validation (Auth Check):**
-
 ```php
 // config/auth_check.php
 session_start();
@@ -1127,9 +1076,9 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in'])) {
 
 // 2. Check session timeout (30 minutes)
 $timeout_duration = 1800; // 30 minutes
-if (isset($_SESSION['last_activity']) &&
+if (isset($_SESSION['last_activity']) && 
     (time() - $_SESSION['last_activity']) > $timeout_duration) {
-
+    
     session_unset();
     session_destroy();
     header('Location: ../login.php?timeout=1');
@@ -1145,7 +1094,6 @@ $current_username = $_SESSION['username'];
 ```
 
 **Protected Page Usage:**
-
 ```php
 // admin/dashboard.php
 <?php
@@ -1160,7 +1108,6 @@ $user_data = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_u
 ```
 
 **Session Storage:**
-
 ```php
 // Session variables stored:
 $_SESSION = [
@@ -1176,14 +1123,13 @@ $_SESSION = [
 
 ---
 
-### 12. Penggunaan Session Logout ✅
+### 12. Penggunaan Session Logout 
 
 **Lokasi Implementasi:** logout.php
 
 **Cara Kerja Teknikal:**
 
 **Logout Process:**
-
 ```php
 // logout.php
 <?php
@@ -1207,7 +1153,6 @@ exit;
 ```
 
 **Logout Button in Navbar:**
-
 ```php
 // partials/admin_nav.php
 <ul class="navbar-nav ms-auto">
@@ -1232,7 +1177,6 @@ exit;
 ```
 
 **Logout Confirmation (Optional):**
-
 ```javascript
 // assets/js/admin.js
 function confirmLogout() {
@@ -1242,18 +1186,15 @@ function confirmLogout() {
 }
 
 // Usage
-<a href="#" onclick="confirmLogout(); return false;">
-    Logout
-</a>;
+<a href="#" onclick="confirmLogout(); return false;">Logout</a>
 ```
 
 **Auto Logout on Timeout:**
-
 ```php
 // config/auth_check.php already handles this
-if (isset($_SESSION['last_activity']) &&
+if (isset($_SESSION['last_activity']) && 
     (time() - $_SESSION['last_activity']) > 1800) {
-
+    
     session_unset();
     session_destroy();
     header('Location: ../login.php?timeout=1');
@@ -1262,7 +1203,6 @@ if (isset($_SESSION['last_activity']) &&
 ```
 
 **Login Page After Logout:**
-
 ```php
 // login.php
 <?php
@@ -1280,12 +1220,12 @@ if (isset($_GET['timeout'])) {
 
 ## B. FITUR TAMBAHAN (5+)
 
-### 1. Email Verification dengan OTP ✅
+### 1. Email Verification dengan OTP 
 
-**Lokasi:** verify-otp.php, resend-otp.php
+**Lokasi:** erify-otp.php, 
+esend-otp.php
 
 **Cara Kerja:**
-
 ```php
 // verify-email.php - Generate OTP
 $otp_code = sprintf("%06d", mt_rand(1, 999999)); // 6 digit
@@ -1314,23 +1254,22 @@ $mail->send();
 ```
 
 **Verify OTP:**
-
 ```php
 // verify-otp.php
 if ($_POST['action'] === 'verify') {
     $otp_input = $_POST['otp_code'];
-
+    
     $session = get_single_row(
-        "SELECT * FROM sessions
+        "SELECT * FROM sessions 
          WHERE user_id = ? AND otp_code = ? AND expires_at > NOW()",
         [$user_id, $otp_input], 'is'
     );
-
+    
     if ($session) {
         // Valid OTP
         execute_query("UPDATE users SET email_verified = 1 WHERE user_id = ?", [$user_id], 'i');
         execute_query("DELETE FROM sessions WHERE user_id = ?", [$user_id], 'i');
-
+        
         $_SESSION['success'] = 'Email verified!';
         header('Location: admin/dashboard.php');
     } else {
@@ -1341,19 +1280,19 @@ if ($_POST['action'] === 'verify') {
 
 ---
 
-### 2. Password Reset dengan Token ✅
+### 2. Password Reset dengan Token 
 
-**Lokasi:** forgot-password.php, reset-password.php
+**Lokasi:** orgot-password.php, 
+eset-password.php
 
 **Cara Kerja:**
-
 ```php
 // forgot-password.php - Generate reset token
 $token = bin2hex(random_bytes(32)); // 64 character token
 $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
 $query = "INSERT INTO sessions (user_id, reset_token, expires_at) VALUES (?, ?, ?)";
-execute_query($query, [$user_id, $token, $expires_at], 'iss');
+execute_query($query, [$user_id, $	oken, $expires_at], 'iss');
 
 // Send reset link
 $reset_link = "https://yourdomain.com/reset-password.php?token=$token";
@@ -1362,15 +1301,14 @@ $mail->send();
 ```
 
 **Reset Password:**
-
 ```php
 // reset-password.php
-$token = $_GET['token'];
+$	oken = $_GET['token'];
 
 // Validate token
 $session = get_single_row(
     "SELECT user_id FROM sessions WHERE reset_token = ? AND expires_at > NOW()",
-    [$token], 's'
+    [$	oken], 's'
 );
 
 if (!$session) {
@@ -1380,20 +1318,19 @@ if (!$session) {
 if ($_POST['action'] === 'reset') {
     $new_password = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
     execute_query("UPDATE users SET password = ? WHERE user_id = ?", [$new_password, $session['user_id']], 'si');
-    execute_query("DELETE FROM sessions WHERE reset_token = ?", [$token], 's');
-
+    execute_query("DELETE FROM sessions WHERE reset_token = ?", [$	oken], 's');
+    
     header('Location: login.php?reset=success');
 }
 ```
 
 ---
 
-### 3. Verified Badge System ✅
+### 3. Verified Badge System 
 
 **Lokasi:** profile.php, database migration
 
 **Cara Kerja:**
-
 ```sql
 -- Add verified column
 ALTER TABLE users ADD COLUMN is_verified TINYINT(1) DEFAULT 0;
@@ -1403,14 +1340,13 @@ UPDATE users SET is_verified = 1 WHERE email = 'fahmiilham029@gmail.com';
 ```
 
 **Display on Profile:**
-
 ```php
 <!-- profile.php -->
 <h1>
     <?php echo htmlspecialchars($user_data['display_name']); ?>
     <?php if ($user_data['is_verified'] == 1): ?>
-        <i class="bi bi-patch-check-fill"
-           style="color: #1DA1F2; font-size: 1.2rem;"
+        <i class="bi bi-patch-check-fill" 
+           style="color: #1DA1F2; font-size: 1.2rem;" 
            title="Verified Account"></i>
     <?php endif; ?>
 </h1>
@@ -1418,12 +1354,11 @@ UPDATE users SET is_verified = 1 WHERE email = 'fahmiilham029@gmail.com';
 
 ---
 
-### 4. Linktree-Style Boxed Layout ✅
+### 4. Linktree-Style Boxed Layout 
 
-**Lokasi:** profile.php, admin/appearance.php
+**Lokasi:** profile.php, dmin/appearance.php
 
 **Cara Kerja:**
-
 ```sql
 -- Database schema
 ALTER TABLE appearance ADD COLUMN outer_background_type ENUM('color', 'image', 'gradient') DEFAULT 'gradient';
@@ -1432,35 +1367,34 @@ ALTER TABLE appearance ADD COLUMN outer_background_image VARCHAR(255) DEFAULT NU
 ```
 
 **CSS Implementation:**
-
 ```html
 <style>
-    .outer-background {
-        min-height: 100vh;
-        background: <?php echo $user_data['outer_background_color']; ?>;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.outer-background {
+    min-height: 100vh;
+    background: <?php echo $user_data['outer_background_color']; ?>;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    .profile-container {
-        max-width: 600px;
-        background: white;
-        border-radius: 20px;
-        padding: 40px 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
+.profile-container {
+    max-width: 600px;
+    background: white;
+    border-radius: 20px;
+    padding: 40px 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
 </style>
 ```
 
 ---
 
-### 5. Real-time Analytics dengan Geolocation ✅
+### 5. Real-time Analytics dengan Geolocation 
 
-**Lokasi:** redirect.php, admin/dashboard.php
+**Lokasi:** 
+edirect.php, dmin/dashboard.php
 
 **Cara Kerja:**
-
 ```php
 // redirect.php - Capture location
 $ip = $_SERVER['REMOTE_ADDR'];
@@ -1470,18 +1404,17 @@ $geo = json_decode($geo_data, true);
 $country = $geo['country'] ?? 'Unknown';
 $city = $geo['city'] ?? '';
 
-$query = "INSERT INTO link_analytics (link_id, ip_address, country, city, clicked_at)
+$query = "INSERT INTO link_analytics (link_id, ip_address, country, city, clicked_at) 
             VALUES (?, ?, ?, ?, NOW())";
 execute_query($query, [$link_id, $ip, $country, $city], 'isss');
 ```
 
 **Display on Dashboard:**
-
 ```php
 // Traffic by Location chart
 $click_by_location = get_all_rows(
-    "SELECT
-        CASE
+    "SELECT 
+        CASE 
             WHEN city != '' THEN CONCAT(city, ', ', country)
             ELSE country
         END as location,
@@ -1497,12 +1430,11 @@ $click_by_location = get_all_rows(
 
 ---
 
-### 6. Category System dengan Color Coding ✅
+### 6. Category System dengan Color Coding 
 
-**Lokasi:** admin/categories.php, profile.php
+**Lokasi:** dmin/categories.php, profile.php
 
 **Cara Kerja:**
-
 ```sql
 CREATE TABLE link_categories (
     category_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -1515,7 +1447,6 @@ CREATE TABLE link_categories (
 ```
 
 **Display with Categories:**
-
 ```php
 $categories = get_all_rows("SELECT * FROM link_categories WHERE user_id = ? ORDER BY order_index", [$user_id], 'i');
 
@@ -1524,7 +1455,7 @@ foreach ($categories as $category) {
     echo "<h5 style='color: {$category['color_code']}'>";
     echo "<i class='bi bi-folder'></i> {$category['category_name']}";
     echo "</h5>";
-
+    
     $links = get_all_rows("SELECT * FROM links WHERE category_id = ? AND is_active = 1", [$category['category_id']], 'i');
     foreach ($links as $link) {
         // Render link
@@ -1535,31 +1466,30 @@ foreach ($categories as $category) {
 
 ---
 
-### 7. Performance Optimization dengan Caching ✅
+### 7. Performance Optimization dengan Caching 
 
 **Lokasi:** config/performance.php
 
 **Cara Kerja:**
-
 ```php
 // SimpleCache class
 class SimpleCache {
-    public static function remember($key, $callback, $ttl = 300) {
+    public static function remember($key, $callback, $	tl = 300) {
         if (!isset($_SESSION['cache'])) {
             $_SESSION['cache'] = [];
         }
-
-        if (isset($_SESSION['cache'][$key]) &&
+        
+        if (isset($_SESSION['cache'][$key]) && 
             $_SESSION['cache'][$key]['expires'] > time()) {
             return $_SESSION['cache'][$key]['data'];
         }
-
+        
         $data = $callback();
         $_SESSION['cache'][$key] = [
             'data' => $data,
-            'expires' => time() + $ttl
+            'expires' => time() + $	tl
         ];
-
+        
         return $data;
     }
 }
@@ -1575,30 +1505,27 @@ $stats = SimpleCache::remember('dashboard_stats_' . $user_id, function() use ($u
 
 ---
 
-### 8. Drag & Drop Link Reordering ✅
+### 8. Drag & Drop Link Reordering 
 
-**Lokasi:** admin/dashboard.php dengan jQuery UI
+**Lokasi:** dmin/dashboard.php dengan jQuery UI
 
 **Cara Kerja:**
-
 ```javascript
 // jQuery UI Sortable
 $('#links-list').sortable({
     handle: '.drag-handle',
-    update: function (event, ui) {
-        const order = $(this).sortable('toArray', {
-            attribute: 'data-link-id',
-        });
-
+    update: function(event, ui) {
+        const order = $(this).sortable('toArray', { attribute: 'data-link-id' });
+        
         $.ajax({
             url: 'dashboard.php',
             method: 'POST',
-            data: {
+            data: { 
                 action: 'reorder_links',
-                order: JSON.stringify(order),
-            },
+                order: JSON.stringify(order)
+            }
         });
-    },
+    }
 });
 ```
 
@@ -1614,42 +1541,37 @@ if ($_POST['action'] === 'reorder_links') {
 
 ---
 
-### 9. SEO Optimization (Meta Tags, Sitemap, Schema.org) ✅
+### 9. SEO Optimization (Meta Tags, Sitemap, Schema.org) 
 
 **Lokasi:** profile.php, sitemap.xml
 
 **Cara Kerja:**
-
 ```html
 <!-- Open Graph & Twitter Card -->
-<meta property="og:title" content="<?php echo $user_data['display_name']; ?>" />
-<meta property="og:description" content="<?php echo $user_data['bio']; ?>" />
-<meta
-    property="og:image"
-    content="<?php echo $user_data['profile_picture']; ?>"
-/>
-<meta name="twitter:card" content="summary" />
+<meta property="og:title" content="<?php echo $user_data['display_name']; ?>">
+<meta property="og:description" content="<?php echo $user_data['bio']; ?>">
+<meta property="og:image" content="<?php echo $user_data['profile_picture']; ?>">
+<meta name="twitter:card" content="summary">
 
 <!-- Schema.org JSON-LD -->
 <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "<?php echo $user_data['display_name']; ?>",
-        "image": "<?php echo $user_data['profile_picture']; ?>",
-        "url": "<?php echo $current_url; ?>"
-    }
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "<?php echo $user_data['display_name']; ?>",
+  "image": "<?php echo $user_data['profile_picture']; ?>",
+  "url": "<?php echo $current_url; ?>"
+}
 </script>
 ```
 
 ---
 
-### 10. AJAX untuk Real-time UI Updates ✅
+### 10. AJAX untuk Real-time UI Updates 
 
-**Lokasi:** admin/dashboard.php, assets/js/admin.js
+**Lokasi:** dmin/dashboard.php, ssets/js/admin.js
 
 **Cara Kerja:**
-
 ```javascript
 // Add link without page reload
 function addLink() {
@@ -1660,16 +1582,16 @@ function addLink() {
             action: 'add_link',
             title: $('#link_title').val(),
             url: $('#link_url').val(),
-            icon_class: $('#icon_class').val(),
+            icon_class: $('#icon_class').val()
         },
-        success: function (response) {
+        success: function(response) {
             const data = JSON.parse(response);
             if (data.success) {
                 // Add new link to UI without reload
                 $('#links-list').prepend(renderLinkHtml(data));
                 $('#addLinkModal').modal('hide');
             }
-        },
+        }
     });
 }
 ```
@@ -1679,38 +1601,36 @@ function addLink() {
 ## C. RINGKASAN FITUR
 
 ### Fitur Wajib (12):
-
-1. ✅ HTML + PHP + Database - Semua file .php
-2. ✅ CSS - assets/css/admin.css, inline CSS
-3. ✅ Chart - Highcharts di admin/dashboard.php
-4. ✅ Table Relasi - users, appearance, links, categories, analytics
-5. ✅ View Database - v_public_page_data
-6. ✅ Insert Database - Register, add link, analytics tracking
-7. ✅ Update Database - Edit profile, links, settings
-8. ✅ Delete Database - Delete links, categories, account
-9. ✅ Hosting - Docker + VPS Ubuntu
-10. ✅ Upload Foto - Profile picture, background image
-11. ✅ Session Login - login.php, config/auth_check.php
-12. ✅ Session Logout - logout.php
+1.  HTML + PHP + Database - Semua file .php
+2.  CSS - ssets/css/admin.css, inline CSS
+3.  Chart - Highcharts di dmin/dashboard.php
+4.  Table Relasi - users, appearance, links, categories, analytics
+5.  View Database - _public_page_data
+6.  Insert Database - Register, add link, analytics tracking
+7.  Update Database - Edit profile, links, settings
+8.  Delete Database - Delete links, categories, account
+9.  Hosting - Docker + VPS Ubuntu
+10.  Upload Foto - Profile picture, background image
+11.  Session Login - login.php, config/auth_check.php
+12.  Session Logout - logout.php
 
 ### Fitur Tambahan (10+):
-
-1. ✅ Email OTP Verification (PHPMailer)
-2. ✅ Password Reset Token System
-3. ✅ Verified Badge (Instagram-style)
-4. ✅ Boxed Layout (Linktree-style)
-5. ✅ Real-time Geolocation Analytics
-6. ✅ Category System with Colors
-7. ✅ Performance Caching
-8. ✅ Drag & Drop Reordering
-9. ✅ SEO Optimization (Meta, Sitemap, Schema)
-10. ✅ AJAX Real-time Updates
+1.  Email OTP Verification (PHPMailer)
+2.  Password Reset Token System
+3.  Verified Badge (Instagram-style)
+4.  Boxed Layout (Linktree-style)
+5.  Real-time Geolocation Analytics
+6.  Category System with Colors
+7.  Performance Caching
+8.  Drag & Drop Reordering
+9.  SEO Optimization (Meta, Sitemap, Schema)
+10.  AJAX Real-time Updates
 
 **Total: 22 Fitur Implementasi Lengkap**
 
 ---
 
 **Dibuat:** November 2024  
-**Mahasiswa:** Fahmi Yoshikage  
+**Mahasiswa:** FahmiYoshikage  
 **Project:** LinkMy - Bio Link Manager  
-**Status:** Production Ready ✅
+**Status:** Production Ready 

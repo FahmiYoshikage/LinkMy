@@ -56,6 +56,296 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_email'])) {
     }
 }
 
+// AJAX: Check slug availability
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'check_slug_availability') {
+    header('Content-Type: application/json');
+    
+    $slug = trim($_POST['slug'] ?? '');
+    
+    // Sanitize slug: lowercase, alphanumeric and hyphens only
+    $slug = strtolower($slug);
+    $slug = preg_replace('/[^a-z0-9-]/', '', $slug);
+    
+    if (strlen($slug) < 3 || strlen($slug) > 50) {
+        echo json_encode(['available' => false, 'message' => 'Slug harus 3-50 karakter', 'slug' => $slug]);
+        exit;
+    }
+    
+    // Check if slug exists (excluding user's own slugs)
+    $existing = get_single_row(
+        "SELECT us.slug_id, us.user_id FROM user_slugs us WHERE us.slug = ? AND us.user_id != ?", 
+        [$slug, $current_user_id], 
+        'si'
+    );
+    
+    if ($existing) {
+        echo json_encode(['available' => false, 'message' => 'Slug sudah digunakan', 'slug' => $slug]);
+    } else {
+        echo json_encode(['available' => true, 'message' => 'Slug tersedia!', 'slug' => $slug]);
+    }
+    exit;
+}
+
+// Request slug change with OTP verification
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change'])) {
+    require_once '../config/mail.php';
+    
+    $new_slug = trim($_POST['new_slug']);
+    
+    // Sanitize slug
+    $new_slug = strtolower($new_slug);
+    $new_slug = preg_replace('/[^a-z0-9-]/', '', $new_slug);
+    
+    if (strlen($new_slug) < 3 || strlen($new_slug) > 50) {
+        $error = 'Slug harus 3-50 karakter, hanya huruf, angka, dan tanda hubung!';
+    } else {
+        // Check cooldown (30 days)
+        if ($user['last_slug_change_at']) {
+            $last_change = strtotime($user['last_slug_change_at']);
+            $days_since = (time() - $last_change) / (60 * 60 * 24);
+            
+            if ($days_since < 30) {
+                $days_left = ceil(30 - $days_since);
+                $error = "Anda bisa mengganti slug lagi dalam {$days_left} hari!";
+            }
+        }
+        
+        if (!$error) {
+            // Check availability
+            $existing = get_single_row("SELECT slug_id FROM user_slugs WHERE slug = ?", [$new_slug], 's');
+            
+            if ($existing) {
+                $error = 'Slug sudah digunakan orang lain!';
+            } else {
+                // Generate OTP
+                $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                $expires_at = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+                
+                // Store OTP
+                $query = "INSERT INTO email_verifications (email, otp_code, expires_at, is_used, verification_type, ip_address) 
+                          VALUES (?, ?, ?, 0, 'slug_change', ?)";
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'ssss', $user['email'], $otp, $expires_at, $ip);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    // Send OTP email using custom mailer
+                    $mail = create_mailer();
+                    
+                    if ($mail) {
+                        try {
+                            $mail->addAddress($user['email'], $user['username']);
+                            $mail->isHTML(true);
+                            $mail->Subject = "Konfirmasi Perubahan Slug - LinkMy";
+                            $mail->Body = "
+                                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                                    <h2 style='color: #667eea;'>Konfirmasi Perubahan Slug</h2>
+                                    <p>Halo <strong>{$user['username']}</strong>,</p>
+                                    <p>Anda meminta untuk mengganti slug dari <strong>{$user['page_slug']}</strong> menjadi <strong>{$new_slug}</strong>.</p>
+                                    <p>Kode OTP Anda adalah:</p>
+                                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;'>
+                                        {$otp}
+                                    </div>
+                                    <p><strong>⏰ Kode ini berlaku selama 15 menit.</strong></p>
+                                    <p>Jika Anda tidak meminta perubahan ini, abaikan email ini.</p>
+                                    <hr style='border: 1px solid #eee; margin: 20px 0;'>
+                                    <p style='color: #888; font-size: 12px;'>
+                                        Salam,<br>
+                                        <strong>Tim LinkMy</strong><br>
+                                        <a href='https://linkmy.iet.ovh'>linkmy.iet.ovh</a>
+                                    </p>
+                                </div>
+                            ";
+                            
+                            if ($mail->send()) {
+                                $_SESSION['pending_slug_change'] = $new_slug;
+                                $success = "Kode OTP telah dikirim ke {$user['email']}. Silakan cek email Anda!";
+                            } else {
+                                $error = 'Gagal mengirim email OTP!';
+                            }
+                        } catch (Exception $e) {
+                            $error = 'Gagal mengirim email: ' . $mail->ErrorInfo;
+                        }
+                    } else {
+                        $error = 'Gagal membuat koneksi email!';
+                    }
+                } else {
+                    $error = 'Gagal membuat OTP!';
+                }
+            }
+        }
+    }
+}
+
+// Verify slug change OTP
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])) {
+    $otp = trim($_POST['otp_code']);
+    $new_slug = $_SESSION['pending_slug_change'] ?? '';
+    
+    if (empty($new_slug)) {
+        $error = 'Tidak ada permintaan perubahan slug!';
+    } else {
+        // Verify OTP
+        $verification = get_single_row(
+            "SELECT * FROM email_verifications 
+             WHERE email = ? AND otp_code = ? AND is_used = 0 
+             AND expires_at > NOW() AND verification_type = 'slug_change'
+             ORDER BY id DESC LIMIT 1",
+            [$user['email'], $otp],
+            'ss'
+        );
+        
+        if (!$verification) {
+            $error = 'Kode OTP salah atau sudah kadaluarsa!';
+        } else {
+            // Update primary slug
+            $query = "UPDATE user_slugs SET slug = ? WHERE user_id = ? AND is_primary = 1";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                // Update users.page_slug for backward compatibility
+                $query2 = "UPDATE users SET page_slug = ?, last_slug_change_at = NOW() WHERE user_id = ?";
+                $stmt2 = mysqli_prepare($conn, $query2);
+                mysqli_stmt_bind_param($stmt2, 'si', $new_slug, $current_user_id);
+                mysqli_stmt_execute($stmt2);
+                
+                // Mark OTP as used
+                $query3 = "UPDATE email_verifications SET is_used = 1 WHERE id = ?";
+                $stmt3 = mysqli_prepare($conn, $query3);
+                mysqli_stmt_bind_param($stmt3, 'i', $verification['id']);
+                mysqli_stmt_execute($stmt3);
+                
+                // Update session
+                $_SESSION['page_slug'] = $new_slug;
+                unset($_SESSION['pending_slug_change']);
+                
+                $success = "Slug berhasil diubah menjadi: {$new_slug}";
+                
+                // Refresh user data
+                $user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_id], 'i');
+            } else {
+                $error = 'Gagal mengubah slug!';
+            }
+        }
+    }
+}
+
+// Add new slug (max 2 total)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_slug'])) {
+    $new_slug = trim($_POST['new_slug']);
+    
+    // Sanitize slug
+    $new_slug = strtolower($new_slug);
+    $new_slug = preg_replace('/[^a-z0-9-]/', '', $new_slug);
+    
+    if (strlen($new_slug) < 3 || strlen($new_slug) > 50) {
+        $error = 'Slug harus 3-50 karakter, hanya huruf, angka, dan tanda hubung!';
+    } else {
+        // Check user's current slug count
+        $slug_count = get_single_row(
+            "SELECT COUNT(*) as count FROM user_slugs WHERE user_id = ?",
+            [$current_user_id],
+            'i'
+        )['count'];
+        
+        if ($slug_count >= 2) {
+            $error = 'Anda sudah memiliki 2 slug (maksimal untuk akun gratis)!';
+        } else {
+            // Check availability
+            $existing = get_single_row("SELECT slug_id FROM user_slugs WHERE slug = ?", [$new_slug], 's');
+            
+            if ($existing) {
+                $error = 'Slug sudah digunakan!';
+            } else {
+                // Add new slug as alias (is_primary = 0)
+                $query = "INSERT INTO user_slugs (user_id, slug, is_primary) VALUES (?, ?, 0)";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'is', $current_user_id, $new_slug);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    $success = "Slug alias '{$new_slug}' berhasil ditambahkan!";
+                } else {
+                    $error = 'Gagal menambahkan slug!';
+                }
+            }
+        }
+    }
+}
+
+// Delete slug (cannot delete primary)
+if (isset($_GET['delete_slug'])) {
+    $slug_id = intval($_GET['delete_slug']);
+    
+    // Check if it's not primary and belongs to user
+    $slug_data = get_single_row(
+        "SELECT * FROM user_slugs WHERE slug_id = ? AND user_id = ?",
+        [$slug_id, $current_user_id],
+        'ii'
+    );
+    
+    if (!$slug_data) {
+        $error = 'Slug tidak ditemukan!';
+    } elseif ($slug_data['is_primary'] == 1) {
+        $error = 'Tidak bisa menghapus slug utama! Ganti ke slug lain sebagai utama terlebih dahulu.';
+    } else {
+        $query = "DELETE FROM user_slugs WHERE slug_id = ? AND user_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'ii', $slug_id, $current_user_id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success = "Slug '{$slug_data['slug']}' berhasil dihapus!";
+        } else {
+            $error = 'Gagal menghapus slug!';
+        }
+    }
+}
+
+// Set primary slug
+if (isset($_GET['set_primary'])) {
+    $slug_id = intval($_GET['set_primary']);
+    
+    // Check if slug belongs to user
+    $slug_data = get_single_row(
+        "SELECT * FROM user_slugs WHERE slug_id = ? AND user_id = ?",
+        [$slug_id, $current_user_id],
+        'ii'
+    );
+    
+    if (!$slug_data) {
+        $error = 'Slug tidak ditemukan!';
+    } else {
+        // Unset all primary flags for this user
+        $query1 = "UPDATE user_slugs SET is_primary = 0 WHERE user_id = ?";
+        $stmt1 = mysqli_prepare($conn, $query1);
+        mysqli_stmt_bind_param($stmt1, 'i', $current_user_id);
+        mysqli_stmt_execute($stmt1);
+        
+        // Set new primary
+        $query2 = "UPDATE user_slugs SET is_primary = 1 WHERE slug_id = ? AND user_id = ?";
+        $stmt2 = mysqli_prepare($conn, $query2);
+        mysqli_stmt_bind_param($stmt2, 'ii', $slug_id, $current_user_id);
+        
+        if (mysqli_stmt_execute($stmt2)) {
+            // Update users.page_slug
+            $query3 = "UPDATE users SET page_slug = ? WHERE user_id = ?";
+            $stmt3 = mysqli_prepare($conn, $query3);
+            mysqli_stmt_bind_param($stmt3, 'si', $slug_data['slug'], $current_user_id);
+            mysqli_stmt_execute($stmt3);
+            
+            // Update session
+            $_SESSION['page_slug'] = $slug_data['slug'];
+            
+            $success = "Slug '{$slug_data['slug']}' sekarang menjadi slug utama!";
+            
+            // Refresh user data
+            $user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_id], 'i');
+        } else {
+            $error = 'Gagal mengubah slug utama!';
+        }
+    }
+}
+
 if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     $query = "DELETE FROM users WHERE user_id = ?";
     $stmt = mysqli_prepare($conn, $query);
@@ -66,6 +356,17 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
         header('Location: ../index.php?account_deleted=1');
         exit;
     }
+}
+
+// Get user's all slugs
+$user_slugs = [];
+$slugs_query = "SELECT * FROM user_slugs WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
+$slugs_stmt = mysqli_prepare($conn, $slugs_query);
+mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
+mysqli_stmt_execute($slugs_stmt);
+$slugs_result = mysqli_stmt_get_result($slugs_stmt);
+while ($row = mysqli_fetch_assoc($slugs_result)) {
+    $user_slugs[] = $row;
 }
 
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE user_id = ?", [$current_user_id], 'i')['count'];
@@ -281,6 +582,171 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                     </div>
                 </div>
                 
+                <!-- Change Primary Slug -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-4">
+                            <i class="bi bi-link-45deg"></i> Ganti Slug Utama
+                            <span class="badge bg-warning text-dark ms-2">Verifikasi OTP</span>
+                        </h5>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>Slug saat ini:</strong> 
+                            <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($user['page_slug']) ?></code>
+                            <br>
+                            <small class="text-muted">
+                                Link profil Anda: <strong>linkmy.iet.ovh/<?= htmlspecialchars($user['page_slug']) ?></strong>
+                            </small>
+                        </div>
+                        
+                        <?php if ($user['last_slug_change_at']): 
+                            $days_since = (time() - strtotime($user['last_slug_change_at'])) / (60 * 60 * 24);
+                            $days_left = max(0, ceil(30 - $days_since));
+                        ?>
+                            <?php if ($days_left > 0): ?>
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-clock-fill me-2"></i>
+                                    Anda bisa mengganti slug lagi dalam <strong><?= $days_left ?> hari</strong>.
+                                    <br>
+                                    <small>Terakhir diubah: <?= date('d M Y', strtotime($user['last_slug_change_at'])) ?></small>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        
+                        <?php if (!isset($_SESSION['pending_slug_change'])): ?>
+                        <form method="POST" id="requestSlugChangeForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Slug Baru</label>
+                                <input type="text" class="form-control" name="new_slug" id="new_slug_input"
+                                       placeholder="contoh: nama-anda" pattern="[a-z0-9-]+" 
+                                       minlength="3" maxlength="50" required>
+                                <div id="slug_check_feedback" class="form-text"></div>
+                                <small class="text-muted">
+                                    Hanya huruf kecil, angka, dan tanda hubung (-). Minimal 3 karakter.
+                                </small>
+                            </div>
+                            
+                            <button type="submit" name="request_slug_change" class="btn btn-primary" 
+                                    id="requestSlugBtn" disabled>
+                                <i class="bi bi-send"></i> Kirim Kode OTP
+                            </button>
+                        </form>
+                        <?php else: ?>
+                        <div class="alert alert-success">
+                            <i class="bi bi-envelope-check-fill me-2"></i>
+                            Kode OTP telah dikirim ke email Anda! Silakan masukkan kode di bawah.
+                        </div>
+                        
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Kode OTP (6 digit)</label>
+                                <input type="text" class="form-control" name="otp_code" 
+                                       placeholder="123456" pattern="[0-9]{6}" maxlength="6" required>
+                                <small class="text-muted">Cek email Anda untuk kode OTP.</small>
+                            </div>
+                            
+                            <button type="submit" name="verify_slug_change" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Verifikasi & Ganti Slug
+                            </button>
+                            <a href="settings.php" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                        </form>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <!-- Manage Multiple Slugs -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-4">
+                            <i class="bi bi-collection"></i> Kelola Slug Anda
+                            <span class="badge bg-info ms-2">Gratis: 2 Slug</span>
+                        </h5>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb-fill me-2"></i>
+                            <strong>Fitur Multi-Slug:</strong> Anda bisa membuat hingga 2 slug yang mengarah ke profil yang sama!
+                            <br>
+                            <small>Contoh: <code>fahmi</code> dan <code>fahmi-portfolio</code> untuk berbagai keperluan.</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Slug Anda (<?= count($user_slugs) ?>/2):</h6>
+                            
+                            <?php if (empty($user_slugs)): ?>
+                                <p class="text-muted">Belum ada slug. Silakan tambahkan slug pertama Anda!</p>
+                            <?php else: ?>
+                                <div class="list-group">
+                                    <?php foreach ($user_slugs as $slug): ?>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <code class="fs-5"><?= htmlspecialchars($slug['slug']) ?></code>
+                                                <?php if ($slug['is_primary']): ?>
+                                                    <span class="badge bg-success ms-2">Slug Utama</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary ms-2">Slug Alias</span>
+                                                <?php endif; ?>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Dibuat: <?= date('d M Y', strtotime($slug['created_at'])) ?>
+                                                    | Link: <strong>linkmy.iet.ovh/<?= htmlspecialchars($slug['slug']) ?></strong>
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <?php if (!$slug['is_primary']): ?>
+                                                    <a href="?set_primary=<?= $slug['slug_id'] ?>" 
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       onclick="return confirm('Jadikan <?= htmlspecialchars($slug['slug']) ?> sebagai slug utama?')">
+                                                        <i class="bi bi-star"></i> Jadikan Utama
+                                                    </a>
+                                                    <a href="?delete_slug=<?= $slug['slug_id'] ?>" 
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       onclick="return confirm('Hapus slug <?= htmlspecialchars($slug['slug']) ?>?')">
+                                                        <i class="bi bi-trash"></i> Hapus
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-star-fill"></i> Aktif
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php if (count($user_slugs) < 2): ?>
+                        <hr>
+                        <h6 class="fw-bold mb-3">Tambah Slug Baru:</h6>
+                        <form method="POST" id="addSlugForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Slug Baru</label>
+                                <input type="text" class="form-control" name="new_slug" id="add_slug_input"
+                                       placeholder="contoh: nama-bisnis" pattern="[a-z0-9-]+" 
+                                       minlength="3" maxlength="50" required>
+                                <div id="add_slug_feedback" class="form-text"></div>
+                                <small class="text-muted">
+                                    Slug alias akan mengarah ke profil yang sama dengan slug utama.
+                                </small>
+                            </div>
+                            
+                            <button type="submit" name="add_slug" class="btn btn-success" 
+                                    id="addSlugBtn" disabled>
+                                <i class="bi bi-plus-circle"></i> Tambah Slug
+                            </button>
+                        </form>
+                        <?php else: ?>
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Anda sudah mencapai batas maksimal 2 slug untuk akun gratis.
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
                 <!-- Danger Zone -->
                 <div class="card">
                     <div class="card-body">
@@ -338,5 +804,112 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
     </div>
     
     <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/jquery-3.7.1.min.js"></script>
+    <script>
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // Check slug availability via AJAX
+        function checkSlugAvailability(slug, feedbackElement, buttonElement) {
+            if (slug.length < 3) {
+                feedbackElement.innerHTML = '<span class="text-muted">Minimal 3 karakter</span>';
+                buttonElement.disabled = true;
+                return;
+            }
+            
+            // Sanitize slug client-side
+            slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            
+            feedbackElement.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Memeriksa...</span>';
+            buttonElement.disabled = true;
+            
+            $.ajax({
+                url: 'settings.php',
+                method: 'POST',
+                data: {
+                    action: 'check_slug_availability',
+                    slug: slug
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.available) {
+                        feedbackElement.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> ' + response.message + '</span>';
+                        buttonElement.disabled = false;
+                    } else {
+                        feedbackElement.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> ' + response.message + '</span>';
+                        buttonElement.disabled = true;
+                    }
+                },
+                error: function() {
+                    feedbackElement.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memeriksa ketersediaan</span>';
+                    buttonElement.disabled = true;
+                }
+            });
+        }
+        
+        // Debounced slug check for "Change Slug" form
+        const debouncedCheckNewSlug = debounce(function() {
+            const slug = $('#new_slug_input').val();
+            const feedback = document.getElementById('slug_check_feedback');
+            const button = document.getElementById('requestSlugBtn');
+            checkSlugAvailability(slug, feedback, button);
+        }, 500);
+        
+        // Debounced slug check for "Add Slug" form
+        const debouncedCheckAddSlug = debounce(function() {
+            const slug = $('#add_slug_input').val();
+            const feedback = document.getElementById('add_slug_feedback');
+            const button = document.getElementById('addSlugBtn');
+            checkSlugAvailability(slug, feedback, button);
+        }, 500);
+        
+        // Attach event listeners
+        $(document).ready(function() {
+            // For "Change Slug" form
+            $('#new_slug_input').on('input', function() {
+                // Auto-sanitize input in real-time
+                let val = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
+                $(this).val(val);
+                debouncedCheckNewSlug();
+            });
+            
+            // For "Add Slug" form
+            $('#add_slug_input').on('input', function() {
+                // Auto-sanitize input in real-time
+                let val = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
+                $(this).val(val);
+                debouncedCheckAddSlug();
+            });
+            
+            // Form submission validation
+            $('#requestSlugChangeForm').on('submit', function(e) {
+                const button = document.getElementById('requestSlugBtn');
+                if (button.disabled) {
+                    e.preventDefault();
+                    alert('Slug tidak tersedia atau tidak valid!');
+                    return false;
+                }
+            });
+            
+            $('#addSlugForm').on('submit', function(e) {
+                const button = document.getElementById('addSlugBtn');
+                if (button.disabled) {
+                    e.preventDefault();
+                    alert('Slug tidak tersedia atau tidak valid!');
+                    return false;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
