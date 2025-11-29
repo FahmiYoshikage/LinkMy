@@ -15,6 +15,11 @@
 -- PHASE 1: CREATE PROFILES TABLE
 -- ========================================
 
+-- Drop existing table if exists (WARNING: This will delete all profile data!)
+DROP TABLE IF EXISTS `profile_activity_log`;
+DROP TABLE IF EXISTS `profile_analytics`;
+DROP TABLE IF EXISTS `profiles`;
+
 CREATE TABLE `profiles` (
   `profile_id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL COMMENT 'Owner of this profile',
