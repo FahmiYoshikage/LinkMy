@@ -5,9 +5,16 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get current user's profiles
+// Get current user's profiles with stats
 $user_profiles = [];
-$query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
+$query = "SELECT p.*, 
+          COALESCE(COUNT(DISTINCT l.link_id), 0) as link_count,
+          COALESCE(SUM(l.click_count), 0) as total_clicks
+          FROM profiles p
+          LEFT JOIN links l ON p.profile_id = l.profile_id
+          WHERE p.user_id = ?
+          GROUP BY p.profile_id
+          ORDER BY p.is_primary DESC, p.created_at ASC";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
 mysqli_stmt_execute($stmt);
@@ -506,7 +513,7 @@ $profile_limit = 2; // Free tier limit
                             </div>
                         </div>
                         
-                        <?php if ($profile['profile_description']): ?>
+                        <?php if (!empty($profile['profile_description'])): ?>
                         <p class="text-muted small mb-2">
                             <?= htmlspecialchars($profile['profile_description']) ?>
                         </p>
@@ -515,17 +522,17 @@ $profile_limit = 2; // Free tier limit
                         <div class="profile-stats">
                             <div class="stat-badge">
                                 <i class="bi bi-link-45deg"></i>
-                                <strong><?= $profile['link_count'] ?></strong> Links
+                                <strong><?= $profile['link_count'] ?? 0 ?></strong> Links
                             </div>
                             <div class="stat-badge">
                                 <i class="bi bi-cursor-fill"></i>
-                                <strong><?= $profile['total_clicks'] ?></strong> Klik
+                                <strong><?= $profile['total_clicks'] ?? 0 ?></strong> Klik
                             </div>
                         </div>
                         
                         <div class="mt-3">
                             <small class="text-muted">
-                                Dibuat: <?= date('d M Y', strtotime($profile['created_at'])) ?>
+                                Dibuat: <?= date('d M Y', strtotime($profile['created_at'] ?? 'now')) ?>
                             </small>
                         </div>
                     </div>
