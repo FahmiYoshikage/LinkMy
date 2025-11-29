@@ -14,7 +14,7 @@ require_once __DIR__ . '/../config/db.php';
 $user_profiles = [];
 $active_profile_name = 'Profile';
 if (isset($_SESSION['user_id'])) {
-    $stmt = mysqli_prepare($conn, "SELECT profile_id, profile_name, profile_slug, is_primary FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC");
+    $stmt = mysqli_prepare($conn, "SELECT profile_id, profile_name, slug, is_primary FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC");
     mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
@@ -75,10 +75,10 @@ if (isset($_SESSION['user_id'])) {
                         <?php foreach ($user_profiles as $profile): ?>
                             <li>
                                 <a class="dropdown-item <?= (isset($_SESSION['active_profile_id']) && $profile['profile_id'] == $_SESSION['active_profile_id']) ? 'active' : '' ?>" 
-                                   href="profiles.php?action=switch&profile_id=<?= $profile['profile_id'] ?>">
+                                   href="profiles.php?switch_profile=<?= $profile['profile_id'] ?>">
                                     <?= $profile['is_primary'] ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
                                     <?= htmlspecialchars($profile['profile_name']) ?>
-                                    <small class="text-muted">(<?= htmlspecialchars($profile['profile_slug']) ?>)</small>
+                                    <small class="text-muted">(<?= htmlspecialchars($profile['slug']) ?>)</small>
                                 </a>
                             </li>
                         <?php endforeach; ?>
