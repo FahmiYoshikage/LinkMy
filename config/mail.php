@@ -47,9 +47,19 @@ function create_mailer() {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = MAIL_PORT;
         
-        // Timeout settings (important for slow connections)
-        $mail->Timeout = 20; // 20 seconds (reduced for faster failure)
-        $mail->SMTPKeepAlive = false; // Disable to avoid connection reuse delays
+        // Skip SSL verification for faster connection (Gmail trusted)
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+        
+        // Timeout settings optimized for speed
+        $mail->Timeout = 8; // 8 seconds timeout (faster)
+        $mail->SMTPKeepAlive = true; // Keep connection alive for faster sends
+        $mail->SMTPAutoTLS = true; // Auto-enable TLS encryption
         
         // Default sender
         $mail->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
@@ -95,9 +105,6 @@ function send_otp_email($email, $otp) {
         // Send
         $result = $mail->send();
         
-        // Close connection immediately
-        $mail->smtpClose();
-        
         return [
             'success' => true,
             'message' => 'Email berhasil dikirim'
@@ -132,9 +139,6 @@ function send_password_reset_email($email, $resetToken) {
     }
     
     try {
-        // Override timeout for faster sending
-        $mail->Timeout = 15; // Faster timeout for reset emails
-        
         // Reset link - automatically detect domain
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'] ?? 'linkmy.iet.ovh';
@@ -151,9 +155,6 @@ function send_password_reset_email($email, $resetToken) {
         
         // Send
         $result = $mail->send();
-        
-        // Close connection immediately
-        $mail->smtpClose();
         
         return [
             'success' => true,
