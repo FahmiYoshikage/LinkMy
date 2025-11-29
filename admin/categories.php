@@ -14,17 +14,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
     } else {
-        $last_order = get_single_row("SELECT MAX(display_order) as max_order FROM link_categories WHERE user_id = ?", [$current_user_id], 'i');
-        $new_order = ($last_order['max_order'] ?? 0) + 1;
-        
-        $query = "INSERT INTO link_categories (user_id, category_name, category_icon, category_color, display_order) VALUES (?, ?, ?, ?, ?)";
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $category_name, $category_icon, $category_color, $new_order);
-        
-        if (mysqli_stmt_execute($stmt)) {
-            $success = 'Kategori berhasil ditambahkan!';
+        // Multi-profile: Get active profile
+        $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+        if (!$active_profile_id) {
+            $error = 'No active profile!';
         } else {
-            $error = 'Gagal menambahkan kategori!';
+            $last_order = get_single_row("SELECT MAX(display_order) as max_order FROM link_categories WHERE profile_id = ?", [$active_profile_id], 'i');
+            $new_order = ($last_order['max_order'] ?? 0) + 1;
+            
+            $query = "INSERT INTO link_categories (user_id, profile_id, category_name, category_icon, category_color, display_order) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'iisssi', $current_user_id, $active_profile_id, $category_name, $category_icon, $category_color, $new_order);
+        
+            if (mysqli_stmt_execute($stmt)) {
+                $success = 'Kategori berhasil ditambahkan!';
+            } else {
+                $error = 'Gagal menambahkan kategori!';
+            }
         }
     }
 }
@@ -39,9 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
     } else {
-        $query = "UPDATE link_categories SET category_name = ?, category_icon = ?, category_color = ? WHERE category_id = ? AND user_id = ?";
+        $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+        $query = "UPDATE link_categories SET category_name = ?, category_icon = ?, category_color = ? WHERE category_id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'sssii', $category_name, $category_icon, $category_color, $category_id, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'sssii', $category_name, $category_icon, $category_color, $category_id, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Kategori berhasil diupdate!';
@@ -60,9 +67,10 @@ if (isset($_GET['delete'])) {
     if ($check['count'] > 0) {
         $error = 'Kategori tidak bisa dihapus karena masih ada ' . $check['count'] . ' link!';
     } else {
-        $query = "DELETE FROM link_categories WHERE category_id = ? AND user_id = ?";
+        $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+        $query = "DELETE FROM link_categories WHERE category_id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ii', $category_id, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'ii', $category_id, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Kategori berhasil dihapus!';
@@ -72,7 +80,15 @@ if (isset($_GET['delete'])) {
     }
 }
 
-$categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link_categories c LEFT JOIN links l ON c.category_id = l.category_id WHERE c.user_id = ? GROUP BY c.category_id ORDER BY c.display_order ASC", [$current_user_id], 'i');
+// Multi-profile: Get active profile
+$active_profile_id = $_SESSION['active_profile_id'] ?? null;
+if (!$active_profile_id) {
+    $primary = get_single_row("SELECT profile_id FROM profiles WHERE user_id = ? AND is_primary = 1", [$current_user_id], 'i');
+    $active_profile_id = $primary['profile_id'] ?? null;
+    $_SESSION['active_profile_id'] = $active_profile_id;
+}
+
+$categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link_categories c LEFT JOIN links l ON c.category_id = l.category_id WHERE c.profile_id = ? GROUP BY c.category_id ORDER BY c.display_order ASC", [$active_profile_id], 'i');
 ?>
 <!DOCTYPE html>
 <html lang="id">

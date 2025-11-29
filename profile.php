@@ -11,6 +11,7 @@
         die('Page not found!');
     }
 
+    // Multi-profile support: Load profile by slug
     $query = "SELECT * FROM v_public_page_data WHERE page_slug = ?";
     $result = execute_query($query, [$slug], 's');
 
@@ -48,6 +49,7 @@
 
     $user_data = mysqli_fetch_assoc($result);
     $user_id = $user_data['user_id'];
+    $profile_id = $user_data['profile_id']; // Multi-profile support
     $profile_title = $user_data['profile_title'] ?? $user_data['username'];
     $bio = $user_data['bio'] ?? '';
     $profile_pic = $user_data['profile_pic_filename'] ?? 'default-avatar.png';
@@ -126,20 +128,22 @@
     // Build query with actual column names from database
     if ($categories_exists && $enable_categories) {
         // Query with categories JOIN using correct link_categories table structure
-        $links_query = "SELECT l.link_id, l.user_id, l.title, l.url, l.order_index, 
+        // Multi-profile: Filter by profile_id instead of user_id
+        $links_query = "SELECT l.link_id, l.user_id, l.profile_id, l.title, l.url, l.order_index, 
                         l.icon_class, l.click_count, l.is_active, l.created_at, l.category_id,
                         c.category_name as category_name, c.category_icon as category_icon, 
                         c.category_color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         LEFT JOIN link_categories c ON l.category_id = c.category_id
-                        WHERE l.user_id = ? AND l.is_active = 1
+                        WHERE l.profile_id = ? AND l.is_active = 1
                         ORDER BY l.order_index ASC, l.link_id ASC";
     } else {
         // Simple query without categories
-        $links_query = "SELECT link_id, user_id, title, url, order_index, 
+        // Multi-profile: Filter by profile_id instead of user_id
+        $links_query = "SELECT link_id, user_id, profile_id, title, url, order_index, 
                         icon_class, click_count, is_active, created_at, category_id
                         FROM links
-                        WHERE user_id = ? AND is_active = 1
+                        WHERE profile_id = ? AND is_active = 1
                         ORDER BY order_index ASC, link_id ASC";
     }
     
@@ -149,7 +153,7 @@
         error_log("Error preparing links query: " . mysqli_error($conn));
         $links_result = false;
     } else {
-        mysqli_stmt_bind_param($stmt_links, 'i', $user_id);
+        mysqli_stmt_bind_param($stmt_links, 'i', $profile_id);
         mysqli_stmt_execute($stmt_links);
         $links_result = mysqli_stmt_get_result($stmt_links);
     }

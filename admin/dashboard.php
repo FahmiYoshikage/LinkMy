@@ -4,6 +4,22 @@
     
     $success = '';
     $error = '';
+    
+    // Multi-profile: Get active profile
+    $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+    if (!$active_profile_id) {
+        // Get user's primary profile
+        $primary_profile = get_single_row(
+            "SELECT profile_id, slug FROM profiles WHERE user_id = ? AND is_primary = 1",
+            [$current_user_id],
+            'i'
+        );
+        if ($primary_profile) {
+            $active_profile_id = $primary_profile['profile_id'];
+            $_SESSION['active_profile_id'] = $active_profile_id;
+            $_SESSION['page_slug'] = $primary_profile['slug'];
+        }
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_link'])){
         $title = trim($_POST['title']);
@@ -14,7 +30,8 @@
         if (empty($title) || empty($url)){
             $error = 'Judul dan URL harus diisi';
         } else {
-            $last_order_row = get_single_row("SELECT MAX(order_index) AS max_order FROM links WHERE user_id = ?", [$current_user_id], 'i');
+            // Multi-profile: Use active_profile_id for new link
+            $last_order_row = get_single_row("SELECT MAX(order_index) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
             $last_order = $last_order_row['max_order'] ?? 0;
             $new_order = $last_order + 1;
 
@@ -23,10 +40,10 @@
             $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
 
             if ($has_categories) {
-                $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?)";
+                $query = "INSERT INTO links (user_id, profile_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
-                    mysqli_stmt_bind_param($stmt, 'isssii', $current_user_id, $title, $url, $icon_class, $category_id, $new_order);
+                    mysqli_stmt_bind_param($stmt, 'iisssii', $current_user_id, $active_profile_id, $title, $url, $icon_class, $category_id, $new_order);
                     if (mysqli_stmt_execute($stmt)){
                         $success = 'Link berhasil ditambahkan';
                     } else {
@@ -37,10 +54,10 @@
                 }
             } else {
                 // Fallback to old schema without category_id
-                $query = "INSERT INTO links (user_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?)";
+                $query = "INSERT INTO links (user_id, profile_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
-                    mysqli_stmt_bind_param($stmt, 'isssi', $current_user_id, $title, $url, $icon_class, $new_order);
+                    mysqli_stmt_bind_param($stmt, 'iisssi', $current_user_id, $active_profile_id, $title, $url, $icon_class, $new_order);
                     if (mysqli_stmt_execute($stmt)){
                         $success = 'Link berhasil ditambahkan';
                     } else {
@@ -67,15 +84,16 @@
             $check_col = mysqli_query($conn, "SHOW COLUMNS FROM links LIKE 'category_id'");
             $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
 
+            // Multi-profile: Update link within active profile
             if ($has_categories) {
-                $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND user_id = ?";
+                $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND profile_id = ?";
                 $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $current_user_id);
+                mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $active_profile_id);
             } else {
                 // Fallback to old schema
-                $query = "UPDATE links SET title = ?, url = ?, icon_class = ? WHERE link_id = ? AND user_id = ?";
+                $query = "UPDATE links SET title = ?, url = ?, icon_class = ? WHERE link_id = ? AND profile_id = ?";
                 $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'sssii', $title, $url, $icon_class, $link_id, $current_user_id);
+                mysqli_stmt_bind_param($stmt, 'sssii', $title, $url, $icon_class, $link_id, $active_profile_id);
             }
             
             if (mysqli_stmt_execute($stmt)) {
@@ -86,12 +104,13 @@
         }
     }
 
+    // Multi-profile: Delete link from active profile
     if (isset($_GET['delete'])) {
         $link_id = intval($_GET['delete']);
         
-        $query = "DELETE FROM links WHERE link_id = ? AND user_id = ?";
+        $query = "DELETE FROM links WHERE link_id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ii', $link_id, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'ii', $link_id, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Link berhasil dihapus!';
@@ -100,6 +119,7 @@
         }
     }
 
+    // Multi-profile: Reorder links within active profile
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order'])) {
         $order_data = json_decode($_POST['order_data'], true);
         
@@ -108,9 +128,9 @@
                 $link_id = intval($item['id']);
                 $order_index = intval($item['order']);
                 
-                $query = "UPDATE links SET order_index = ? WHERE link_id = ? AND user_id = ?";
+                $query = "UPDATE links SET order_index = ? WHERE link_id = ? AND profile_id = ?";
                 $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'iii', $order_index, $link_id, $current_user_id);
+                mysqli_stmt_bind_param($stmt, 'iii', $order_index, $link_id, $active_profile_id);
                 mysqli_stmt_execute($stmt);
             }
             
@@ -118,13 +138,14 @@
             exit;
         }
     }
-    $links = get_all_rows("SELECT * FROM links WHERE user_id = ? ORDER BY order_index ASC", [$current_user_id], 'i');
+    // Multi-profile: Load links for active profile only
+    $links = get_all_rows("SELECT * FROM links WHERE profile_id = ? ORDER BY order_index ASC", [$active_profile_id], 'i');
     
     // Get analytics data for charts
-    // Get link performance data (top 10 most clicked links)
+    // Get link performance data (top 10 most clicked links) - Multi-profile
     $link_performance = get_all_rows(
-        "SELECT title, click_count FROM links WHERE user_id = ? AND is_active = 1 ORDER BY click_count DESC LIMIT 10",
-        [$current_user_id],
+        "SELECT title, click_count FROM links WHERE profile_id = ? AND is_active = 1 ORDER BY click_count DESC LIMIT 10",
+        [$active_profile_id],
         'i'
     );
     
@@ -134,9 +155,10 @@
         // Check if table exists first
         $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'link_categories'");
         if ($check_table && mysqli_num_rows($check_table) > 0) {
+            // Multi-profile: Load categories for active profile
             $user_categories = get_all_rows(
-                "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE user_id = ? ORDER BY display_order ASC",
-                [$current_user_id],
+                "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE profile_id = ? ORDER BY display_order ASC",
+                [$active_profile_id],
                 'i'
             ) ?? [];
         }
@@ -145,19 +167,19 @@
         $user_categories = [];
     }
 
-    // Get daily clicks for last 7 days (including today for realtime updates)
+    // Get daily clicks for last 7 days (including today for realtime updates) - Multi-profile
     $daily_clicks = get_all_rows(
         "SELECT 
             DATE(clicked_at) as date,
             COUNT(*) as clicks
         FROM link_analytics la
         INNER JOIN links l ON la.link_id = l.link_id
-        WHERE l.user_id = ? 
+        WHERE l.profile_id = ? 
           AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
           AND DATE(clicked_at) <= CURDATE()
         GROUP BY DATE(clicked_at)
         ORDER BY date ASC",
-        [$current_user_id],
+        [$active_profile_id],
         'i'
     );
     
@@ -172,7 +194,7 @@
         $dates_range[$row['date']] = intval($row['clicks']);
     }
     
-    // Get click distribution by geographic location (city + country)
+    // Get click distribution by geographic location (city + country) - Multi-profile
     $click_by_location = get_all_rows(
         "SELECT 
             CASE 
@@ -182,15 +204,15 @@
             COUNT(*) as clicks
         FROM link_analytics la
         INNER JOIN links l ON la.link_id = l.link_id
-        WHERE l.user_id = ?
+        WHERE l.profile_id = ?
         GROUP BY location
         ORDER BY clicks DESC
         LIMIT 10",
-        [$current_user_id],
+        [$active_profile_id],
         'i'
     );
     
-    // If no country data, show IP-based location summary
+    // If no country data, show IP-based location summary - Multi-profile
     if (empty($click_by_location)) {
         $click_by_location = get_all_rows(
             "SELECT 
@@ -202,11 +224,11 @@
                 COUNT(*) as clicks
             FROM link_analytics la
             INNER JOIN links l ON la.link_id = l.link_id
-            WHERE l.user_id = ?
+            WHERE l.profile_id = ?
             GROUP BY location
             ORDER BY clicks DESC
             LIMIT 10",
-            [$current_user_id],
+            [$active_profile_id],
             'i'
         );
     }

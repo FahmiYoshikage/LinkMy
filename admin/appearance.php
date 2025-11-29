@@ -4,6 +4,21 @@
    error_reporting(E_ALL);
    ini_set('display_errors', 1);
 
+    // Multi-profile: Get active profile
+    $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+    if (!$active_profile_id) {
+        // Get user's primary profile
+        $primary_profile = get_single_row(
+            "SELECT profile_id FROM profiles WHERE user_id = ? AND is_primary = 1",
+            [$current_user_id],
+            'i'
+        );
+        if ($primary_profile) {
+            $active_profile_id = $primary_profile['profile_id'];
+            $_SESSION['active_profile_id'] = $active_profile_id;
+        }
+    }
+
     // Auto-create upload folders if not exist
     $base_upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads';
     $required_folders = [
@@ -37,15 +52,17 @@
     $success = '';
     $error = '';
 
-    $appearance = get_single_row("SELECT * FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
+    // Multi-profile: Load appearance for active profile
+    $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
         $profile_title = trim($_POST['profile_title']);
         $bio = trim($_POST['bio']);
         
-        $query = "UPDATE appearance SET profile_title = ?, bio = ? WHERE user_id = ?";
+        // Multi-profile: Update profile info in profiles table
+        $query = "UPDATE profiles SET profile_title = ?, bio = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ssi', $profile_title, $bio, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'ssi', $profile_title, $bio, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Info profil berhasil diupdate!';
@@ -83,9 +100,10 @@
                     if ($appearance['profile_pic_filename'] !== 'default-avatar.png' && file_exists($old_file)) {
                         unlink($old_file);
                     }
-                    $query = "UPDATE appearance SET profile_pic_filename = ? WHERE user_id = ?";
+                    // Multi-profile: Update profile pic for active profile
+                    $query = "UPDATE user_appearance SET profile_pic_filename = ? WHERE profile_id = ?";
                     $stmt = mysqli_prepare($conn, $query);
-                    mysqli_stmt_bind_param($stmt, 'si', $new_filename, $current_user_id);
+                    mysqli_stmt_bind_param($stmt, 'si', $new_filename, $active_profile_id);
                     
                     if (mysqli_stmt_execute($stmt)) {
                         $success = 'Foto profil berhasil diupload!';
@@ -130,9 +148,10 @@
                     if (!empty($appearance['bg_image_filename']) && file_exists($old_file)) {
                         unlink($old_file);
                     }
-                    $query = "UPDATE appearance SET bg_image_filename = ? WHERE user_id = ?";
+                    // Multi-profile: Update background for active profile
+                    $query = "UPDATE user_appearance SET bg_image_filename = ? WHERE profile_id = ?";
                     $stmt = mysqli_prepare($conn, $query);
-                    mysqli_stmt_bind_param($stmt, 'si', $new_filename, $current_user_id);
+                    mysqli_stmt_bind_param($stmt, 'si', $new_filename, $active_profile_id);
                     if (mysqli_stmt_execute($stmt)) {
                         $success = 'Background berhasil diupload!';
                         $appearance['bg_image_filename'] = $new_filename;
@@ -154,9 +173,10 @@
             if (file_exists($bg_path)) {
                 unlink($bg_path);
             }
-            $query = "UPDATE appearance SET bg_image_filename = NULL WHERE user_id = ?";
+            // Multi-profile: Remove background for active profile
+            $query = "UPDATE user_appearance SET bg_image_filename = NULL WHERE profile_id = ?";
             $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
+            mysqli_stmt_bind_param($stmt, 'i', $active_profile_id);
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Background berhasil dihapus!';
@@ -168,9 +188,10 @@
         $theme_name = $_POST['theme_name'];
         $button_style = $_POST['button_style'];
         
-        $query = "UPDATE appearance SET theme_name = ?, button_style = ? WHERE user_id = ?";
+        // Multi-profile: Update theme for active profile
+        $query = "UPDATE user_appearance SET theme_name = ?, button_style = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ssi', $theme_name, $button_style, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'ssi', $theme_name, $button_style, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Tema berhasil diupdate!';
@@ -207,7 +228,7 @@
         error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, container=$container_style, categories=$enable_categories, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
         error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
         
-        $query = "UPDATE appearance SET 
+        $query = "UPDATE user_appearance SET 
                   gradient_preset = ?, 
                   custom_bg_color = ?, 
                   custom_button_color = ?,
@@ -220,16 +241,17 @@
                   enable_animations = ?,
                   enable_glass_effect = ?,
                   shadow_intensity = ?
-                  WHERE user_id = ?";
+                  WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         
         if (!$stmt) {
             $error = 'Database prepare error: ' . mysqli_error($conn);
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
+            // Multi-profile: Update advanced settings for active profile
             $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiiiisi', 
                 $gradient_preset, $custom_bg_color, $custom_button_color, $custom_text_color, $custom_link_text_color,
-                $profile_layout, $container_style, $enable_categories, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $current_user_id);
+                $profile_layout, $container_style, $enable_categories, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $active_profile_id);
             
             if (!$bind_result) {
                 $error = 'Bind param error: ' . mysqli_stmt_error($stmt);
@@ -243,8 +265,8 @@
                 }
                 error_log("SUCCESS! Affected rows: $affected");
                 
-                // Reload data from database to ensure we have latest
-                $appearance = get_single_row("SELECT * FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
+                // Reload data from database to ensure we have latest - Multi-profile
+                $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
                 
                 error_log("After save - gradient: " . ($appearance['gradient_preset'] ?? 'NULL'));
                 
@@ -269,7 +291,7 @@
         $container_border_radius = intval($_POST['container_border_radius'] ?? 30);
         $container_shadow = isset($_POST['container_shadow']) ? 1 : 0;
         
-        $query = "UPDATE appearance SET 
+        $query = "UPDATE user_appearance SET 
                   boxed_layout = ?,
                   outer_bg_type = ?,
                   outer_bg_color = ?,
@@ -278,17 +300,19 @@
                   container_max_width = ?,
                   container_border_radius = ?,
                   container_shadow = ?
-                  WHERE user_id = ?";
+                  WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
+        // Multi-profile: Update boxed layout for active profile
         mysqli_stmt_bind_param($stmt, 'issssiiii', 
             $boxed_layout, $outer_bg_type, $outer_bg_color, 
             $outer_bg_gradient_start, $outer_bg_gradient_end, 
             $container_max_width, $container_border_radius, 
-            $container_shadow, $current_user_id);
+            $container_shadow, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = '✅ Boxed Layout berhasil disimpan!';
-            $appearance = get_single_row("SELECT * FROM appearance WHERE user_id = ?", [$current_user_id], 'i');
+            // Multi-profile: Reload appearance for active profile
+            $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
             $_SESSION['show_boxed_tab'] = true;
         } else {
             $error = 'Gagal menyimpan Boxed Layout!';
