@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db:3306
--- Generation Time: Nov 29, 2025 at 10:40 AM
+-- Generation Time: Nov 29, 2025 at 03:32 PM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.27
 
@@ -20,61 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `linkmy_db`
 --
-
--- --------------------------------------------------------
-
---
--- Table structure for table `appearance`
---
-
-CREATE TABLE `appearance` (
-  `appearance_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `profile_title` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `bio` text COLLATE utf8mb4_general_ci,
-  `profile_pic_filename` varchar(255) COLLATE utf8mb4_general_ci DEFAULT 'default-avatar.png',
-  `bg_image_filename` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `theme_name` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'light',
-  `button_style` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'rounded',
-  `font_family` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Inter',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `custom_bg_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom background color hex',
-  `custom_button_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom button color hex',
-  `custom_text_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom text color hex',
-  `custom_link_text_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `gradient_preset` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Predefined gradient name',
-  `profile_layout` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'centered' COMMENT 'Profile layout style: centered, left, minimal',
-  `container_style` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'wide' COMMENT 'wide|boxed',
-  `enable_categories` tinyint(1) DEFAULT '0' COMMENT 'Enable link categories/folders',
-  `show_profile_border` tinyint(1) DEFAULT '1' COMMENT 'Show border around profile picture',
-  `enable_animations` tinyint(1) DEFAULT '1' COMMENT 'Enable hover animations on links',
-  `enable_glass_effect` tinyint(1) DEFAULT '0',
-  `shadow_intensity` enum('none','light','medium','heavy') COLLATE utf8mb4_general_ci DEFAULT 'medium',
-  `boxed_layout` tinyint(1) DEFAULT '0' COMMENT '0=full width, 1=boxed mode',
-  `outer_bg_type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'color' COMMENT 'color, gradient, image',
-  `outer_bg_color` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#667eea' COMMENT 'Outer background color',
-  `outer_bg_gradient_start` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#667eea' COMMENT 'Gradient start color',
-  `outer_bg_gradient_end` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#764ba2' COMMENT 'Gradient end color',
-  `outer_bg_image` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Path to background image',
-  `container_bg_color` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#ffffff' COMMENT 'Inner container background',
-  `container_max_width` int DEFAULT '480' COMMENT 'Max width in pixels for boxed container',
-  `container_border_radius` int DEFAULT '30' COMMENT 'Border radius in pixels',
-  `container_shadow` tinyint(1) DEFAULT '1' COMMENT 'Show shadow on container'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `appearance`
---
-
-INSERT INTO `appearance` (`appearance_id`, `user_id`, `profile_title`, `bio`, `profile_pic_filename`, `bg_image_filename`, `theme_name`, `button_style`, `font_family`, `updated_at`, `custom_bg_color`, `custom_button_color`, `custom_text_color`, `custom_link_text_color`, `gradient_preset`, `profile_layout`, `container_style`, `enable_categories`, `show_profile_border`, `enable_animations`, `enable_glass_effect`, `shadow_intensity`, `boxed_layout`, `outer_bg_type`, `outer_bg_color`, `outer_bg_gradient_start`, `outer_bg_gradient_end`, `outer_bg_image`, `container_bg_color`, `container_max_width`, `container_border_radius`, `container_shadow`) VALUES
-(1, 1, 'Admin LinkMy', 'Welcome to LinkMy - Your Personal Link Hub', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-10 23:29:30', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(7, 7, 'mandatori', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-13 01:05:43', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(8, 8, 'Nyla', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 14:58:17', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(9, 9, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'dark', 'rounded', 'Inter', '2025-11-16 15:16:57', '#ffffff', '#667eea', '#333333', '#333333', 'Midnight Blue', 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(10, 10, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 15:16:41', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(11, 11, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-16 17:08:12', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(12, 12, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-26 06:54:36', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Rose Petal', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#334fcc', '#452862', NULL, '#ffffff', 600, 15, 1),
-(13, 13, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-18 03:59:27', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
 
 -- --------------------------------------------------------
 
@@ -106,37 +51,38 @@ CREATE TABLE `email_verifications` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `expires_at` timestamp NULL DEFAULT NULL,
   `is_used` tinyint(1) DEFAULT '0',
-  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL
+  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `verification_type` enum('email','slug_change') COLLATE utf8mb4_general_ci DEFAULT 'email' COMMENT 'Type of verification: email registration or slug change'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `email_verifications`
 --
 
-INSERT INTO `email_verifications` (`id`, `email`, `otp_code`, `created_at`, `expires_at`, `is_used`, `ip_address`) VALUES
-(14, 'kunalmr40@gmail.com', '488129', '2025-11-12 05:31:28', '2025-11-11 23:41:28', 0, NULL),
-(20, 'kunalmr40@gmail.com', '086821', '2025-11-13 00:05:44', '2025-11-12 18:15:44', 0, '::1'),
-(23, 'vivoy12gweh@gmail.com', '492648', '2025-11-13 00:30:33', '2025-11-12 18:40:33', 0, '::1'),
-(24, 'vivoy12gweh@gmail.com', '347508', '2025-11-13 00:48:57', '2025-11-12 18:58:57', 0, '::1'),
-(25, 'vivoy12gweh@gmail.com', '185055', '2025-11-13 00:49:14', '2025-11-12 18:59:14', 1, '::1'),
-(26, 'kunalmr40@gmail.com', '347860', '2025-11-13 00:57:47', '2025-11-12 19:07:47', 1, '::1'),
-(27, 'kanduang@gmail.com', '871525', '2025-11-16 14:55:48', '2025-11-16 15:05:48', 0, '172.22.0.1'),
-(28, 'kanduang@gmail.com', '536895', '2025-11-16 14:55:51', '2025-11-16 15:05:51', 0, '172.22.0.1'),
-(29, 'kanduang@gmail.com', '789981', '2025-11-16 14:55:54', '2025-11-16 15:05:54', 0, '172.22.0.1'),
-(30, 'kanduang@gmail.com', '588594', '2025-11-16 14:55:58', '2025-11-16 15:05:58', 0, '172.22.0.1'),
-(31, 'kanduang@gmail.com', '008442', '2025-11-16 14:56:01', '2025-11-16 15:06:01', 0, '172.22.0.1'),
-(32, 'kanduang@gmail.com', '608147', '2025-11-16 14:56:04', '2025-11-16 15:06:04', 0, '172.22.0.1'),
-(33, 'nilaanidia@gmail.com', '602361', '2025-11-16 14:57:15', '2025-11-16 15:07:15', 1, '172.22.0.1'),
-(34, 'yogazogo@gmail.com', '429554', '2025-11-16 15:04:26', '2025-11-16 15:14:26', 1, '172.22.0.1'),
-(35, 'irfannazrildebian@gmail.com', '297327', '2025-11-16 15:05:08', '2025-11-16 15:15:08', 1, '172.22.0.1'),
-(36, 'jagajagaketiga@gmail.com', '834199', '2025-11-16 17:07:33', '2025-11-16 17:17:33', 1, '172.22.0.1'),
-(37, 'hutyasooitsthyven@gmail.com', '414534', '2025-11-17 08:25:23', '2025-11-17 08:35:23', 0, '172.22.0.1'),
-(38, 'hutasooitsthyven@gmail.com', '025074', '2025-11-17 08:25:35', '2025-11-17 08:35:35', 0, '172.22.0.1'),
-(39, 'hutasoitsthyven@gmail.com', '796910', '2025-11-17 08:25:44', '2025-11-17 08:35:44', 1, '172.22.0.1'),
-(40, 'fahmiilham029@gmail.com', '968615', '2025-11-18 03:49:46', '2025-11-18 03:59:46', 0, '172.22.0.1'),
-(41, 'fahmiilham029@gmail.com', '460305', '2025-11-18 03:49:50', '2025-11-18 03:59:50', 1, '172.22.0.1'),
-(42, 'fahmiilham029@gmail.com', '163434', '2025-11-18 03:55:53', '2025-11-18 04:05:53', 1, '172.22.0.1'),
-(43, 'vivoy12gweh@gmail.com', '619176', '2025-11-18 03:57:38', '2025-11-18 04:07:38', 1, '172.22.0.1');
+INSERT INTO `email_verifications` (`id`, `email`, `otp_code`, `created_at`, `expires_at`, `is_used`, `ip_address`, `verification_type`) VALUES
+(14, 'kunalmr40@gmail.com', '488129', '2025-11-12 05:31:28', '2025-11-11 23:41:28', 0, NULL, 'email'),
+(20, 'kunalmr40@gmail.com', '086821', '2025-11-13 00:05:44', '2025-11-12 18:15:44', 0, '::1', 'email'),
+(23, 'vivoy12gweh@gmail.com', '492648', '2025-11-13 00:30:33', '2025-11-12 18:40:33', 0, '::1', 'email'),
+(24, 'vivoy12gweh@gmail.com', '347508', '2025-11-13 00:48:57', '2025-11-12 18:58:57', 0, '::1', 'email'),
+(25, 'vivoy12gweh@gmail.com', '185055', '2025-11-13 00:49:14', '2025-11-12 18:59:14', 1, '::1', 'email'),
+(26, 'kunalmr40@gmail.com', '347860', '2025-11-13 00:57:47', '2025-11-12 19:07:47', 1, '::1', 'email'),
+(27, 'kanduang@gmail.com', '871525', '2025-11-16 14:55:48', '2025-11-16 15:05:48', 0, '172.22.0.1', 'email'),
+(28, 'kanduang@gmail.com', '536895', '2025-11-16 14:55:51', '2025-11-16 15:05:51', 0, '172.22.0.1', 'email'),
+(29, 'kanduang@gmail.com', '789981', '2025-11-16 14:55:54', '2025-11-16 15:05:54', 0, '172.22.0.1', 'email'),
+(30, 'kanduang@gmail.com', '588594', '2025-11-16 14:55:58', '2025-11-16 15:05:58', 0, '172.22.0.1', 'email'),
+(31, 'kanduang@gmail.com', '008442', '2025-11-16 14:56:01', '2025-11-16 15:06:01', 0, '172.22.0.1', 'email'),
+(32, 'kanduang@gmail.com', '608147', '2025-11-16 14:56:04', '2025-11-16 15:06:04', 0, '172.22.0.1', 'email'),
+(33, 'nilaanidia@gmail.com', '602361', '2025-11-16 14:57:15', '2025-11-16 15:07:15', 1, '172.22.0.1', 'email'),
+(34, 'yogazogo@gmail.com', '429554', '2025-11-16 15:04:26', '2025-11-16 15:14:26', 1, '172.22.0.1', 'email'),
+(35, 'irfannazrildebian@gmail.com', '297327', '2025-11-16 15:05:08', '2025-11-16 15:15:08', 1, '172.22.0.1', 'email'),
+(36, 'jagajagaketiga@gmail.com', '834199', '2025-11-16 17:07:33', '2025-11-16 17:17:33', 1, '172.22.0.1', 'email'),
+(37, 'hutyasooitsthyven@gmail.com', '414534', '2025-11-17 08:25:23', '2025-11-17 08:35:23', 0, '172.22.0.1', 'email'),
+(38, 'hutasooitsthyven@gmail.com', '025074', '2025-11-17 08:25:35', '2025-11-17 08:35:35', 0, '172.22.0.1', 'email'),
+(39, 'hutasoitsthyven@gmail.com', '796910', '2025-11-17 08:25:44', '2025-11-17 08:35:44', 1, '172.22.0.1', 'email'),
+(40, 'fahmiilham029@gmail.com', '968615', '2025-11-18 03:49:46', '2025-11-18 03:59:46', 0, '172.22.0.1', 'email'),
+(41, 'fahmiilham029@gmail.com', '460305', '2025-11-18 03:49:50', '2025-11-18 03:59:50', 1, '172.22.0.1', 'email'),
+(42, 'fahmiilham029@gmail.com', '163434', '2025-11-18 03:55:53', '2025-11-18 04:05:53', 1, '172.22.0.1', 'email'),
+(43, 'vivoy12gweh@gmail.com', '619176', '2025-11-18 03:57:38', '2025-11-18 04:07:38', 1, '172.22.0.1', 'email');
 
 -- --------------------------------------------------------
 
@@ -192,6 +138,7 @@ INSERT INTO `gradient_presets` (`preset_id`, `preset_name`, `gradient_css`, `pre
 CREATE TABLE `links` (
   `link_id` int NOT NULL,
   `user_id` int NOT NULL,
+  `profile_id` int DEFAULT NULL,
   `title` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
   `url` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
   `order_index` int DEFAULT '0',
@@ -206,27 +153,27 @@ CREATE TABLE `links` (
 -- Dumping data for table `links`
 --
 
-INSERT INTO `links` (`link_id`, `user_id`, `title`, `url`, `order_index`, `icon_class`, `click_count`, `is_active`, `created_at`, `category_id`) VALUES
-(1, 1, 'Instagram', 'https://instagram.com', 1, 'bi-instagram', 0, 1, '2025-11-10 23:29:30', NULL),
-(2, 1, 'GitHub', 'https://github.com', 2, 'bi-github', 0, 1, '2025-11-10 23:29:30', NULL),
-(3, 1, 'LinkedIn', 'https://linkedin.com', 3, 'bi-linkedin', 0, 1, '2025-11-10 23:29:30', NULL),
-(6, 7, 'labaka saturnu saturnika', 'https://08.shinigami.asia/', 1, 'bi-link-45deg', 1, 1, '2025-11-13 01:06:28', NULL),
-(10, 9, 'Youtube', 'youtube://youtube.com/dQw4w9WgXcQ?si=ZW-Lq6EZsG0aJslv', 1, 'bi-youtube', 3, 1, '2025-11-16 15:13:34', NULL),
-(11, 10, 'bahlil', 'https://ibehelp.gt.tc/', 1, 'bi-link-45deg', 9, 1, '2025-11-16 15:17:53', NULL),
-(12, 10, 'ss', 'https://ibehelp.gt.tc/', 2, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:29', NULL),
-(13, 10, 'se', 'https://ibehelp.gt.tc/', 3, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:37', NULL),
-(14, 10, 'ss', 'https://ibehelp.gt.tc/', 4, 'bi-link-45deg', 1, 1, '2025-11-16 15:29:45', NULL),
-(16, 12, 'Instagram', 'https://www.instagram.com/fahmi.ilham06/', 6, 'bi-instagram', 3, 1, '2025-11-18 05:38:56', 19),
-(17, 12, 'Github', 'https://github.com/FahmiYoshikage', 5, 'bi-github', 7, 1, '2025-11-18 06:27:04', 19),
-(18, 12, 'LinkMy', 'https://linkmy.iet.ovh/', 1, 'bi-globe', 2, 1, '2025-11-21 01:50:07', 21),
-(19, 12, 'Kas Triforce', 'https://triforce.fahmi.app/', 2, 'bi-globe', 5, 1, '2025-11-21 01:50:43', 21),
-(20, 12, 'Linkedin', 'https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/', 4, 'bi-linkedin', 4, 1, '2025-11-21 01:53:28', 19),
-(22, 12, 'Twitter / X', 'https://x.com/FahmiVoldigoad', 7, 'bi-twitter-x', 2, 1, '2025-11-21 01:55:52', 19),
-(24, 12, 'Facebook', 'https://www.facebook.com/Fahmi1lham/', 8, 'bi-facebook', 4, 1, '2025-11-21 02:06:05', 19),
-(25, 12, 'Shopee', 'https://shopee.co.id/', 3, 'bi-shop-window', 3, 1, '2025-11-21 02:12:18', 22),
-(26, 12, 'Netdata', 'https://monitor.fahmi.app', 9, 'bi-speedometer', 2, 1, '2025-11-27 12:42:33', 23),
-(27, 12, 'Affine', 'https://affine.fahmi.app', 10, 'bi-journal-text', 4, 1, '2025-11-27 12:43:31', 23),
-(28, 12, 'Dozzle', 'https://dozzle.fahmi.app', 11, 'bi-activity', 3, 1, '2025-11-27 12:44:56', 23);
+INSERT INTO `links` (`link_id`, `user_id`, `profile_id`, `title`, `url`, `order_index`, `icon_class`, `click_count`, `is_active`, `created_at`, `category_id`) VALUES
+(1, 1, 1, 'Instagram', 'https://instagram.com', 1, 'bi-instagram', 0, 1, '2025-11-10 23:29:30', NULL),
+(2, 1, 1, 'GitHub', 'https://github.com', 2, 'bi-github', 0, 1, '2025-11-10 23:29:30', NULL),
+(3, 1, 1, 'LinkedIn', 'https://linkedin.com', 3, 'bi-linkedin', 0, 1, '2025-11-10 23:29:30', NULL),
+(6, 7, 2, 'labaka saturnu saturnika', 'https://08.shinigami.asia/', 1, 'bi-link-45deg', 1, 1, '2025-11-13 01:06:28', NULL),
+(10, 9, 4, 'Youtube', 'youtube://youtube.com/dQw4w9WgXcQ?si=ZW-Lq6EZsG0aJslv', 1, 'bi-youtube', 3, 1, '2025-11-16 15:13:34', NULL),
+(11, 10, 5, 'bahlil', 'https://ibehelp.gt.tc/', 1, 'bi-link-45deg', 9, 1, '2025-11-16 15:17:53', NULL),
+(12, 10, 5, 'ss', 'https://ibehelp.gt.tc/', 2, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:29', NULL),
+(13, 10, 5, 'se', 'https://ibehelp.gt.tc/', 3, 'bi-link-45deg', 4, 1, '2025-11-16 15:29:37', NULL),
+(14, 10, 5, 'ss', 'https://ibehelp.gt.tc/', 4, 'bi-link-45deg', 1, 1, '2025-11-16 15:29:45', NULL),
+(16, 12, 7, 'Instagram', 'https://www.instagram.com/fahmi.ilham06/', 6, 'bi-instagram', 3, 1, '2025-11-18 05:38:56', 19),
+(17, 12, 7, 'Github', 'https://github.com/FahmiYoshikage', 5, 'bi-github', 8, 1, '2025-11-18 06:27:04', 19),
+(18, 12, 7, 'LinkMy', 'https://linkmy.iet.ovh/', 1, 'bi-globe', 2, 1, '2025-11-21 01:50:07', 21),
+(19, 12, 7, 'Kas Triforce', 'https://triforce.fahmi.app/', 2, 'bi-globe', 5, 1, '2025-11-21 01:50:43', 21),
+(20, 12, 7, 'Linkedin', 'https://www.linkedin.com/in/fahmi-ilham-bagaskara-65a197305/', 4, 'bi-linkedin', 4, 1, '2025-11-21 01:53:28', 19),
+(22, 12, 7, 'Twitter / X', 'https://x.com/FahmiVoldigoad', 7, 'bi-twitter-x', 2, 1, '2025-11-21 01:55:52', 19),
+(24, 12, 7, 'Facebook', 'https://www.facebook.com/Fahmi1lham/', 8, 'bi-facebook', 4, 1, '2025-11-21 02:06:05', 19),
+(25, 12, 7, 'Shopee', 'https://shopee.co.id/', 3, 'bi-shop-window', 3, 1, '2025-11-21 02:12:18', 22),
+(26, 12, 7, 'Netdata', 'https://monitor.fahmi.app', 9, 'bi-speedometer', 2, 1, '2025-11-27 12:42:33', 23),
+(27, 12, 7, 'Affine', 'https://affine.fahmi.app', 10, 'bi-journal-text', 4, 1, '2025-11-27 12:43:31', 23),
+(28, 12, 7, 'Dozzle', 'https://dozzle.fahmi.app', 11, 'bi-activity', 3, 1, '2025-11-27 12:44:56', 23);
 
 -- --------------------------------------------------------
 
@@ -282,7 +229,8 @@ INSERT INTO `link_analytics` (`analytics_id`, `link_id`, `clicked_at`, `referrer
 (30, 28, '2025-11-27 21:06:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.97.203', 'Indonesia', 'Surabaya'),
 (31, 25, '2025-11-27 22:14:13', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
 (32, 20, '2025-11-27 22:14:46', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
-(33, 27, '2025-11-29 04:53:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2404:c0:b602:702a:a190:1b2d:2066:e7f3', 'Indonesia', 'Surabaya');
+(33, 27, '2025-11-29 04:53:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2404:c0:b602:702a:a190:1b2d:2066:e7f3', 'Indonesia', 'Surabaya'),
+(34, 17, '2025-11-29 13:55:35', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '210.57.215.18', 'Indonesia', 'Mulyorejo');
 
 -- --------------------------------------------------------
 
@@ -293,6 +241,7 @@ INSERT INTO `link_analytics` (`analytics_id`, `link_id`, `clicked_at`, `referrer
 CREATE TABLE `link_categories` (
   `category_id` int NOT NULL,
   `user_id` int NOT NULL,
+  `profile_id` int DEFAULT NULL,
   `category_name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `category_icon` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'bi-folder',
   `category_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT '#667eea',
@@ -305,17 +254,17 @@ CREATE TABLE `link_categories` (
 -- Dumping data for table `link_categories`
 --
 
-INSERT INTO `link_categories` (`category_id`, `user_id`, `category_name`, `category_icon`, `category_color`, `display_order`, `is_expanded`, `created_at`) VALUES
-(1, 1, 'Social Media', 'bi-people-fill', '#667eea', 1, 1, '2025-11-15 14:30:55'),
-(3, 7, 'Social Media', 'bi-people-fill', '#667eea', 1, 1, '2025-11-15 14:30:55'),
-(8, 1, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
-(10, 7, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
-(15, 1, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
-(17, 7, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
-(19, 12, 'Social Media', 'bi-folder', '#667eea', 1, 1, '2025-11-18 23:32:10'),
-(21, 12, 'Project', 'bi-code-slash', '#667eea', 2, 1, '2025-11-21 01:49:18'),
-(22, 12, 'Marketplace', 'bi-shop', '#667eea', 3, 1, '2025-11-21 02:09:03'),
-(23, 12, 'Personal-Services', 'bi-globe', '#667eea', 4, 1, '2025-11-27 12:40:29');
+INSERT INTO `link_categories` (`category_id`, `user_id`, `profile_id`, `category_name`, `category_icon`, `category_color`, `display_order`, `is_expanded`, `created_at`) VALUES
+(1, 1, 1, 'Social Media', 'bi-people-fill', '#667eea', 1, 1, '2025-11-15 14:30:55'),
+(3, 7, 2, 'Social Media', 'bi-people-fill', '#667eea', 1, 1, '2025-11-15 14:30:55'),
+(8, 1, 1, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
+(10, 7, 2, 'Professional', 'bi-briefcase-fill', '#28a745', 2, 1, '2025-11-15 14:30:55'),
+(15, 1, 1, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
+(17, 7, 2, 'Content', 'bi-play-circle-fill', '#dc3545', 3, 1, '2025-11-15 14:30:55'),
+(19, 12, 7, 'Social Media', 'bi-folder', '#667eea', 1, 1, '2025-11-18 23:32:10'),
+(21, 12, 7, 'Project', 'bi-code-slash', '#667eea', 2, 1, '2025-11-21 01:49:18'),
+(22, 12, 7, 'Marketplace', 'bi-shop', '#667eea', 3, 1, '2025-11-21 02:09:03'),
+(23, 12, 7, 'Personal-Services', 'bi-globe', '#667eea', 4, 1, '2025-11-27 12:40:29');
 
 -- --------------------------------------------------------
 
@@ -373,6 +322,97 @@ INSERT INTO `password_resets` (`id`, `email`, `reset_token`, `created_at`, `expi
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `profiles`
+--
+
+CREATE TABLE `profiles` (
+  `profile_id` int NOT NULL,
+  `user_id` int NOT NULL COMMENT 'Owner of this profile',
+  `slug` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Unique URL slug for this profile',
+  `profile_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Profile display name (e.g., "Personal", "Business")',
+  `profile_description` text COLLATE utf8mb4_general_ci COMMENT 'Internal note about this profile',
+  `profile_title` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Public title shown on profile page',
+  `bio` text COLLATE utf8mb4_general_ci COMMENT 'Profile bio/description',
+  `profile_pic_filename` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Profile picture',
+  `is_primary` tinyint(1) DEFAULT '0' COMMENT '1 = primary/default profile, 0 = secondary',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT '1 = active, 0 = deactivated',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `last_accessed_at` timestamp NULL DEFAULT NULL COMMENT 'Last time profile was viewed'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Multiple profiles per user - each with independent appearance and content';
+
+--
+-- Dumping data for table `profiles`
+--
+
+INSERT INTO `profiles` (`profile_id`, `user_id`, `slug`, `profile_name`, `profile_description`, `profile_title`, `bio`, `profile_pic_filename`, `is_primary`, `is_active`, `created_at`, `updated_at`, `last_accessed_at`) VALUES
+(1, 1, 'admin', 'admin - Main Profile', NULL, 'Admin LinkMy', 'Welcome to LinkMy - Your Personal Link Hub', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(2, 7, 'heheheha', 'mandatori - Main Profile', NULL, 'mandatori', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(3, 8, 'nylaa', 'Nyla - Main Profile', NULL, 'Nyla', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(4, 9, 'MalingPangsit', 'MalingPangsit - Main Profile', NULL, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(5, 10, 'tulongg', 'sumber_air_su_dekat - Main Profile', NULL, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(6, 11, 'ajilahsapalagi', 'AjiSantoso - Main Profile', NULL, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(7, 12, 'fahmi', 'fahmi - Main Profile', NULL, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(8, 13, 'naganiga', 'naganiga - Main Profile', NULL, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL);
+
+--
+-- Triggers `profiles`
+--
+DELIMITER $$
+CREATE TRIGGER `sync_primary_slug_on_insert` AFTER INSERT ON `profiles` FOR EACH ROW BEGIN
+    -- If this is a primary profile, update users.page_slug
+    IF NEW.is_primary = 1 THEN
+        UPDATE users SET page_slug = NEW.slug WHERE user_id = NEW.user_id;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `sync_primary_slug_on_update` AFTER UPDATE ON `profiles` FOR EACH ROW BEGIN
+    -- If this is a primary profile and slug changed, update users.page_slug
+    IF NEW.is_primary = 1 AND NEW.slug != OLD.slug THEN
+        UPDATE users SET page_slug = NEW.slug WHERE user_id = NEW.user_id;
+    END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `profile_activity_log`
+--
+
+CREATE TABLE `profile_activity_log` (
+  `log_id` int NOT NULL,
+  `profile_id` int NOT NULL,
+  `action_type` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'created, updated, cloned, deleted',
+  `description` text COLLATE utf8mb4_general_ci,
+  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `user_agent` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Audit log for profile activities';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `profile_analytics`
+--
+
+CREATE TABLE `profile_analytics` (
+  `analytics_id` int NOT NULL,
+  `profile_id` int NOT NULL,
+  `date` date NOT NULL,
+  `total_views` int DEFAULT '0' COMMENT 'Total profile page views',
+  `total_clicks` int DEFAULT '0' COMMENT 'Total link clicks',
+  `unique_visitors` int DEFAULT '0' COMMENT 'Unique IP addresses',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Daily analytics per profile';
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 
@@ -387,22 +427,14 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`session_id`, `session_data`, `session_expire`) VALUES
-('357e69b4ead77d8286dcb76be75a5c04', '', 1764326589),
 ('40b2ac013508b9a282f72499265e3cee', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322476;', 1764927276),
 ('434c81bbb4d93028b2cde774641a72eb', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764247834;', 1764852634),
-('44b43abeabe97ff2a5538fc3612384a0', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763727890;', 1764332690),
 ('6121170c67155c822c9e1dc9f7a56bbf', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322602;', 1764927402),
-('70081f39c6e0dce8332fa6de9efd1903', '', 1764228865),
 ('787b19de3a31e945c7cc31df27e4be8c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764146178;', 1764750978),
-('9100985f5871e6f4716ca56a3dc36829', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763709869;', 1764314669),
-('9b83bc05e30cd7aff61f38d4567bf44c', 'user_id|i:13;username|s:8:\"naganiga\";page_slug|s:8:\"naganiga\";last_activity|i:1764412724;', 1765017524),
-('b00bb622c5f3a16fb07f61d08116fa94', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763643470;', 1764248270),
-('b05fdf8d0a44e15e4209daab3884b3ed', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763579816;', 1764184616),
-('b568e22a74c3633bcb5d20d7b97027f5', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763513922;', 1764118722),
-('dd325598a8a14f30c8812cd98aadd135', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763690599;', 1764295399),
-('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763856883;', 1764461683),
-('eab6c29612c6b7ff768941d3cf20dd34', '', 1764123882),
-('f13d54b8565758d170650c2aef2df590', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763709812;', 1764314612);
+('95c285dc01b011d473e897199548cdbd', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764429619;active_profile_id|i:7;', 1765034419),
+('9b83bc05e30cd7aff61f38d4567bf44c', 'user_id|i:13;username|s:8:\"naganiga\";page_slug|s:8:\"naganiga\";last_activity|i:1764413069;', 1765017869),
+('c24d22b7e5e2bb91369fffe85998fe4c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:8:\"triforce\";last_activity|i:1764429782;active_profile_id|i:7;', 1765034582),
+('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763856883;', 1764461683);
 
 -- --------------------------------------------------------
 
@@ -454,26 +486,113 @@ CREATE TABLE `users` (
   `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `page_slug` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `active_profile_id` int DEFAULT NULL,
   `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
   `email_verified` tinyint(1) DEFAULT '0',
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `is_verified` tinyint(1) DEFAULT '0' COMMENT 'Verified badge (1=verified founder/influencer)'
+  `is_verified` tinyint(1) DEFAULT '0' COMMENT 'Verified badge (1=verified founder/influencer)',
+  `last_slug_change_at` datetime DEFAULT NULL COMMENT 'Last time user changed their primary slug (30-day cooldown)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `username`, `password_hash`, `page_slug`, `email`, `email_verified`, `email_verified_at`, `created_at`, `is_verified`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'admin@linkmy.com', 0, NULL, '2025-11-10 23:29:30', 0),
-(7, 'mandatori', '$2y$10$2KHGnWqmaE09y6rBkTGeYOgBhor2mHbzJHcxL24HCim3CmSrdqpaO', 'heheheha', 'kunalmr40@gmail.com', 1, '2025-11-13 01:05:43', '2025-11-13 01:05:43', 0),
-(8, 'Nyla', '$2y$10$a3IhdC22rwMIkhr4rofyAeXW3J.2pSoQTDbcPAld9zUYdxrPmymTi', 'nylaa', 'nilaanidia@gmail.com', 1, '2025-11-16 14:58:17', '2025-11-16 14:58:17', 0),
-(9, 'MalingPangsit', '$2y$10$xjejtjDgzhGgOwu5sO3es.WJq9Tge6I5XpKTWqrdoWLPd88uXStpq', 'MalingPangsit', 'irfannazrildebian@gmail.com', 1, '2025-11-16 15:06:11', '2025-11-16 15:06:11', 0),
-(10, 'sumber_air_su_dekat', '$2y$10$xMfhL6qCj7FyqBczv.gdOutuEpb/CQJfqHTy4RfnhfnRud79ZNlEq', 'tulongg', 'yogazogo@gmail.com', 1, '2025-11-16 15:16:41', '2025-11-16 15:16:41', 0),
-(11, 'AjiSantoso', '$2y$10$eM6Fi50ax/DPgbCqkJOWKOKccKk.Lmq0xsFDeuh/Sp1Z.wrUinM1S', 'ajilahsapalagi', 'jagajagaketiga@gmail.com', 1, '2025-11-16 17:08:12', '2025-11-16 17:08:12', 0),
-(12, 'fahmi', '$2y$10$N7EAhQe57LT7a.yzLH7WbeYsB/8/.ySFY/RY8Co54RdyW558HEQbe', 'fahmi', 'fahmiilham029@gmail.com', 1, '2025-11-18 03:56:37', '2025-11-18 03:56:37', 1),
-(13, 'naganiga', '$2y$10$IkhZqrb5qxaitJkjVobgUuVGincqnp0neGwXmS.BWmLgLtdTfQOnO', 'naganiga', 'vivoy12gweh@gmail.com', 1, '2025-11-18 03:59:27', '2025-11-18 03:59:27', 0);
+INSERT INTO `users` (`user_id`, `username`, `password_hash`, `page_slug`, `active_profile_id`, `email`, `email_verified`, `email_verified_at`, `created_at`, `is_verified`, `last_slug_change_at`) VALUES
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 1, 'admin@linkmy.com', 0, NULL, '2025-11-10 23:29:30', 0, NULL),
+(7, 'mandatori', '$2y$10$2KHGnWqmaE09y6rBkTGeYOgBhor2mHbzJHcxL24HCim3CmSrdqpaO', 'heheheha', 2, 'kunalmr40@gmail.com', 1, '2025-11-13 01:05:43', '2025-11-13 01:05:43', 0, NULL),
+(8, 'Nyla', '$2y$10$a3IhdC22rwMIkhr4rofyAeXW3J.2pSoQTDbcPAld9zUYdxrPmymTi', 'nylaa', 3, 'nilaanidia@gmail.com', 1, '2025-11-16 14:58:17', '2025-11-16 14:58:17', 0, NULL),
+(9, 'MalingPangsit', '$2y$10$xjejtjDgzhGgOwu5sO3es.WJq9Tge6I5XpKTWqrdoWLPd88uXStpq', 'MalingPangsit', 4, 'irfannazrildebian@gmail.com', 1, '2025-11-16 15:06:11', '2025-11-16 15:06:11', 0, NULL),
+(10, 'sumber_air_su_dekat', '$2y$10$xMfhL6qCj7FyqBczv.gdOutuEpb/CQJfqHTy4RfnhfnRud79ZNlEq', 'tulongg', 5, 'yogazogo@gmail.com', 1, '2025-11-16 15:16:41', '2025-11-16 15:16:41', 0, NULL),
+(11, 'AjiSantoso', '$2y$10$eM6Fi50ax/DPgbCqkJOWKOKccKk.Lmq0xsFDeuh/Sp1Z.wrUinM1S', 'ajilahsapalagi', 6, 'jagajagaketiga@gmail.com', 1, '2025-11-16 17:08:12', '2025-11-16 17:08:12', 0, NULL),
+(12, 'fahmi', '$2y$10$N7EAhQe57LT7a.yzLH7WbeYsB/8/.ySFY/RY8Co54RdyW558HEQbe', 'triforce', 7, 'fahmiilham029@gmail.com', 1, '2025-11-18 03:56:37', '2025-11-18 03:56:37', 1, NULL),
+(13, 'naganiga', '$2y$10$IkhZqrb5qxaitJkjVobgUuVGincqnp0neGwXmS.BWmLgLtdTfQOnO', 'naganiga', 8, 'vivoy12gweh@gmail.com', 1, '2025-11-18 03:59:27', '2025-11-18 03:59:27', 0, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_appearance`
+--
+
+CREATE TABLE `user_appearance` (
+  `appearance_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `profile_id` int DEFAULT NULL,
+  `profile_title` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_general_ci,
+  `profile_pic_filename` varchar(255) COLLATE utf8mb4_general_ci DEFAULT 'default-avatar.png',
+  `bg_image_filename` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `theme_name` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'light',
+  `button_style` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'rounded',
+  `font_family` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'Inter',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `custom_bg_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom background color hex',
+  `custom_button_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom button color hex',
+  `custom_text_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Custom text color hex',
+  `custom_link_text_color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `gradient_preset` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Predefined gradient name',
+  `profile_layout` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'centered' COMMENT 'Profile layout style: centered, left, minimal',
+  `container_style` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'wide' COMMENT 'wide|boxed',
+  `enable_categories` tinyint(1) DEFAULT '0' COMMENT 'Enable link categories/folders',
+  `show_profile_border` tinyint(1) DEFAULT '1' COMMENT 'Show border around profile picture',
+  `enable_animations` tinyint(1) DEFAULT '1' COMMENT 'Enable hover animations on links',
+  `enable_glass_effect` tinyint(1) DEFAULT '0',
+  `shadow_intensity` enum('none','light','medium','heavy') COLLATE utf8mb4_general_ci DEFAULT 'medium',
+  `boxed_layout` tinyint(1) DEFAULT '0' COMMENT '0=full width, 1=boxed mode',
+  `outer_bg_type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'color' COMMENT 'color, gradient, image',
+  `outer_bg_color` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#667eea' COMMENT 'Outer background color',
+  `outer_bg_gradient_start` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#667eea' COMMENT 'Gradient start color',
+  `outer_bg_gradient_end` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#764ba2' COMMENT 'Gradient end color',
+  `outer_bg_image` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Path to background image',
+  `container_bg_color` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '#ffffff' COMMENT 'Inner container background',
+  `container_max_width` int DEFAULT '480' COMMENT 'Max width in pixels for boxed container',
+  `container_border_radius` int DEFAULT '30' COMMENT 'Border radius in pixels',
+  `container_shadow` tinyint(1) DEFAULT '1' COMMENT 'Show shadow on container'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_appearance`
+--
+
+INSERT INTO `user_appearance` (`appearance_id`, `user_id`, `profile_id`, `profile_title`, `bio`, `profile_pic_filename`, `bg_image_filename`, `theme_name`, `button_style`, `font_family`, `updated_at`, `custom_bg_color`, `custom_button_color`, `custom_text_color`, `custom_link_text_color`, `gradient_preset`, `profile_layout`, `container_style`, `enable_categories`, `show_profile_border`, `enable_animations`, `enable_glass_effect`, `shadow_intensity`, `boxed_layout`, `outer_bg_type`, `outer_bg_color`, `outer_bg_gradient_start`, `outer_bg_gradient_end`, `outer_bg_image`, `container_bg_color`, `container_max_width`, `container_border_radius`, `container_shadow`) VALUES
+(1, 1, 1, 'Admin LinkMy', 'Welcome to LinkMy - Your Personal Link Hub', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(7, 7, 2, 'mandatori', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(8, 8, 3, 'Nyla', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(9, 9, 4, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'dark', 'rounded', 'Inter', '2025-11-29 14:34:57', '#ffffff', '#667eea', '#333333', '#333333', 'Midnight Blue', 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(10, 10, 5, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(11, 11, 6, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(12, 12, 7, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-29 14:34:57', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Rose Petal', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#334fcc', '#452862', NULL, '#ffffff', 600, 15, 1),
+(13, 13, 8, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_slugs`
+--
+
+CREATE TABLE `user_slugs` (
+  `slug_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `slug` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `is_primary` tinyint(1) DEFAULT '0' COMMENT '1 = primary slug, 0 = alias slug',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Multiple slugs per user - all point to same profile';
+
+--
+-- Dumping data for table `user_slugs`
+--
+
+INSERT INTO `user_slugs` (`slug_id`, `user_id`, `slug`, `is_primary`, `created_at`) VALUES
+(1, 1, 'admin', 1, '2025-11-10 23:29:30'),
+(2, 7, 'heheheha', 1, '2025-11-13 01:05:43'),
+(3, 8, 'nylaa', 1, '2025-11-16 14:58:17'),
+(4, 9, 'MalingPangsit', 1, '2025-11-16 15:06:11'),
+(5, 10, 'tulongg', 1, '2025-11-16 15:16:41'),
+(6, 11, 'ajilahsapalagi', 1, '2025-11-16 17:08:12'),
+(7, 12, 'fahmi', 0, '2025-11-18 03:56:37'),
+(8, 13, 'naganiga', 1, '2025-11-18 03:59:27'),
+(16, 12, 'triforce', 1, '2025-11-29 10:45:16');
 
 -- --------------------------------------------------------
 
@@ -486,7 +605,6 @@ CREATE TABLE `v_public_page_data` (
 ,`bio` text
 ,`boxed_layout` tinyint(1)
 ,`button_style` varchar(20)
-,`container_bg_color` varchar(50)
 ,`container_border_radius` int
 ,`container_max_width` int
 ,`container_shadow` tinyint(1)
@@ -495,18 +613,18 @@ CREATE TABLE `v_public_page_data` (
 ,`custom_button_color` varchar(20)
 ,`custom_link_text_color` varchar(20)
 ,`custom_text_color` varchar(20)
+,`email` varchar(100)
 ,`enable_animations` tinyint(1)
 ,`enable_categories` tinyint(1)
 ,`enable_glass_effect` tinyint(1)
-,`font_family` varchar(50)
 ,`gradient_preset` varchar(50)
 ,`is_verified` tinyint(1)
 ,`outer_bg_color` varchar(50)
 ,`outer_bg_gradient_end` varchar(50)
 ,`outer_bg_gradient_start` varchar(50)
-,`outer_bg_image` varchar(255)
 ,`outer_bg_type` varchar(20)
 ,`page_slug` varchar(50)
+,`profile_id` int
 ,`profile_layout` varchar(20)
 ,`profile_pic_filename` varchar(255)
 ,`profile_title` varchar(100)
@@ -526,13 +644,16 @@ CREATE TABLE `v_public_page_data` (
 CREATE TABLE `v_public_page_data_with_categories` (
 `bg_image_filename` varchar(255)
 ,`bio` text
+,`boxed_layout` tinyint(1)
 ,`button_style` varchar(20)
 ,`category_color` varchar(20)
-,`category_expanded` tinyint(1)
 ,`category_icon` varchar(50)
 ,`category_id` int
 ,`category_name` varchar(50)
-,`click_count` int
+,`category_order` int
+,`container_border_radius` int
+,`container_max_width` int
+,`container_shadow` tinyint(1)
 ,`container_style` varchar(20)
 ,`custom_bg_color` varchar(20)
 ,`custom_button_color` varchar(20)
@@ -543,19 +664,26 @@ CREATE TABLE `v_public_page_data_with_categories` (
 ,`enable_categories` tinyint(1)
 ,`enable_glass_effect` tinyint(1)
 ,`gradient_preset` varchar(50)
-,`icon_class` varchar(50)
-,`is_active` tinyint(1)
+,`is_verified` tinyint(1)
+,`link_clicks` int
+,`link_icon` varchar(50)
 ,`link_id` int
+,`link_is_active` tinyint(1)
+,`link_order` int
 ,`link_title` varchar(100)
-,`order_index` int
+,`link_url` varchar(500)
+,`outer_bg_color` varchar(50)
+,`outer_bg_gradient_end` varchar(50)
+,`outer_bg_gradient_start` varchar(50)
+,`outer_bg_type` varchar(20)
 ,`page_slug` varchar(50)
+,`profile_id` int
 ,`profile_layout` varchar(20)
 ,`profile_pic_filename` varchar(255)
 ,`profile_title` varchar(100)
 ,`shadow_intensity` enum('none','light','medium','heavy')
 ,`show_profile_border` tinyint(1)
 ,`theme_name` varchar(20)
-,`url` varchar(500)
 ,`user_id` int
 ,`username` varchar(50)
 );
@@ -563,13 +691,6 @@ CREATE TABLE `v_public_page_data_with_categories` (
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `appearance`
---
-ALTER TABLE `appearance`
-  ADD PRIMARY KEY (`appearance_id`),
-  ADD UNIQUE KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `categories`
@@ -599,7 +720,8 @@ ALTER TABLE `gradient_presets`
 ALTER TABLE `links`
   ADD PRIMARY KEY (`link_id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `category_id` (`category_id`);
+  ADD KEY `category_id` (`category_id`),
+  ADD KEY `idx_profile_id` (`profile_id`);
 
 --
 -- Indexes for table `link_analytics`
@@ -615,7 +737,8 @@ ALTER TABLE `link_analytics`
 --
 ALTER TABLE `link_categories`
   ADD PRIMARY KEY (`category_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_profile_id` (`profile_id`);
 
 --
 -- Indexes for table `password_resets`
@@ -628,6 +751,34 @@ ALTER TABLE `password_resets`
   ADD KEY `idx_expires` (`expires_at`),
   ADD KEY `idx_email_token` (`email`,`reset_token`),
   ADD KEY `idx_token_used` (`reset_token`,`is_used`);
+
+--
+-- Indexes for table `profiles`
+--
+ALTER TABLE `profiles`
+  ADD PRIMARY KEY (`profile_id`),
+  ADD UNIQUE KEY `unique_slug` (`slug`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_user_primary` (`user_id`,`is_primary`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
+-- Indexes for table `profile_activity_log`
+--
+ALTER TABLE `profile_activity_log`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `idx_profile_id` (`profile_id`),
+  ADD KEY `idx_action_type` (`action_type`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `profile_analytics`
+--
+ALTER TABLE `profile_analytics`
+  ADD PRIMARY KEY (`analytics_id`),
+  ADD UNIQUE KEY `unique_profile_date` (`profile_id`,`date`),
+  ADD KEY `idx_date` (`date`);
 
 --
 -- Indexes for table `sessions`
@@ -651,17 +802,30 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `page_slug` (`page_slug`),
   ADD UNIQUE KEY `unique_email` (`email`),
   ADD KEY `idx_email` (`email`),
-  ADD KEY `idx_verified` (`is_verified`);
+  ADD KEY `idx_verified` (`is_verified`),
+  ADD KEY `idx_active_profile` (`active_profile_id`);
+
+--
+-- Indexes for table `user_appearance`
+--
+ALTER TABLE `user_appearance`
+  ADD PRIMARY KEY (`appearance_id`),
+  ADD UNIQUE KEY `unique_profile_id` (`profile_id`),
+  ADD KEY `idx_profile_id` (`profile_id`);
+
+--
+-- Indexes for table `user_slugs`
+--
+ALTER TABLE `user_slugs`
+  ADD PRIMARY KEY (`slug_id`),
+  ADD UNIQUE KEY `unique_slug` (`slug`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_user_primary` (`user_id`,`is_primary`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
-
---
--- AUTO_INCREMENT for table `appearance`
---
-ALTER TABLE `appearance`
-  MODIFY `appearance_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -691,7 +855,7 @@ ALTER TABLE `links`
 -- AUTO_INCREMENT for table `link_analytics`
 --
 ALTER TABLE `link_analytics`
-  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `link_categories`
@@ -706,6 +870,24 @@ ALTER TABLE `password_resets`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
+-- AUTO_INCREMENT for table `profiles`
+--
+ALTER TABLE `profiles`
+  MODIFY `profile_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `profile_activity_log`
+--
+ALTER TABLE `profile_activity_log`
+  MODIFY `log_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `profile_analytics`
+--
+ALTER TABLE `profile_analytics`
+  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `social_icons`
 --
 ALTER TABLE `social_icons`
@@ -717,6 +899,18 @@ ALTER TABLE `social_icons`
 ALTER TABLE `users`
   MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
+--
+-- AUTO_INCREMENT for table `user_appearance`
+--
+ALTER TABLE `user_appearance`
+  MODIFY `appearance_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `user_slugs`
+--
+ALTER TABLE `user_slugs`
+  MODIFY `slug_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
 -- --------------------------------------------------------
 
 --
@@ -724,7 +918,7 @@ ALTER TABLE `users`
 --
 DROP TABLE IF EXISTS `v_public_page_data`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data`  AS SELECT `u`.`user_id` AS `user_id`, `u`.`username` AS `username`, `u`.`page_slug` AS `page_slug`, `u`.`is_verified` AS `is_verified`, `a`.`profile_title` AS `profile_title`, `a`.`bio` AS `bio`, `a`.`profile_pic_filename` AS `profile_pic_filename`, `a`.`bg_image_filename` AS `bg_image_filename`, `a`.`theme_name` AS `theme_name`, `a`.`button_style` AS `button_style`, `a`.`font_family` AS `font_family`, `a`.`custom_bg_color` AS `custom_bg_color`, `a`.`custom_button_color` AS `custom_button_color`, `a`.`custom_text_color` AS `custom_text_color`, `a`.`custom_link_text_color` AS `custom_link_text_color`, `a`.`gradient_preset` AS `gradient_preset`, `a`.`profile_layout` AS `profile_layout`, `a`.`container_style` AS `container_style`, `a`.`show_profile_border` AS `show_profile_border`, `a`.`enable_animations` AS `enable_animations`, `a`.`enable_glass_effect` AS `enable_glass_effect`, `a`.`shadow_intensity` AS `shadow_intensity`, `a`.`enable_categories` AS `enable_categories`, `a`.`boxed_layout` AS `boxed_layout`, `a`.`outer_bg_type` AS `outer_bg_type`, `a`.`outer_bg_color` AS `outer_bg_color`, `a`.`outer_bg_gradient_start` AS `outer_bg_gradient_start`, `a`.`outer_bg_gradient_end` AS `outer_bg_gradient_end`, `a`.`outer_bg_image` AS `outer_bg_image`, `a`.`container_bg_color` AS `container_bg_color`, `a`.`container_max_width` AS `container_max_width`, `a`.`container_border_radius` AS `container_border_radius`, `a`.`container_shadow` AS `container_shadow` FROM (`users` `u` join `appearance` `a` on((`u`.`user_id` = `a`.`user_id`))) WHERE (`u`.`email_verified` = 1) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data`  AS SELECT `p`.`profile_id` AS `profile_id`, `p`.`slug` AS `page_slug`, `p`.`profile_title` AS `profile_title`, `p`.`bio` AS `bio`, `p`.`profile_pic_filename` AS `profile_pic_filename`, `u`.`user_id` AS `user_id`, `u`.`username` AS `username`, `u`.`email` AS `email`, `u`.`is_verified` AS `is_verified`, `ua`.`theme_name` AS `theme_name`, `ua`.`button_style` AS `button_style`, `ua`.`bg_image_filename` AS `bg_image_filename`, `ua`.`gradient_preset` AS `gradient_preset`, `ua`.`custom_bg_color` AS `custom_bg_color`, `ua`.`custom_button_color` AS `custom_button_color`, `ua`.`custom_text_color` AS `custom_text_color`, `ua`.`custom_link_text_color` AS `custom_link_text_color`, `ua`.`profile_layout` AS `profile_layout`, `ua`.`container_style` AS `container_style`, `ua`.`enable_categories` AS `enable_categories`, `ua`.`show_profile_border` AS `show_profile_border`, `ua`.`enable_animations` AS `enable_animations`, `ua`.`enable_glass_effect` AS `enable_glass_effect`, `ua`.`shadow_intensity` AS `shadow_intensity`, `ua`.`boxed_layout` AS `boxed_layout`, `ua`.`outer_bg_type` AS `outer_bg_type`, `ua`.`outer_bg_color` AS `outer_bg_color`, `ua`.`outer_bg_gradient_start` AS `outer_bg_gradient_start`, `ua`.`outer_bg_gradient_end` AS `outer_bg_gradient_end`, `ua`.`container_max_width` AS `container_max_width`, `ua`.`container_border_radius` AS `container_border_radius`, `ua`.`container_shadow` AS `container_shadow` FROM ((`profiles` `p` join `users` `u` on((`p`.`user_id` = `u`.`user_id`))) left join `user_appearance` `ua` on((`p`.`profile_id` = `ua`.`profile_id`))) WHERE (`p`.`is_active` = 1) ;
 
 -- --------------------------------------------------------
 
@@ -733,17 +927,11 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_publi
 --
 DROP TABLE IF EXISTS `v_public_page_data_with_categories`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data_with_categories`  AS SELECT `u`.`user_id` AS `user_id`, `u`.`username` AS `username`, `u`.`page_slug` AS `page_slug`, `u`.`email` AS `email`, `a`.`profile_title` AS `profile_title`, `a`.`bio` AS `bio`, `a`.`profile_pic_filename` AS `profile_pic_filename`, `a`.`bg_image_filename` AS `bg_image_filename`, `a`.`theme_name` AS `theme_name`, `a`.`button_style` AS `button_style`, `a`.`gradient_preset` AS `gradient_preset`, `a`.`custom_bg_color` AS `custom_bg_color`, `a`.`custom_button_color` AS `custom_button_color`, `a`.`custom_text_color` AS `custom_text_color`, `a`.`custom_link_text_color` AS `custom_link_text_color`, `a`.`profile_layout` AS `profile_layout`, `a`.`container_style` AS `container_style`, `a`.`enable_categories` AS `enable_categories`, `a`.`show_profile_border` AS `show_profile_border`, `a`.`enable_animations` AS `enable_animations`, `a`.`enable_glass_effect` AS `enable_glass_effect`, `a`.`shadow_intensity` AS `shadow_intensity`, `l`.`link_id` AS `link_id`, `l`.`title` AS `link_title`, `l`.`url` AS `url`, `l`.`icon_class` AS `icon_class`, `l`.`click_count` AS `click_count`, `l`.`is_active` AS `is_active`, `l`.`order_index` AS `order_index`, `l`.`category_id` AS `category_id`, `c`.`category_name` AS `category_name`, `c`.`category_icon` AS `category_icon`, `c`.`category_color` AS `category_color`, `c`.`is_expanded` AS `category_expanded` FROM (((`users` `u` left join `appearance` `a` on((`u`.`user_id` = `a`.`user_id`))) left join `links` `l` on(((`u`.`user_id` = `l`.`user_id`) and (`l`.`is_active` = 1)))) left join `link_categories` `c` on((`l`.`category_id` = `c`.`category_id`))) ORDER BY `c`.`display_order` ASC, `l`.`order_index` ASC ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_public_page_data_with_categories`  AS SELECT `vpd`.`profile_id` AS `profile_id`, `vpd`.`page_slug` AS `page_slug`, `vpd`.`profile_title` AS `profile_title`, `vpd`.`bio` AS `bio`, `vpd`.`profile_pic_filename` AS `profile_pic_filename`, `vpd`.`user_id` AS `user_id`, `vpd`.`username` AS `username`, `vpd`.`email` AS `email`, `vpd`.`is_verified` AS `is_verified`, `vpd`.`theme_name` AS `theme_name`, `vpd`.`button_style` AS `button_style`, `vpd`.`bg_image_filename` AS `bg_image_filename`, `vpd`.`gradient_preset` AS `gradient_preset`, `vpd`.`custom_bg_color` AS `custom_bg_color`, `vpd`.`custom_button_color` AS `custom_button_color`, `vpd`.`custom_text_color` AS `custom_text_color`, `vpd`.`custom_link_text_color` AS `custom_link_text_color`, `vpd`.`profile_layout` AS `profile_layout`, `vpd`.`container_style` AS `container_style`, `vpd`.`enable_categories` AS `enable_categories`, `vpd`.`show_profile_border` AS `show_profile_border`, `vpd`.`enable_animations` AS `enable_animations`, `vpd`.`enable_glass_effect` AS `enable_glass_effect`, `vpd`.`shadow_intensity` AS `shadow_intensity`, `vpd`.`boxed_layout` AS `boxed_layout`, `vpd`.`outer_bg_type` AS `outer_bg_type`, `vpd`.`outer_bg_color` AS `outer_bg_color`, `vpd`.`outer_bg_gradient_start` AS `outer_bg_gradient_start`, `vpd`.`outer_bg_gradient_end` AS `outer_bg_gradient_end`, `vpd`.`container_max_width` AS `container_max_width`, `vpd`.`container_border_radius` AS `container_border_radius`, `vpd`.`container_shadow` AS `container_shadow`, `l`.`link_id` AS `link_id`, `l`.`title` AS `link_title`, `l`.`url` AS `link_url`, `l`.`icon_class` AS `link_icon`, `l`.`is_active` AS `link_is_active`, `l`.`order_index` AS `link_order`, `l`.`click_count` AS `link_clicks`, `lc`.`category_id` AS `category_id`, `lc`.`category_name` AS `category_name`, `lc`.`category_icon` AS `category_icon`, `lc`.`category_color` AS `category_color`, `lc`.`display_order` AS `category_order` FROM ((`v_public_page_data` `vpd` left join `links` `l` on(((`vpd`.`profile_id` = `l`.`profile_id`) and (`l`.`is_active` = 1)))) left join `link_categories` `lc` on((`l`.`category_id` = `lc`.`category_id`))) ORDER BY `lc`.`display_order` ASC, `l`.`order_index` ASC ;
 
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `appearance`
---
-ALTER TABLE `appearance`
-  ADD CONSTRAINT `appearance_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `categories`
@@ -756,6 +944,7 @@ ALTER TABLE `categories`
 --
 ALTER TABLE `links`
   ADD CONSTRAINT `fk_link_category` FOREIGN KEY (`category_id`) REFERENCES `link_categories` (`category_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_links_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `links_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
@@ -768,7 +957,38 @@ ALTER TABLE `link_analytics`
 -- Constraints for table `link_categories`
 --
 ALTER TABLE `link_categories`
-  ADD CONSTRAINT `fk_category_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_category_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_link_categories_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `profiles`
+--
+ALTER TABLE `profiles`
+  ADD CONSTRAINT `fk_profiles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `profile_activity_log`
+--
+ALTER TABLE `profile_activity_log`
+  ADD CONSTRAINT `fk_activity_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `profile_analytics`
+--
+ALTER TABLE `profile_analytics`
+  ADD CONSTRAINT `fk_profile_analytics` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_appearance`
+--
+ALTER TABLE `user_appearance`
+  ADD CONSTRAINT `fk_user_appearance_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_slugs`
+--
+ALTER TABLE `user_slugs`
+  ADD CONSTRAINT `fk_user_slugs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
