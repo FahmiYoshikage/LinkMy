@@ -26,5 +26,17 @@
 
     $current_user_id = $_SESSION['user_id'];
     $current_username = $_SESSION['username'];
-    $current_page_slug = $_SESSION['page_slug'] ?? '';
+    
+    // Multi-profile: Get slug from active profile
+    if (isset($_SESSION['active_profile_id'])) {
+        require_once __DIR__ . '/db.php';
+        $profile = get_single_row(
+            "SELECT slug FROM profiles WHERE profile_id = ?",
+            [$_SESSION['active_profile_id']],
+            'i'
+        );
+        $current_page_slug = $profile['slug'] ?? $_SESSION['page_slug'] ?? '';
+    } else {
+        $current_page_slug = $_SESSION['page_slug'] ?? '';
+    }
 ?>
