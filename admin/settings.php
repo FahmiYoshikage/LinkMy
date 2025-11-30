@@ -5,7 +5,13 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-$user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_id], 'i');
+// Get user data
+$query = "SELECT * FROM users WHERE user_id = ?";
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$user = mysqli_fetch_assoc($result);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];

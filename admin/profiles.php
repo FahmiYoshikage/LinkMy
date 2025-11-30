@@ -7,13 +7,15 @@ $error = '';
 
 // Get current user's profiles with stats
 $user_profiles = [];
-$query = "SELECT p.*, 
+$query = "SELECT p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_description, 
+          p.is_primary, p.is_active, p.created_at, p.updated_at,
           COALESCE(COUNT(DISTINCT l.link_id), 0) as link_count,
           COALESCE(SUM(l.click_count), 0) as total_clicks
           FROM profiles p
-          LEFT JOIN links l ON p.profile_id = l.profile_id
+          LEFT JOIN links l ON p.profile_id = l.profile_id AND l.is_active = 1
           WHERE p.user_id = ?
-          GROUP BY p.profile_id
+          GROUP BY p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_description, 
+                   p.is_primary, p.is_active, p.created_at, p.updated_at
           ORDER BY p.is_primary DESC, p.created_at ASC";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
