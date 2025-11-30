@@ -14,8 +14,7 @@ $query = "SELECT p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_desc
           FROM profiles p
           LEFT JOIN links l ON p.profile_id = l.profile_id
           WHERE p.user_id = ?
-          GROUP BY p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_description, 
-                   p.is_primary, p.is_active, p.created_at, p.updated_at
+          GROUP BY p.profile_id
           ORDER BY p.is_primary DESC, p.created_at ASC";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
@@ -408,6 +407,14 @@ $profile_limit = 2; // Free tier limit
             </button>
             <?php endif; ?>
         </div>
+        
+        <!-- DEBUG: Tampilkan data profiles -->
+        <?php if (isset($_GET['debug'])): ?>
+            <div class="alert alert-info">
+                <strong>DEBUG MODE:</strong>
+                <pre><?php print_r($user_profiles); ?></pre>
+            </div>
+        <?php endif; ?>
         
         <?php if (isset($_GET['created'])): ?>
             <div class="alert alert-success alert-dismissible fade show">
