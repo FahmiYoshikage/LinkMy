@@ -52,13 +52,13 @@ try {
     echo "4. Testing links query...\n";
     $user_id = $user_data['user_id'];
     
-    $links_query = "SELECT l.id as link_id, l.title, l.url, l.icon, l.category_id, l.display_order,
+    $links_query = "SELECT l.link_id, l.title, l.url, l.icon_class, l.category_id, l.order_index,
                     c.name as category_name, c.icon as category_icon, 
                     c.color as category_color, c.is_expanded as category_expanded
                     FROM links l
-                    LEFT JOIN categories c ON l.category_id = c.id
-                    WHERE l.user_id = ? AND l.is_visible = 1
-                    ORDER BY l.display_order ASC";
+                    LEFT JOIN link_categories c ON l.category_id = c.category_id
+                    WHERE l.user_id = ? AND l.is_active = 1
+                    ORDER BY l.order_index ASC";
     
     $stmt_links = mysqli_prepare($conn, $links_query);
     
