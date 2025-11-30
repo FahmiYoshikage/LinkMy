@@ -12,7 +12,7 @@ $query = "SELECT p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_desc
           COUNT(DISTINCT l.link_id) as link_count,
           COALESCE(SUM(l.click_count), 0) as total_clicks
           FROM profiles p
-          LEFT JOIN links l ON p.profile_id = l.profile_id AND l.user_id = p.user_id
+          LEFT JOIN links l ON p.profile_id = l.profile_id
           WHERE p.user_id = ?
           GROUP BY p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_description, 
                    p.is_primary, p.is_active, p.created_at, p.updated_at

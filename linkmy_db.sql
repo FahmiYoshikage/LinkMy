@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db:3306
--- Generation Time: Nov 29, 2025 at 03:32 PM
+-- Generation Time: Nov 30, 2025 at 02:39 AM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.27
 
@@ -173,7 +173,9 @@ INSERT INTO `links` (`link_id`, `user_id`, `profile_id`, `title`, `url`, `order_
 (25, 12, 7, 'Shopee', 'https://shopee.co.id/', 3, 'bi-shop-window', 3, 1, '2025-11-21 02:12:18', 22),
 (26, 12, 7, 'Netdata', 'https://monitor.fahmi.app', 9, 'bi-speedometer', 2, 1, '2025-11-27 12:42:33', 23),
 (27, 12, 7, 'Affine', 'https://affine.fahmi.app', 10, 'bi-journal-text', 4, 1, '2025-11-27 12:43:31', 23),
-(28, 12, 7, 'Dozzle', 'https://dozzle.fahmi.app', 11, 'bi-activity', 3, 1, '2025-11-27 12:44:56', 23);
+(28, 12, 7, 'Dozzle', 'https://dozzle.fahmi.app', 11, 'bi-activity', 3, 1, '2025-11-27 12:44:56', 23),
+(29, 12, 16, 'Materi STr TRI', 'https://drive.google.com/drive/folders/1y7RJ4pqRBVK39nAlWGPHDtV99SXy62Lh?usp=drive_link', 1, 'bi-link-45deg', 0, 1, '2025-11-29 16:13:08', NULL),
+(30, 12, 16, 'PA-WTWA Kating', 'https://drive.google.com/drive/folders/1TzKAsjPn4oLAokI9fE6JePETbxSJHnxy', 2, 'bi-globe', 1, 1, '2025-11-29 16:34:02', NULL);
 
 -- --------------------------------------------------------
 
@@ -230,7 +232,8 @@ INSERT INTO `link_analytics` (`analytics_id`, `link_id`, `clicked_at`, `referrer
 (31, 25, '2025-11-27 22:14:13', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
 (32, 20, '2025-11-27 22:14:46', '', 'Mozilla/5.0 (Linux; Android 13; V2110 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.174 Mobile Safari/537.36 Instagram 407.0.0.55.243 Android (33/13; 300dpi; 720x1509; vivo; V2110; 2110; mt6768; in_ID; 827398133; IABMV/1)', '114.8.228.89', 'Indonesia', 'Surabaya'),
 (33, 27, '2025-11-29 04:53:44', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2404:c0:b602:702a:a190:1b2d:2066:e7f3', 'Indonesia', 'Surabaya'),
-(34, 17, '2025-11-29 13:55:35', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '210.57.215.18', 'Indonesia', 'Mulyorejo');
+(34, 17, '2025-11-29 13:55:35', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '210.57.215.18', 'Indonesia', 'Mulyorejo'),
+(35, 30, '2025-11-29 16:34:08', '', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '182.8.122.246', 'Indonesia', 'Surabaya');
 
 -- --------------------------------------------------------
 
@@ -317,7 +320,9 @@ INSERT INTO `password_resets` (`id`, `email`, `reset_token`, `created_at`, `expi
 (28, 'fahmiilham029@gmail.com', '4d5826078ac029d00486e7c81b486874747403938097309c56684812a91ecbf2', '2025-11-18 04:15:06', '2025-11-18 05:15:06', 0, '172.22.0.1'),
 (29, 'fahmiilham029@gmail.com', '26d01466f60b1fe9a66cfe9d6bf1c4bb856e1cc1756addf6a66cdbea4e3ed9d3', '2025-11-28 09:34:46', '2025-11-28 10:34:46', 0, '172.22.0.1'),
 (30, 'fahmiilham029@gmail.com', '2905a9fb416d32fb719150f2036c14f3e6d435332466c9370cc4ab08b795eb6a', '2025-11-28 09:34:50', '2025-11-28 10:34:50', 0, '172.22.0.1'),
-(31, 'vivoy12gweh@gmail.com', '8a9842726456d505770e609331377a65acbb58402e90d5e00784f178193dd1b3', '2025-11-29 09:00:57', '2025-11-29 10:00:57', 1, '172.22.0.1');
+(31, 'vivoy12gweh@gmail.com', '8a9842726456d505770e609331377a65acbb58402e90d5e00784f178193dd1b3', '2025-11-29 09:00:57', '2025-11-29 10:00:57', 1, '172.22.0.1'),
+(32, 'fahmiilham029@gmail.com', 'ab9d672a0d5d1de82b9377a7ee7b81907eb0549f686e043fd55e05168abb8d4a', '2025-11-29 16:37:14', '2025-11-29 17:37:14', 0, '172.22.0.1'),
+(33, 'fahmiilham029@gmail.com', 'cdc3e25d9614276db5ae137b9051435a0e78069400988d7beba4f91e4d8d0e8d', '2025-11-29 16:59:18', '2025-11-29 17:59:18', 0, '172.22.0.1');
 
 -- --------------------------------------------------------
 
@@ -352,8 +357,9 @@ INSERT INTO `profiles` (`profile_id`, `user_id`, `slug`, `profile_name`, `profil
 (4, 9, 'MalingPangsit', 'MalingPangsit - Main Profile', NULL, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
 (5, 10, 'tulongg', 'sumber_air_su_dekat - Main Profile', NULL, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
 (6, 11, 'ajilahsapalagi', 'AjiSantoso - Main Profile', NULL, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
-(7, 12, 'fahmi', 'fahmi - Main Profile', NULL, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
-(8, 13, 'naganiga', 'naganiga - Main Profile', NULL, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL);
+(7, 12, 'fahmi', 'fahmi - Main Profile', NULL, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', 0, 1, '2025-11-29 14:34:56', '2025-11-30 02:26:49', NULL),
+(8, 13, 'naganiga', 'naganiga - Main Profile', NULL, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', 1, 1, '2025-11-29 14:34:56', NULL, NULL),
+(16, 12, 'triforce', 'TRIFORCE', 'Menyimpan link penting di kelas', NULL, NULL, NULL, 1, 1, '2025-11-29 16:05:12', '2025-11-30 02:26:49', NULL);
 
 --
 -- Triggers `profiles`
@@ -427,14 +433,12 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`session_id`, `session_data`, `session_expire`) VALUES
-('40b2ac013508b9a282f72499265e3cee', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322476;', 1764927276),
-('434c81bbb4d93028b2cde774641a72eb', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764247834;', 1764852634),
-('6121170c67155c822c9e1dc9f7a56bbf', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764322602;', 1764927402),
-('787b19de3a31e945c7cc31df27e4be8c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764146178;', 1764750978),
-('95c285dc01b011d473e897199548cdbd', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764429619;active_profile_id|i:7;', 1765034419),
-('9b83bc05e30cd7aff61f38d4567bf44c', 'user_id|i:13;username|s:8:\"naganiga\";page_slug|s:8:\"naganiga\";last_activity|i:1764413069;', 1765017869),
-('c24d22b7e5e2bb91369fffe85998fe4c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:8:\"triforce\";last_activity|i:1764429782;active_profile_id|i:7;', 1765034582),
-('dfcaeace911d02bc728ded23a08f0424', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1763856883;', 1764461683);
+('11df0ee7945fc8959d74b2aa9483be40', '', 1765037683),
+('5e3964c181fa2e3648ee16a45859d1fe', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764470098;active_profile_id|i:7;', 1765074898),
+('72c3e6c9daf14ef854677443e9becf98', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:8:\"triforce\";last_activity|i:1764470269;active_profile_id|i:16;', 1765075069),
+('95c285dc01b011d473e897199548cdbd', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764432274;active_profile_id|i:7;', 1765037074),
+('c24d22b7e5e2bb91369fffe85998fe4c', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:8:\"triforce\";last_activity|i:1764434222;active_profile_id|i:16;', 1765039022),
+('d9cd0d5c8ba32db7a679fb527b48ce08', 'user_id|i:12;username|s:5:\"fahmi\";page_slug|s:5:\"fahmi\";last_activity|i:1764460676;active_profile_id|i:7;', 1765065476);
 
 -- --------------------------------------------------------
 
@@ -562,37 +566,9 @@ INSERT INTO `user_appearance` (`appearance_id`, `user_id`, `profile_id`, `profil
 (9, 9, 4, 'MalingPangsit', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'dark', 'rounded', 'Inter', '2025-11-29 14:34:57', '#ffffff', '#667eea', '#333333', '#333333', 'Midnight Blue', 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
 (10, 10, 5, 'sumber_air_su_dekat', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
 (11, 11, 6, 'AjiSantoso', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
-(12, 12, 7, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-29 14:34:57', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Rose Petal', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#334fcc', '#452862', NULL, '#ffffff', 600, 15, 1),
-(13, 13, 8, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `user_slugs`
---
-
-CREATE TABLE `user_slugs` (
-  `slug_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `slug` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
-  `is_primary` tinyint(1) DEFAULT '0' COMMENT '1 = primary slug, 0 = alias slug',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Multiple slugs per user - all point to same profile';
-
---
--- Dumping data for table `user_slugs`
---
-
-INSERT INTO `user_slugs` (`slug_id`, `user_id`, `slug`, `is_primary`, `created_at`) VALUES
-(1, 1, 'admin', 1, '2025-11-10 23:29:30'),
-(2, 7, 'heheheha', 1, '2025-11-13 01:05:43'),
-(3, 8, 'nylaa', 1, '2025-11-16 14:58:17'),
-(4, 9, 'MalingPangsit', 1, '2025-11-16 15:06:11'),
-(5, 10, 'tulongg', 1, '2025-11-16 15:16:41'),
-(6, 11, 'ajilahsapalagi', 1, '2025-11-16 17:08:12'),
-(7, 12, 'fahmi', 0, '2025-11-18 03:56:37'),
-(8, 13, 'naganiga', 1, '2025-11-18 03:59:27'),
-(16, 12, 'triforce', 1, '2025-11-29 10:45:16');
+(12, 12, 7, 'Fahmi Ilham Bagaskara', 'I Love Internet and tech', 'user_12_1763450873.jpg', NULL, 'gradient', 'pill', 'Inter', '2025-11-30 01:22:59', '#ffffff', '#9eb0ff', '#333333', '#000000', 'Rose Petal', 'minimal', 'wide', 1, 0, 1, 1, 'heavy', 1, 'gradient', '#667eea', '#334fcc', '#452862', NULL, '#ffffff', 600, 15, 1),
+(13, 13, 8, 'naganiga', 'Welcome to my LinkMy page!', 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 14:34:57', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1),
+(14, 12, 16, NULL, NULL, 'default-avatar.png', NULL, 'light', 'rounded', 'Inter', '2025-11-29 16:05:12', NULL, NULL, NULL, NULL, NULL, 'centered', 'wide', 0, 1, 1, 0, 'medium', 0, 'color', '#667eea', '#667eea', '#764ba2', NULL, '#ffffff', 480, 30, 1);
 
 -- --------------------------------------------------------
 
@@ -814,16 +790,6 @@ ALTER TABLE `user_appearance`
   ADD KEY `idx_profile_id` (`profile_id`);
 
 --
--- Indexes for table `user_slugs`
---
-ALTER TABLE `user_slugs`
-  ADD PRIMARY KEY (`slug_id`),
-  ADD UNIQUE KEY `unique_slug` (`slug`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_slug` (`slug`),
-  ADD KEY `idx_user_primary` (`user_id`,`is_primary`);
-
---
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -849,13 +815,13 @@ ALTER TABLE `gradient_presets`
 -- AUTO_INCREMENT for table `links`
 --
 ALTER TABLE `links`
-  MODIFY `link_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `link_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `link_analytics`
 --
 ALTER TABLE `link_analytics`
-  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `analytics_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `link_categories`
@@ -867,13 +833,13 @@ ALTER TABLE `link_categories`
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `profiles`
 --
 ALTER TABLE `profiles`
-  MODIFY `profile_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `profile_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `profile_activity_log`
@@ -903,13 +869,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_appearance`
 --
 ALTER TABLE `user_appearance`
-  MODIFY `appearance_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `user_slugs`
---
-ALTER TABLE `user_slugs`
-  MODIFY `slug_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `appearance_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 -- --------------------------------------------------------
 
@@ -983,12 +943,6 @@ ALTER TABLE `profile_analytics`
 --
 ALTER TABLE `user_appearance`
   ADD CONSTRAINT `fk_user_appearance_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`profile_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `user_slugs`
---
-ALTER TABLE `user_slugs`
-  ADD CONSTRAINT `fk_user_slugs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
