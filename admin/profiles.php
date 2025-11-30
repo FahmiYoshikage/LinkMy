@@ -343,21 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// Get stats per profile
-foreach ($user_profiles as &$profile) {
-    $stats = get_single_row(
-        "SELECT 
-            COUNT(l.link_id) as link_count,
-            SUM(l.click_count) as total_clicks
-         FROM links l
-         WHERE l.profile_id = ?",
-        [$profile['profile_id']],
-        'i'
-    );
-    $profile['link_count'] = $stats['link_count'] ?? 0;
-    $profile['total_clicks'] = $stats['total_clicks'] ?? 0;
-}
-unset($profile);
+// Stats already included in the main query above (lines 10-25)
+// No need to fetch stats again per profile
 
 $profile_count = count($user_profiles);
 $profile_limit = 2; // Free tier limit

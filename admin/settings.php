@@ -366,15 +366,24 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Get user's all profiles (slugs)
+// Get user's all profiles (slugs) with stats
 $user_slugs = [];
-$slugs_query = "SELECT profile_id, slug, profile_name, is_primary, is_active, created_at FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
+$user_profiles = [];
+$slugs_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
+                COUNT(DISTINCT l.link_id) as link_count,
+                COALESCE(SUM(l.click_count), 0) as total_clicks
+                FROM profiles p
+                LEFT JOIN links l ON p.profile_id = l.profile_id
+                WHERE p.user_id = ?
+                GROUP BY p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at
+                ORDER BY p.is_primary DESC, p.created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
 mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($slugs_stmt);
 $slugs_result = mysqli_stmt_get_result($slugs_stmt);
 while ($row = mysqli_fetch_assoc($slugs_result)) {
     $user_slugs[] = $row;
+    $user_profiles[] = $row; // Also populate $user_profiles
 }
 
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE user_id = ?", [$current_user_id], 'i')['count'];
@@ -698,8 +707,13 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
-                                                    Dibuat: <?= date('d M Y', strtotime($profile['created_at'])) ?>
-                                                    | Link: <strong>linkmy.iet.ovh/<?= htmlspecialchars($profile['slug']) ?></strong>
+                                                    <i class="bi bi-link-45deg"></i> <strong><?= $profile['link_count'] ?? 0 ?></strong> Links
+                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= $profile['total_clicks'] ?? 0 ?></strong> Klik
+                                                    | Dibuat: <?= date('d M Y', strtotime($profile['created_at'])) ?>
+                                                </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Link: <strong>linkmy.iet.ovh/<?= htmlspecialchars($profile['slug']) ?></strong>
                                                 </small>
                                             </div>
                                             <div>
