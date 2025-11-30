@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
         
         if (!$error) {
             // Check availability
-            $existing = get_single_row("SELECT slug_id FROM user_slugs WHERE slug = ?", [$new_slug], 's');
+            $existing = get_single_row("SELECT profile_id FROM profiles WHERE slug = ?", [$new_slug], 's');
             
             if ($existing) {
                 $error = 'Slug sudah digunakan orang lain!';
@@ -366,9 +366,9 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Get user's all slugs
+// Get user's all profiles (slugs)
 $user_slugs = [];
-$slugs_query = "SELECT * FROM user_slugs WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
+$slugs_query = "SELECT profile_id, slug, profile_name, is_primary, is_active, created_at FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
 mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($slugs_stmt);
