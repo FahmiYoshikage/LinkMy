@@ -5,23 +5,33 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get current user's profiles with stats
+// Get current user's profiles
 $user_profiles = [];
-$query = "SELECT p.profile_id, p.user_id, p.slug, p.profile_name, p.profile_description, 
-          p.is_primary, p.is_active, p.created_at, p.updated_at,
-          COUNT(DISTINCT l.link_id) as link_count,
-          COALESCE(SUM(l.click_count), 0) as total_clicks
-          FROM profiles p
-          LEFT JOIN links l ON p.profile_id = l.profile_id
-          WHERE p.user_id = ?
-          GROUP BY p.profile_id
-          ORDER BY p.is_primary DESC, p.created_at ASC";
+$query = "SELECT profile_id, user_id, slug, profile_name, profile_description, 
+          is_primary, is_active, created_at, updated_at
+          FROM profiles
+          WHERE user_id = ?
+          ORDER BY is_primary DESC, created_at ASC";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 while ($row = mysqli_fetch_assoc($result)) {
+    // Get stats for each profile separately
+    $stats_query = "SELECT COUNT(link_id) as link_count, COALESCE(SUM(click_count), 0) as total_clicks 
+                    FROM links WHERE profile_id = ?";
+    $stats_stmt = mysqli_prepare($conn, $stats_query);
+    mysqli_stmt_bind_param($stats_stmt, 'i', $row['profile_id']);
+    mysqli_stmt_execute($stats_stmt);
+    $stats_result = mysqli_stmt_get_result($stats_stmt);
+    $stats = mysqli_fetch_assoc($stats_result);
+    
+    // Add stats to profile data
+    $row['link_count'] = $stats['link_count'];
+    $row['total_clicks'] = $stats['total_clicks'];
+    
     $user_profiles[] = $row;
+    mysqli_stmt_close($stats_stmt);
 }
 
 // Get active profile
