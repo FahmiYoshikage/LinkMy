@@ -5,12 +5,7 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// FORCE NO CACHE
-header("Cache-Control: no-cache, no-store, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-// Get current user's profiles - SIMPLEST POSSIBLE WAY
+// Get current user's profiles with stats
 $user_profiles = [];
 $profiles_result = mysqli_query($conn, "SELECT * FROM profiles WHERE user_id = {$current_user_id} ORDER BY is_primary DESC, created_at ASC");
 while ($profile = mysqli_fetch_assoc($profiles_result)) {
@@ -21,16 +16,7 @@ while ($profile = mysqli_fetch_assoc($profiles_result)) {
     $profile['link_count'] = (int)$counts['cnt'];
     $profile['total_clicks'] = (int)$counts['clk'];
     
-    // DEBUG: Print to see if it's set
-    echo "<!-- SETTING: {$profile['slug']} = {$profile['link_count']} links, {$profile['total_clicks']} clicks -->\n";
-    
     $user_profiles[] = $profile;
-}
-
-// DEBUG: Final check
-echo "<!-- TOTAL PROFILES LOADED: " . count($user_profiles) . " -->\n";
-foreach ($user_profiles as $idx => $p) {
-    echo "<!-- Profile[$idx]: {$p['slug']} has link_count=" . (isset($p['link_count']) ? $p['link_count'] : 'NOT SET') . " -->\n";
 }
 
 // Get active profile
@@ -446,7 +432,9 @@ $profile_limit = 2; // Free tier limit
         </div>
         
         <div class="row">
-            <?php foreach ($user_profiles as $profile): ?>
+            <?php foreach ($user_profiles as $prof_data): ?>
+            <?php // Rename to avoid conflict with $profile used elsewhere ?>
+            <?php $profile = $prof_data; // Keep backward compatibility ?>
             <div class="col-md-6 mb-4">
                 <div class="card profile-card <?= $profile['profile_id'] == $active_profile_id ? 'active' : '' ?> <?= $profile['is_primary'] ? 'primary' : '' ?>">
                     <div class="card-body">
@@ -516,7 +504,6 @@ $profile_limit = 2; // Free tier limit
                         </p>
                         <?php endif; ?>
                         
-                        <!-- DEBUG: <?php echo "link_count=" . ($profile['link_count'] ?? 'NOT SET') . ", total_clicks=" . ($profile['total_clicks'] ?? 'NOT SET'); ?> -->
                         <div class="profile-stats">
                             <div class="stat-badge">
                                 <i class="bi bi-link-45deg"></i>
