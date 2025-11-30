@@ -5,29 +5,23 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get current user's profiles with stats - using simple approach
+// FORCE NO CACHE
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Get current user's profiles - SIMPLEST POSSIBLE WAY
 $user_profiles = [];
-$query = "SELECT p.* FROM profiles p WHERE p.user_id = ? ORDER BY p.is_primary DESC, p.created_at ASC";
-$stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-while ($row = mysqli_fetch_assoc($result)) {
-    // Get link count
-    $link_query = "SELECT COUNT(*) as count, COALESCE(SUM(click_count), 0) as clicks FROM links WHERE profile_id = ?";
-    $link_stmt = mysqli_prepare($conn, $link_query);
-    mysqli_stmt_bind_param($link_stmt, 'i', $row['profile_id']);
-    mysqli_stmt_execute($link_stmt);
-    $link_result = mysqli_stmt_get_result($link_stmt);
-    $link_data = mysqli_fetch_assoc($link_result);
+$profiles_result = mysqli_query($conn, "SELECT * FROM profiles WHERE user_id = {$current_user_id} ORDER BY is_primary DESC, created_at ASC");
+while ($profile = mysqli_fetch_assoc($profiles_result)) {
+    // Count links for this profile
+    $count_result = mysqli_query($conn, "SELECT COUNT(*) as cnt, COALESCE(SUM(click_count), 0) as clk FROM links WHERE profile_id = {$profile['profile_id']}");
+    $counts = mysqli_fetch_assoc($count_result);
     
-    $row['link_count'] = intval($link_data['count']);
-    $row['total_clicks'] = intval($link_data['clicks']);
+    $profile['link_count'] = (int)$counts['cnt'];
+    $profile['total_clicks'] = (int)$counts['clk'];
     
-    // TEMPORARY DEBUG
-    error_log("PROFILE DEBUG: {$row['slug']} - Links: {$row['link_count']}, Clicks: {$row['total_clicks']}");
-    
-    $user_profiles[] = $row;
+    $user_profiles[] = $profile;
 }
 
 // Get active profile
