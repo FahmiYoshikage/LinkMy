@@ -373,7 +373,7 @@ $slugs_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_
                 COUNT(DISTINCT l.link_id) as link_count,
                 COALESCE(SUM(l.click_count), 0) as total_clicks
                 FROM profiles p
-                LEFT JOIN links l ON p.profile_id = l.profile_id
+                LEFT JOIN links l ON p.profile_id = l.profile_id AND l.user_id = p.user_id
                 WHERE p.user_id = ?
                 GROUP BY p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at
                 ORDER BY p.is_primary DESC, p.created_at ASC";
@@ -425,52 +425,7 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-link-45deg"></i> LinkMy
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php">
-                            <i class="bi bi-house-fill"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="appearance.php">
-                            <i class="bi bi-palette-fill"></i> Appearance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="categories.php">
-                            <i class="bi bi-folder-fill"></i> Categories
-                            <span class="badge bg-success ms-1">New</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="settings.php">
-                            <i class="bi bi-gear-fill"></i> Settings
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../<?= $current_page_slug ?>" target="_blank">
-                            <i class="bi bi-eye-fill"></i> View Page
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../logout.php">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php require_once __DIR__ . '/../partials/admin_nav.php'; ?>
     
     <div class="container py-4">
         <h2 class="fw-bold mb-4">
