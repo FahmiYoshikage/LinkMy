@@ -24,6 +24,9 @@ while ($row = mysqli_fetch_assoc($result)) {
     $row['link_count'] = intval($link_data['count']);
     $row['total_clicks'] = intval($link_data['clicks']);
     
+    // TEMPORARY DEBUG
+    error_log("PROFILE DEBUG: {$row['slug']} - Links: {$row['link_count']}, Clicks: {$row['total_clicks']}");
+    
     $user_profiles[] = $row;
 }
 
@@ -510,14 +513,15 @@ $profile_limit = 2; // Free tier limit
                         </p>
                         <?php endif; ?>
                         
+                        <!-- DEBUG: <?php echo "link_count=" . ($profile['link_count'] ?? 'NOT SET') . ", total_clicks=" . ($profile['total_clicks'] ?? 'NOT SET'); ?> -->
                         <div class="profile-stats">
                             <div class="stat-badge">
                                 <i class="bi bi-link-45deg"></i>
-                                <strong><?= $profile['link_count'] ?? 0 ?></strong> Links
+                                <strong><?= isset($profile['link_count']) ? $profile['link_count'] : 0 ?></strong> Links
                             </div>
                             <div class="stat-badge">
                                 <i class="bi bi-cursor-fill"></i>
-                                <strong><?= $profile['total_clicks'] ?? 0 ?></strong> Klik
+                                <strong><?= isset($profile['total_clicks']) ? $profile['total_clicks'] : 0 ?></strong> Klik
                             </div>
                         </div>
                         
