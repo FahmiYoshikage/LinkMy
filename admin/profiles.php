@@ -5,17 +5,21 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get current user's profiles with stats
+// Get current user's profiles with stats (using GROUP BY like settings.php)
 $user_profiles = [];
-$profiles_result = mysqli_query($conn, "SELECT * FROM profiles WHERE user_id = {$current_user_id} ORDER BY is_primary DESC, created_at ASC");
+$profiles_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
+                   COUNT(DISTINCT l.link_id) as link_count,
+                   COALESCE(SUM(l.click_count), 0) as total_clicks
+                   FROM profiles p
+                   LEFT JOIN links l ON p.profile_id = l.profile_id
+                   WHERE p.user_id = ?
+                   GROUP BY p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at
+                   ORDER BY p.is_primary DESC, p.created_at ASC";
+$profiles_stmt = mysqli_prepare($conn, $profiles_query);
+mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
+mysqli_stmt_execute($profiles_stmt);
+$profiles_result = mysqli_stmt_get_result($profiles_stmt);
 while ($profile = mysqli_fetch_assoc($profiles_result)) {
-    // Count links for this profile
-    $count_result = mysqli_query($conn, "SELECT COUNT(*) as cnt, COALESCE(SUM(click_count), 0) as clk FROM links WHERE profile_id = {$profile['profile_id']}");
-    $counts = mysqli_fetch_assoc($count_result);
-    
-    $profile['link_count'] = (int)$counts['cnt'];
-    $profile['total_clicks'] = (int)$counts['clk'];
-    
     $user_profiles[] = $profile;
 }
 
