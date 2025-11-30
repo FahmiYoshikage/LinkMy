@@ -21,7 +21,16 @@ while ($profile = mysqli_fetch_assoc($profiles_result)) {
     $profile['link_count'] = (int)$counts['cnt'];
     $profile['total_clicks'] = (int)$counts['clk'];
     
+    // DEBUG: Print to see if it's set
+    echo "<!-- SETTING: {$profile['slug']} = {$profile['link_count']} links, {$profile['total_clicks']} clicks -->\n";
+    
     $user_profiles[] = $profile;
+}
+
+// DEBUG: Final check
+echo "<!-- TOTAL PROFILES LOADED: " . count($user_profiles) . " -->\n";
+foreach ($user_profiles as $idx => $p) {
+    echo "<!-- Profile[$idx]: {$p['slug']} has link_count=" . (isset($p['link_count']) ? $p['link_count'] : 'NOT SET') . " -->\n";
 }
 
 // Get active profile
