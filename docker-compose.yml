@@ -4,7 +4,7 @@ services:
         image: mysql:8.4-oracle
         container_name: linkmy_mysql
         restart: always
-        command: --default-authentication-plugin=mysql_native_password --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+        command: --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION" --authentication-policy=mysql_native_password
         environment:
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
             MYSQL_DATABASE: ${DB_NAME:-linkmy_db}
