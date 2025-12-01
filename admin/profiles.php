@@ -517,17 +517,17 @@ $profile_limit = 2; // Free tier limit
                         <div class="profile-stats">
                             <div class="stat-badge">
                                 <i class="bi bi-link-45deg"></i>
-                                <strong><?= isset($profile['link_count']) ? $profile['link_count'] : 0 ?></strong> Links
+                                <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
                             </div>
                             <div class="stat-badge">
                                 <i class="bi bi-cursor-fill"></i>
-                                <strong><?= isset($profile['total_clicks']) ? $profile['total_clicks'] : 0 ?></strong> Klik
+                                <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
                             </div>
                         </div>
                         
                         <div class="mt-3">
                             <small class="text-muted">
-                                Dibuat: <?= !empty($profile['created_at']) ? date('d M Y', strtotime($profile['created_at'])) : 'N/A' ?>
+                                Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
                             </small>
                         </div>
                     </div>

@@ -677,9 +677,9 @@ if (isset($_GET['debug'])) {
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <i class="bi bi-link-45deg"></i> <strong><?= isset($profile['link_count']) ? intval($profile['link_count']) : 0 ?></strong> Links
-                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= isset($profile['total_clicks']) ? intval($profile['total_clicks']) : 0 ?></strong> Klik
-                                                    | Dibuat: <?= !empty($profile['created_at']) ? date('d M Y', strtotime($profile['created_at'])) : 'N/A' ?>
+                                                    <i class="bi bi-link-45deg"></i> <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
+                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
+                                                    | Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
