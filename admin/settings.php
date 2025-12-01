@@ -366,16 +366,14 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Get user's all profiles (slugs) with stats
+// Get user's all profiles (slugs) with stats (using subquery method for better compatibility)
 $user_slugs = [];
 $user_profiles = [];
 $slugs_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
-                COUNT(DISTINCT l.link_id) as link_count,
-                COALESCE(SUM(l.click_count), 0) as total_clicks
+                (SELECT COUNT(*) FROM links WHERE profile_id = p.profile_id) as link_count,
+                (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE profile_id = p.profile_id) as total_clicks
                 FROM profiles p
-                LEFT JOIN links l ON p.profile_id = l.profile_id
                 WHERE p.user_id = ?
-                GROUP BY p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at
                 ORDER BY p.is_primary DESC, p.created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
 mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);

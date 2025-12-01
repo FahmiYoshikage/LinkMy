@@ -5,15 +5,14 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get current user's profiles with stats (using GROUP BY like settings.php)
+// Get current user's profiles with stats (using subquery method for better compatibility)
 $user_profiles = [];
 $profiles_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
-                   COUNT(DISTINCT l.link_id) as link_count,
-                   COALESCE(SUM(l.click_count), 0) as total_clicks
+                   p.profile_description, p.profile_title, p.bio, p.profile_pic_filename,
+                   (SELECT COUNT(*) FROM links WHERE profile_id = p.profile_id) as link_count,
+                   (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE profile_id = p.profile_id) as total_clicks
                    FROM profiles p
-                   LEFT JOIN links l ON p.profile_id = l.profile_id
                    WHERE p.user_id = ?
-                   GROUP BY p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at
                    ORDER BY p.is_primary DESC, p.created_at ASC";
 $profiles_stmt = mysqli_prepare($conn, $profiles_query);
 mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
