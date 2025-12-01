@@ -3,19 +3,21 @@
 ## 📊 Version Changes
 
 ### Before (Old & Problematic):
+
 ```yaml
-MySQL:      8.0
-PHP:        8.1-apache
+MySQL: 8.0
+PHP: 8.1-apache
 phpMyAdmin: latest (unstable)
-SQL Mode:   STRICT (causing errors!)
+SQL Mode: STRICT (causing errors!)
 ```
 
 ### After (Latest & Stable):
+
 ```yaml
-MySQL:      8.4-oracle (LTS)
-PHP:        8.3-apache (Latest Stable)
+MySQL: 8.4-oracle (LTS)
+PHP: 8.3-apache (Latest Stable)
 phpMyAdmin: 5.2-apache (Stable)
-SQL Mode:   Relaxed (compatible)
+SQL Mode: Relaxed (compatible)
 ```
 
 ---
@@ -23,6 +25,7 @@ SQL Mode:   Relaxed (compatible)
 ## 🎯 What Was Fixed
 
 ### 1. **MySQL 8.4 LTS Upgrade**
+
 ```yaml
 # OLD: Strict SQL mode causing DELIMITER errors
 image: mysql:8.0
@@ -33,13 +36,15 @@ command: --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_
 ```
 
 **Benefits:**
-- ✅ LTS (Long Term Support) version
-- ✅ Better stored procedure support
-- ✅ Compatible SQL mode for migrations
-- ✅ Health check added
-- ✅ Faster performance
+
+-   ✅ LTS (Long Term Support) version
+-   ✅ Better stored procedure support
+-   ✅ Compatible SQL mode for migrations
+-   ✅ Health check added
+-   ✅ Faster performance
 
 ### 2. **PHP 8.3 Upgrade**
+
 ```dockerfile
 # OLD
 FROM php:8.1-apache
@@ -49,12 +54,14 @@ FROM php:8.3-apache
 ```
 
 **Benefits:**
-- ✅ Latest security patches
-- ✅ Better performance (JIT improvements)
-- ✅ New language features
-- ✅ Better error handling
+
+-   ✅ Latest security patches
+-   ✅ Better performance (JIT improvements)
+-   ✅ New language features
+-   ✅ Better error handling
 
 ### 3. **phpMyAdmin Stable Release**
+
 ```yaml
 # OLD: Rolling latest (unstable)
 image: phpmyadmin:latest
@@ -64,12 +71,14 @@ image: phpmyadmin:5.2-apache
 ```
 
 **Benefits:**
-- ✅ Predictable behavior
-- ✅ No breaking changes
-- ✅ 300MB upload limit
-- ✅ Wait for MySQL health check
+
+-   ✅ Predictable behavior
+-   ✅ No breaking changes
+-   ✅ 300MB upload limit
+-   ✅ Wait for MySQL health check
 
 ### 4. **Migration Script Fixed**
+
 ```php
 // OLD: Simple split by semicolon (breaks on DELIMITER)
 explode(';', $schema);
@@ -79,16 +88,18 @@ preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
 ```
 
 **Benefits:**
-- ✅ Properly handles stored procedures
-- ✅ Separates DELIMITER blocks
-- ✅ Better error handling
-- ✅ No more SQL syntax errors
+
+-   ✅ Properly handles stored procedures
+-   ✅ Separates DELIMITER blocks
+-   ✅ Better error handling
+-   ✅ No more SQL syntax errors
 
 ---
 
 ## 🔄 How to Upgrade
 
 ### Step 1: Backup Everything
+
 ```bash
 # Backup database
 docker exec linkmy_mysql mysqldump -u root -prootpassword linkmy_db > backup_before_upgrade.sql
@@ -99,6 +110,7 @@ cp -r $(docker volume inspect linkmy_mysql_data -f '{{.Mountpoint}}') ./mysql_ba
 ```
 
 ### Step 2: Stop Current Containers
+
 ```powershell
 # Stop all containers
 docker-compose down
@@ -111,6 +123,7 @@ docker image prune -a -f
 ```
 
 ### Step 3: Pull New Images
+
 ```powershell
 # Pull latest images
 docker-compose pull
@@ -122,12 +135,14 @@ docker-compose pull
 ```
 
 ### Step 4: Rebuild Web Container
+
 ```powershell
 # Rebuild with new PHP 8.3
 docker-compose build --no-cache web
 ```
 
 ### Step 5: Start New Stack
+
 ```powershell
 # Start all services
 docker-compose up -d
@@ -140,6 +155,7 @@ docker-compose logs -f db
 ```
 
 ### Step 6: Test Everything
+
 ```powershell
 # Check containers
 docker-compose ps
@@ -162,6 +178,7 @@ docker exec linkmy_web php -v
 ```
 
 ### Step 7: Run Migration (if needed)
+
 ```
 Open: http://localhost:83/migrate_to_v2.php
 ```
@@ -171,6 +188,7 @@ Open: http://localhost:83/migrate_to_v2.php
 ## 🐛 Troubleshooting
 
 ### Error: "Port already in use"
+
 ```powershell
 # Check what's using the port
 netstat -ano | findstr :83
@@ -181,6 +199,7 @@ netstat -ano | findstr :8083
 ```
 
 ### Error: "Cannot connect to MySQL"
+
 ```powershell
 # Wait for health check
 docker-compose ps
@@ -193,6 +212,7 @@ docker exec -it linkmy_mysql mysql -u root -prootpassword
 ```
 
 ### Error: "Volume mount failed"
+
 ```powershell
 # Remove old volume
 docker volume rm linkmy_mysql_data
@@ -202,6 +222,7 @@ docker-compose up -d
 ```
 
 ### Error: "Migration still fails"
+
 ```powershell
 # Check SQL mode
 docker exec linkmy_mysql mysql -u root -prootpassword -e "SELECT @@sql_mode;"
@@ -216,6 +237,7 @@ docker exec linkmy_mysql mysql -u root -prootpassword -e "SELECT @@sql_mode;"
 ### Query Performance (admin/profiles.php)
 
 **Before (MySQL 8.0 + Strict Mode):**
+
 ```
 Complex GROUP BY query: 0.15s
 Subquery method: 0.08s
@@ -223,6 +245,7 @@ Status: ❌ Errors with DELIMITER
 ```
 
 **After (MySQL 8.4 + Relaxed Mode):**
+
 ```
 Complex GROUP BY query: 0.05s (3x faster!)
 Subquery method: 0.02s (4x faster!)
@@ -232,6 +255,7 @@ Status: ✅ No errors, stored procedures work
 ### Memory Usage
 
 **Before:**
+
 ```
 mysql:8.0:       ~500MB RAM
 php:8.1-apache:  ~250MB RAM
@@ -239,6 +263,7 @@ Total:           ~750MB RAM
 ```
 
 **After:**
+
 ```
 mysql:8.4-oracle: ~450MB RAM (optimized!)
 php:8.3-apache:   ~200MB RAM (optimized!)
@@ -250,22 +275,25 @@ Total:            ~650MB RAM (13% less!)
 ## 🎁 New Features Available
 
 ### 1. **MySQL 8.4 Features**
-- Better JSON support
-- Improved indexing
-- Faster query optimizer
-- Better stored procedure performance
+
+-   Better JSON support
+-   Improved indexing
+-   Faster query optimizer
+-   Better stored procedure performance
 
 ### 2. **PHP 8.3 Features**
-- Typed class constants
-- json_validate() function
-- Randomizer improvements
-- Better error messages
+
+-   Typed class constants
+-   json_validate() function
+-   Randomizer improvements
+-   Better error messages
 
 ### 3. **phpMyAdmin 5.2 Features**
-- Better UI/UX
-- Faster table browsing
-- Better import/export
-- 300MB upload limit
+
+-   Better UI/UX
+-   Faster table browsing
+-   Better import/export
+-   300MB upload limit
 
 ---
 
@@ -273,15 +301,15 @@ Total:            ~650MB RAM (13% less!)
 
 After upgrade, verify:
 
-- [ ] All containers running: `docker-compose ps`
-- [ ] MySQL is healthy (not just Up)
-- [ ] Can login to website
-- [ ] Profile stats display correctly
-- [ ] Links work and click tracking works
-- [ ] phpMyAdmin accessible at http://localhost:8083
-- [ ] No errors in logs: `docker-compose logs`
-- [ ] Migration script runs without errors
-- [ ] Stored procedures created successfully
+-   [ ] All containers running: `docker-compose ps`
+-   [ ] MySQL is healthy (not just Up)
+-   [ ] Can login to website
+-   [ ] Profile stats display correctly
+-   [ ] Links work and click tracking works
+-   [ ] phpMyAdmin accessible at http://localhost:8083
+-   [ ] No errors in logs: `docker-compose logs`
+-   [ ] Migration script runs without errors
+-   [ ] Stored procedures created successfully
 
 ---
 
@@ -290,6 +318,7 @@ After upgrade, verify:
 If upgrade fails:
 
 ### Quick Rollback:
+
 ```powershell
 # Stop new containers
 docker-compose down
@@ -310,44 +339,51 @@ docker-compose up -d
 ## 📝 Next Steps After Upgrade
 
 1. **Test migration script:**
-   ```
-   http://localhost:83/migrate_to_v2.php
-   ```
+
+    ```
+    http://localhost:83/migrate_to_v2.php
+    ```
 
 2. **If migration works:**
-   - Test all features thoroughly
-   - Check admin/profiles.php stats
-   - Test link clicks
-   - Test profile switching
+
+    - Test all features thoroughly
+    - Check admin/profiles.php stats
+    - Test link clicks
+    - Test profile switching
 
 3. **If everything good:**
-   - Delete old backup files
-   - Update documentation
-   - Push to production
+
+    - Delete old backup files
+    - Update documentation
+    - Push to production
 
 4. **Production deployment:**
-   - SSH to VPS
-   - Pull latest code
-   - Run same upgrade steps
-   - Test thoroughly
+    - SSH to VPS
+    - Pull latest code
+    - Run same upgrade steps
+    - Test thoroughly
 
 ---
 
 ## 💡 Why This Fixes Your Issues
 
 ### Problem 1: Stats showing 0
+
 **Root cause:** MySQL 8.0 strict mode + GROUP BY issues
 **Solution:** MySQL 8.4 with relaxed SQL mode
 
-### Problem 2: Migration DELIMITER errors  
+### Problem 2: Migration DELIMITER errors
+
 **Root cause:** Simple explode(';') can't handle stored procedures
 **Solution:** Regex to extract and execute procedures separately
 
 ### Problem 3: Database too complex
+
 **Root cause:** 15+ tables with redundant relationships
 **Solution:** Migration to simplified 8-table structure
 
 ### Problem 4: Slow queries
+
 **Root cause:** Complex JOINs with GROUP BY
 **Solution:** MySQL 8.4 optimizer + views + stored procedures
 
