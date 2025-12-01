@@ -15,11 +15,18 @@ $profiles_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.
                    WHERE p.user_id = ?
                    ORDER BY p.is_primary DESC, p.created_at ASC";
 $profiles_stmt = mysqli_prepare($conn, $profiles_query);
-mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
-mysqli_stmt_execute($profiles_stmt);
-$profiles_result = mysqli_stmt_get_result($profiles_stmt);
-while ($profile = mysqli_fetch_assoc($profiles_result)) {
-    $user_profiles[] = $profile;
+if ($profiles_stmt) {
+    mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
+    mysqli_stmt_execute($profiles_stmt);
+    $profiles_result = mysqli_stmt_get_result($profiles_stmt);
+    if ($profiles_result) {
+        while ($profile = mysqli_fetch_assoc($profiles_result)) {
+            $user_profiles[] = $profile;
+        }
+    }
+    mysqli_stmt_close($profiles_stmt);
+} else {
+    error_log("Error preparing profiles query: " . mysqli_error($conn));
 }
 
 // Get active profile
@@ -520,7 +527,7 @@ $profile_limit = 2; // Free tier limit
                         
                         <div class="mt-3">
                             <small class="text-muted">
-                                Dibuat: <?= date('d M Y', strtotime($profile['created_at'] ?? 'now')) ?>
+                                Dibuat: <?= !empty($profile['created_at']) ? date('d M Y', strtotime($profile['created_at'])) : 'N/A' ?>
                             </small>
                         </div>
                     </div>

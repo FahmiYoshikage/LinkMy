@@ -1,4 +1,4 @@
-## Perbaikan Profile Stats Display
+## Perbaikan Profile Stats Display (Updated)
 
 ### Masalah
 

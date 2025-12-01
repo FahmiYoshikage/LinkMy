@@ -376,16 +376,33 @@ $slugs_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_
                 WHERE p.user_id = ?
                 ORDER BY p.is_primary DESC, p.created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
-mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
-mysqli_stmt_execute($slugs_stmt);
-$slugs_result = mysqli_stmt_get_result($slugs_stmt);
-while ($row = mysqli_fetch_assoc($slugs_result)) {
-    $user_slugs[] = $row;
-    $user_profiles[] = $row; // Also populate $user_profiles
+if ($slugs_stmt) {
+    mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
+    mysqli_stmt_execute($slugs_stmt);
+    $slugs_result = mysqli_stmt_get_result($slugs_stmt);
+    if ($slugs_result) {
+        while ($row = mysqli_fetch_assoc($slugs_result)) {
+            $user_slugs[] = $row;
+            $user_profiles[] = $row; // Also populate $user_profiles
+        }
+    }
+    mysqli_stmt_close($slugs_stmt);
+} else {
+    error_log("Error preparing slugs query: " . mysqli_error($conn));
 }
 
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE user_id = ?", [$current_user_id], 'i')['count'];
 $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHERE user_id = ?", [$current_user_id], 'i')['total'] ?? 0;
+
+// DEBUG: Check what's in $user_profiles
+if (isset($_GET['debug'])) {
+    echo "<pre>DEBUG user_profiles:\n";
+    print_r($user_profiles);
+    echo "\nDEBUG user_slugs:\n";
+    print_r($user_slugs);
+    echo "</pre>";
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -660,9 +677,9 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <i class="bi bi-link-45deg"></i> <strong><?= $profile['link_count'] ?? 0 ?></strong> Links
-                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= $profile['total_clicks'] ?? 0 ?></strong> Klik
-                                                    | Dibuat: <?= date('d M Y', strtotime($profile['created_at'])) ?>
+                                                    <i class="bi bi-link-45deg"></i> <strong><?= isset($profile['link_count']) ? intval($profile['link_count']) : 0 ?></strong> Links
+                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= isset($profile['total_clicks']) ? intval($profile['total_clicks']) : 0 ?></strong> Klik
+                                                    | Dibuat: <?= !empty($profile['created_at']) ? date('d M Y', strtotime($profile['created_at'])) : 'N/A' ?>
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
