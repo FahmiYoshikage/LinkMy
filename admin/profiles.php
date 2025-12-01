@@ -1,4 +1,9 @@
 <?php
+// Prevent caching to always show fresh data
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
 
@@ -352,6 +357,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 $profile_count = count($user_profiles);
 $profile_limit = 2; // Free tier limit
+
+// DEBUG: Check what's in $user_profiles (remove after verifying)
+if (isset($_GET['debug'])) {
+    echo "<pre style='background:#f0f0f0;padding:20px;border:2px solid #333;'>";
+    echo "DEBUG INFO:\n";
+    echo "current_user_id: {$current_user_id}\n\n";
+    echo "user_profiles array count: " . count($user_profiles) . "\n\n";
+    echo "user_profiles data:\n";
+    print_r($user_profiles);
+    echo "\nprofile_count: {$profile_count}\n";
+    echo "</pre>";
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

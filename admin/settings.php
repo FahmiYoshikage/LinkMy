@@ -1,4 +1,9 @@
 <?php
+// Prevent caching to always show fresh data
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
 
@@ -394,12 +399,18 @@ if ($slugs_stmt) {
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE user_id = ?", [$current_user_id], 'i')['count'];
 $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHERE user_id = ?", [$current_user_id], 'i')['total'] ?? 0;
 
-// DEBUG: Check what's in $user_profiles
+// DEBUG: Check what's in $user_profiles (remove after verifying)
 if (isset($_GET['debug'])) {
-    echo "<pre>DEBUG user_profiles:\n";
+    echo "<pre style='background:#f0f0f0;padding:20px;border:2px solid #333;'>";
+    echo "DEBUG INFO:\n";
+    echo "current_user_id: {$current_user_id}\n\n";
+    echo "user_profiles array count: " . count($user_profiles) . "\n\n";
+    echo "user_profiles data:\n";
     print_r($user_profiles);
-    echo "\nDEBUG user_slugs:\n";
+    echo "\nuser_slugs data:\n";
     print_r($user_slugs);
+    echo "\ntotal_links: {$total_links}\n";
+    echo "total_clicks: {$total_clicks}\n";
     echo "</pre>";
     exit;
 }
