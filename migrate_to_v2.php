@@ -331,14 +331,44 @@ if (!$schema) {
 $schema = preg_replace('/CREATE DATABASE.*?;/i', '', $schema);
 $schema = preg_replace('/USE.*?;/i', '', $schema);
 
-// Split by semicolon and execute
-$statements = array_filter(array_map('trim', explode(';', $schema)));
-foreach ($statements as $statement) {
-    if (empty($statement) || strpos($statement, '--') === 0) continue;
+// Handle DELIMITER for stored procedures
+if (preg_match('/DELIMITER/', $schema)) {
+    // Extract procedures separately
+    preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
     
-    if (!mysqli_query($conn, $statement)) {
-        log_error("Failed to execute: " . substr($statement, 0, 100) . "...");
-        log_error("Error: " . mysqli_error($conn));
+    // Remove procedures from main schema
+    $schema = preg_replace('/DELIMITER \$\$(.*?)DELIMITER ;/s', '', $schema);
+    
+    // Execute regular statements first
+    $statements = array_filter(array_map('trim', explode(';', $schema)));
+    foreach ($statements as $statement) {
+        if (empty($statement) || strpos($statement, '--') === 0) continue;
+        
+        if (!mysqli_query($conn, $statement)) {
+            log_error("Failed to execute: " . substr($statement, 0, 100) . "...");
+            log_error("Error: " . mysqli_error($conn));
+        }
+    }
+    
+    // Now execute procedures
+    foreach ($procedures[1] as $procedure) {
+        $procedure = trim($procedure);
+        if (!empty($procedure)) {
+            if (!mysqli_query($conn, $procedure)) {
+                log_warning("Failed to create procedure: " . mysqli_error($conn));
+            }
+        }
+    }
+} else {
+    // No procedures, simple execution
+    $statements = array_filter(array_map('trim', explode(';', $schema)));
+    foreach ($statements as $statement) {
+        if (empty($statement) || strpos($statement, '--') === 0) continue;
+        
+        if (!mysqli_query($conn, $statement)) {
+            log_error("Failed to execute: " . substr($statement, 0, 100) . "...");
+            log_error("Error: " . mysqli_error($conn));
+        }
     }
 }
 log_message("✓ New structure created", 'SUCCESS');
