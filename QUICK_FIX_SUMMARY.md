@@ -41,15 +41,21 @@ preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
 
 ### Option 1: Automatic (Recommended)
 
+**Windows:**
 ```powershell
-# 1. Start Docker Desktop
-# 2. Run upgrade script
 .\upgrade_docker.bat
+```
+
+**Ubuntu/Linux:**
+```bash
+chmod +x upgrade_docker.sh
+./upgrade_docker.sh
 ```
 
 ### Option 2: Manual
 
-```powershell
+**All platforms:**
+```bash
 # Stop containers
 docker-compose down
 
@@ -63,7 +69,7 @@ docker-compose build --no-cache web
 docker-compose up -d
 
 # Wait 30 seconds for MySQL health check
-timeout /t 30
+sleep 30
 
 # Test
 docker-compose ps

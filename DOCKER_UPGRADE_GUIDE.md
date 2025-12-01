@@ -98,6 +98,23 @@ preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
 
 ## 🔄 How to Upgrade
 
+### Quick Start (Automated)
+
+**Windows:**
+```powershell
+.\upgrade_docker.bat
+```
+
+**Ubuntu/Linux:**
+```bash
+chmod +x upgrade_docker.sh
+./upgrade_docker.sh
+```
+
+---
+
+### Manual Upgrade
+
 ### Step 1: Backup Everything
 
 ```bash
