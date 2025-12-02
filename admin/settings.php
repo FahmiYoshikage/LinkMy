@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     // Check if slug exists (excluding user's own profiles)
     $existing = get_single_row(
-        "SELECT p.profile_id, p.user_id FROM profiles p WHERE p.slug = ? AND p.user_id != ?", 
+        "SELECT p.id, p.user_id FROM profiles p WHERE p.slug = ? AND p.user_id != ?", 
         [$slug, $current_user_id], 
         'si'
     );
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
         
         if (!$error) {
             // Check availability
-            $existing = get_single_row("SELECT profile_id FROM profiles WHERE slug = ?", [$new_slug], 's');
+            $existing = get_single_row("SELECT id FROM profiles WHERE slug = ?", [$new_slug], 's');
             
             if ($existing) {
                 $error = 'Slug sudah digunakan orang lain!';
@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
             $error = 'Kode OTP salah atau sudah kadaluarsa!';
         } else {
             // Update primary slug
-            $query = "UPDATE profiles SET slug = ? WHERE user_id = ? AND is_primary = 1";
+            $query = "UPDATE profiles SET slug = ? WHERE user_id = ? AND display_order = 0";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
             
@@ -264,16 +264,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_slug'])) {
             $error = 'Anda sudah memiliki 2 slug (maksimal untuk akun gratis)!';
         } else {
             // Check availability
-            $existing = get_single_row("SELECT profile_id FROM profiles WHERE slug = ?", [$new_slug], 's');
+            $existing = get_single_row("SELECT id FROM profiles WHERE slug = ?", [$new_slug], 's');
             
             if ($existing) {
                 $error = 'Slug sudah digunakan!';
             } else {
                 // Add new profile with slug
-                $profile_name = ucfirst($new_slug) . ' Profile';
-                $query = "INSERT INTO profiles (user_id, slug, profile_name, is_primary, is_active) VALUES (?, ?, ?, 0, 1)";
+                $name = ucfirst($new_slug) . ' Profile';
+                $query = "INSERT INTO profiles (user_id, slug, name, display_order, is_active) VALUES (?, ?, ?, 0, 1)";
                 $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'iss', $current_user_id, $new_slug, $profile_name);
+                mysqli_stmt_bind_param($stmt, 'iss', $current_user_id, $new_slug, $name);
                 
                 if (mysqli_stmt_execute($stmt)) {
                     $success = "Profile baru '{$new_slug}' berhasil ditambahkan!";
@@ -287,23 +287,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_slug'])) {
 
 // Delete profile (cannot delete primary)
 if (isset($_GET['delete_slug'])) {
-    $profile_id = intval($_GET['delete_slug']);
+    $id = intval($_GET['delete_slug']);
     
     // Check if it's not primary and belongs to user
     $profile_data = get_single_row(
-        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
-        [$profile_id, $current_user_id],
+        "SELECT * FROM profiles WHERE id = ? AND user_id = ?",
+        [$id, $current_user_id],
         'ii'
     );
     
     if (!$profile_data) {
         $error = 'Profile tidak ditemukan!';
-    } elseif ($profile_data['is_primary'] == 1) {
+    } elseif ($profile_data['display_order'] == 1) {
         $error = 'Tidak bisa menghapus profile utama! Ganti ke profile lain sebagai utama terlebih dahulu.';
     } else {
-        $query = "DELETE FROM profiles WHERE profile_id = ? AND user_id = ?";
+        $query = "DELETE FROM profiles WHERE id = ? AND user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ii', $profile_id, $current_user_id);
+        mysqli_stmt_bind_param($stmt, 'ii', $id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = "Profile '{$profile_data['slug']}' berhasil dihapus!";
@@ -315,12 +315,12 @@ if (isset($_GET['delete_slug'])) {
 
 // Set primary profile
 if (isset($_GET['set_primary'])) {
-    $profile_id = intval($_GET['set_primary']);
+    $id = intval($_GET['set_primary']);
     
     // Check if profile belongs to user
     $profile_data = get_single_row(
-        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
-        [$profile_id, $current_user_id],
+        "SELECT * FROM profiles WHERE id = ? AND user_id = ?",
+        [$id, $current_user_id],
         'ii'
     );
     
@@ -328,26 +328,26 @@ if (isset($_GET['set_primary'])) {
         $error = 'Profile tidak ditemukan!';
     } else {
         // Unset all primary flags for this user
-        $query1 = "UPDATE profiles SET is_primary = 0 WHERE user_id = ?";
+        $query1 = "UPDATE profiles SET display_order = 99 WHERE user_id = ?";
         $stmt1 = mysqli_prepare($conn, $query1);
         mysqli_stmt_bind_param($stmt1, 'i', $current_user_id);
         mysqli_stmt_execute($stmt1);
         
         // Set new primary
-        $query2 = "UPDATE profiles SET is_primary = 1 WHERE profile_id = ? AND user_id = ?";
+        $query2 = "UPDATE profiles SET display_order = 0 WHERE id = ? AND user_id = ?";
         $stmt2 = mysqli_prepare($conn, $query2);
-        mysqli_stmt_bind_param($stmt2, 'ii', $profile_id, $current_user_id);
+        mysqli_stmt_bind_param($stmt2, 'ii', $id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt2)) {
-            // Update users.page_slug and active_profile_id
-            $query3 = "UPDATE users SET page_slug = ?, active_profile_id = ? WHERE user_id = ?";
+            // Update users.page_slug and active_id
+            $query3 = "UPDATE users SET page_slug = ?, active_id = ? WHERE user_id = ?";
             $stmt3 = mysqli_prepare($conn, $query3);
-            mysqli_stmt_bind_param($stmt3, 'sii', $profile_data['slug'], $profile_id, $current_user_id);
+            mysqli_stmt_bind_param($stmt3, 'sii', $profile_data['slug'], $id, $current_user_id);
             mysqli_stmt_execute($stmt3);
             
             // Update session
             $_SESSION['page_slug'] = $profile_data['slug'];
-            $_SESSION['active_profile_id'] = $profile_id;
+            $_SESSION['active_id'] = $id;
             
             $success = "Profile '{$profile_data['slug']}' sekarang menjadi profile utama!";
             
@@ -374,12 +374,12 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
 // Get user's all profiles (slugs) with stats (using subquery method for better compatibility)
 $user_slugs = [];
 $user_profiles = [];
-$slugs_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
-                (SELECT COUNT(*) FROM links WHERE profile_id = p.profile_id) as link_count,
-                (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE profile_id = p.profile_id) as total_clicks
+$slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
+                (SELECT COUNT(*) FROM links WHERE id = p.id) as link_count,
+                (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE id = p.id) as total_clicks
                 FROM profiles p
                 WHERE p.user_id = ?
-                ORDER BY p.is_primary DESC, p.created_at ASC";
+                ORDER BY p.display_order DESC, p.created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
 if ($slugs_stmt) {
     mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
@@ -681,7 +681,7 @@ if (isset($_GET['debug'])) {
                                         <div class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
                                                 <code class="fs-5"><?= htmlspecialchars($profile['slug']) ?></code>
-                                                <?php if ($profile['is_primary']): ?>
+                                                <?php if ($profile['display_order']): ?>
                                                     <span class="badge bg-success ms-2">Profile Utama</span>
                                                 <?php else: ?>
                                                     <span class="badge bg-secondary ms-2">Profile Tambahan</span>
@@ -698,13 +698,13 @@ if (isset($_GET['debug'])) {
                                                 </small>
                                             </div>
                                             <div>
-                                                <?php if (!$profile['is_primary']): ?>
-                                                    <a href="?set_primary=<?= $profile['profile_id'] ?>" 
+                                                <?php if (!$profile['display_order']): ?>
+                                                    <a href="?set_primary=<?= $profile['id'] ?>" 
                                                        class="btn btn-sm btn-outline-primary"
                                                        onclick="return confirm('Jadikan <?= htmlspecialchars($profile['slug']) ?> sebagai profile utama?')">
                                                         <i class="bi bi-star"></i> Jadikan Utama
                                                     </a>
-                                                    <a href="?delete_slug=<?= $profile['profile_id'] ?>" 
+                                                    <a href="?delete_slug=<?= $profile['id'] ?>" 
                                                        class="btn btn-sm btn-outline-danger"
                                                        onclick="return confirm('Hapus profile <?= htmlspecialchars($profile['slug']) ?>?')">
                                                         <i class="bi bi-trash"></i> Hapus

@@ -9,7 +9,7 @@ $user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_i
 
 // Get user's profiles
 $user_profiles = [];
-$profiles_query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC";
+$profiles_query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY display_order ASC, created_at ASC";
 $profiles_stmt = mysqli_prepare($conn, $profiles_query);
 mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($profiles_stmt);
@@ -193,15 +193,15 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                                 <?php foreach ($user_profiles as $profile): ?>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <div>
-                                            <?= $profile['is_primary'] ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
-                                            <strong><?= htmlspecialchars($profile['profile_name']) ?></strong>
+                                            <?= $profile['display_order'] ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
+                                            <strong><?= htmlspecialchars($profile['name']) ?></strong>
                                             <br>
                                             <small class="text-muted">
                                                 Slug: <code><?= htmlspecialchars($profile['slug']) ?></code> | 
                                                 Link: <strong>linkmy.iet.ovh/<?= htmlspecialchars($profile['slug']) ?></strong>
                                             </small>
                                         </div>
-                                        <?php if ($profile['is_primary']): ?>
+                                        <?php if ($profile['display_order']): ?>
                                             <span class="badge bg-success">Primary</span>
                                         <?php endif; ?>
                                     </div>
@@ -366,3 +366,4 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
     </script>
 </body>
 </html>
+

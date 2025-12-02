@@ -78,7 +78,7 @@
         $bio = trim($_POST['bio']);
         
         // Multi-profile: Update profile info in profiles table
-        $query = "UPDATE profiles SET profile_title = ?, bio = ? WHERE profile_id = ?";
+        $query = "UPDATE profiles SET title = ?, bio = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'ssi', $profile_title, $bio, $active_profile_id);
         
@@ -119,7 +119,7 @@
                         unlink($old_file);
                     }
                     // Multi-profile: Update profile pic for active profile
-                    $query = "UPDATE user_appearance SET profile_pic_filename = ? WHERE profile_id = ?";
+                    $query = "UPDATE profiles SET avatar = ? WHERE id = ?";
                     $stmt = mysqli_prepare($conn, $query);
                     mysqli_stmt_bind_param($stmt, 'si', $new_filename, $active_profile_id);
                     
@@ -167,7 +167,7 @@
                         unlink($old_file);
                     }
                     // Multi-profile: Update background for active profile
-                    $query = "UPDATE user_appearance SET bg_image_filename = ? WHERE profile_id = ?";
+                    $query = "UPDATE themes SET bg_type = 'image', bg_value = ? WHERE profile_id = ?";
                     $stmt = mysqli_prepare($conn, $query);
                     mysqli_stmt_bind_param($stmt, 'si', $new_filename, $active_profile_id);
                     if (mysqli_stmt_execute($stmt)) {
@@ -192,7 +192,7 @@
                 unlink($bg_path);
             }
             // Multi-profile: Remove background for active profile
-            $query = "UPDATE user_appearance SET bg_image_filename = NULL WHERE profile_id = ?";
+            $query = "UPDATE themes SET bg_type = 'gradient', bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' WHERE profile_id = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'i', $active_profile_id);
             
@@ -207,9 +207,9 @@
         $button_style = $_POST['button_style'];
         
         // Multi-profile: Update theme for active profile
-        $query = "UPDATE user_appearance SET theme_name = ?, button_style = ? WHERE profile_id = ?";
+        $query = "UPDATE themes SET button_style = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'ssi', $theme_name, $button_style, $active_profile_id);
+        mysqli_stmt_bind_param($stmt, 'si', $button_style, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Tema berhasil diupdate!';
@@ -246,20 +246,7 @@
         error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, container=$container_style, categories=$enable_categories, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
         error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
         
-        $query = "UPDATE user_appearance SET 
-                  gradient_preset = ?, 
-                  custom_bg_color = ?, 
-                  custom_button_color = ?,
-                  custom_text_color = ?,
-                  custom_link_text_color = ?,
-                  profile_layout = ?,
-                  container_style = ?,
-                  enable_categories = ?,
-                  show_profile_border = ?,
-                  enable_animations = ?,
-                  enable_glass_effect = ?,
-                  shadow_intensity = ?
-                  WHERE profile_id = ?";
+        $query = "UPDATE themes SET bg_type = CASE WHEN ? IS NOT NULL THEN 'gradient' ELSE 'color' END, bg_value = COALESCE(?, ?), button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         
         if (!$stmt) {
@@ -2458,3 +2445,4 @@
 // Close the connection
 mysqli_close($conn);
 ?>
+
