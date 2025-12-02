@@ -15,11 +15,24 @@ function init_db_session() {
         return;
     }
     
-    // Check if sessions table exists
+    // Try to load db.php if not loaded
     if (!isset($conn) || !$conn) {
-        require_once __DIR__ . '/db.php';
+        try {
+            require_once __DIR__ . '/db.php';
+        } catch (Exception $e) {
+            // Database connection failed, use default file handler
+            error_log("Database connection failed in session_handler: " . $e->getMessage());
+            return;
+        }
     }
     
+    // Verify connection is valid
+    if (!$conn || mysqli_connect_errno()) {
+        error_log("Invalid database connection, using default file session handler");
+        return;
+    }
+    
+    // Check if sessions table exists
     $check = @mysqli_query($conn, "SHOW TABLES LIKE 'sessions'");
     if (!$check || mysqli_num_rows($check) === 0) {
         // Sessions table doesn't exist, use default file handler

@@ -1,4 +1,10 @@
 <?php
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once 'config/db.php';
 require_once 'config/session_handler.php';
 init_db_session();
 session_start();
@@ -7,7 +13,7 @@ if (isset($_SESSION['user_id'])) {
     header('Location: admin/dashboard.php');
     exit;
 }
-require_once 'config/db.php';
+
 $error = '';
 $success = '';
 
