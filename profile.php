@@ -241,12 +241,15 @@
     $background_css = '#ffffff';
     $text_color = $custom_text_color ?? '#333333';
     $is_gradient = false;
-    // Note: $bg_image already set at line 90-93
+    // Note: $bg_image already set at line 90-93, preserve it
     
     // Use bg_type and bg_value directly from DB
     if ($bg_type === 'image' && !empty($bg_value)) {
-        // Background image (bg_image already set above)
-        $background_css = '#667eea'; // fallback color behind image
+        // Background image - ensure $bg_image is set
+        if (empty($bg_image)) {
+            $bg_image = $bg_value; // Make sure it's set
+        }
+        $background_css = 'linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%)'; // semi-transparent gradient overlay
         $text_color = $custom_text_color ?? '#ffffff';
     } elseif ($bg_type === 'gradient' && !empty($bg_value)) {
         // Gradient background from DB
@@ -323,25 +326,24 @@
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <style>
         body {
-            <?php if ($boxed_layout): ?>
-            /* Boxed mode: Use outer background */
-            background: <?= $outer_bg_value ?: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' ?>;
-            <?php else: ?>
-            /* Non-boxed mode: Use theme background directly */
-            background: <?= $current_theme['bg'] ?>;
-            <?php endif; ?>
             color: <?= $current_theme['text'] ?>;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             padding: 2rem 0;
-            <?php if (!empty($bg_image)): ?>
-            background-image: url('uploads/backgrounds/<?= $bg_image ?>');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
             position: relative;
+            
+            <?php if (!empty($bg_image)): ?>
+            /* Background Image Mode */
+            background: <?= $background_css ?> url('uploads/backgrounds/<?= $bg_image ?>') no-repeat center center fixed;
+            background-size: cover;
+            <?php elseif ($boxed_layout): ?>
+            /* Boxed mode: Use outer background */
+            background: <?= $outer_bg_value ?: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' ?>;
+            background-attachment: fixed;
             <?php else: ?>
-            <?php if ($is_gradient || $boxed_layout): ?>
+            /* Non-boxed mode: Use theme background directly */
+            background: <?= $current_theme['bg'] ?>;
+            <?php if ($is_gradient): ?>
             background-attachment: fixed;
             <?php endif; ?>
             <?php endif; ?>
@@ -355,8 +357,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: <?= $theme_name === 'light' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)' ?>;
-            z-index: -1;
+            background: <?= $background_css ?>; /* Use the semi-transparent gradient overlay */
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        body > * {
+            position: relative;
+            z-index: 1;
         }
         <?php endif; ?>
         
