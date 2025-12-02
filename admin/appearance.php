@@ -272,7 +272,11 @@
         error_log("PARSED gradient=$gradient_preset, layout=$profile_layout, container=$container_style, categories=$enable_categories, border=$show_profile_border, anim=$enable_animations, glass=$enable_glass_effect, shadow=$shadow_intensity");
         error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
         
-        $query = "UPDATE themes SET bg_type = CASE WHEN ? IS NOT NULL THEN 'gradient' ELSE 'color' END, bg_value = COALESCE(?, ?), button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
+        // Determine bg_value: prefer gradient preset CSS, fallback to custom color
+        $bg_value = $gradient_preset ? ($gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)') : $custom_bg_color;
+        $bg_type = $gradient_preset ? 'gradient' : 'color';
+        
+        $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         
         if (!$stmt) {
@@ -280,9 +284,9 @@
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
             // Multi-profile: Update advanced settings for active profile
-            $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiiiisi', 
-                $gradient_preset, $custom_bg_color, $custom_button_color, $custom_text_color, $custom_link_text_color,
-                $profile_layout, $container_style, $enable_categories, $show_profile_border, $enable_animations, $enable_glass_effect, $shadow_intensity, $active_profile_id);
+            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiiisi', 
+                $bg_type, $bg_value, $custom_button_color, $custom_text_color,
+                $profile_layout, $container_style, $enable_animations, $enable_glass_effect, $shadow_intensity, $active_profile_id);
             
             if (!$bind_result) {
                 $error = 'Bind param error: ' . mysqli_stmt_error($stmt);
