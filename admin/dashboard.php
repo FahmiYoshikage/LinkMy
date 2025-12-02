@@ -1,4 +1,9 @@
 <?php
+    // Enable error reporting for debugging
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
     require_once __DIR__ . '/../config/auth_check.php';
     require_once __DIR__ .  '/../config/db.php';
     
@@ -10,12 +15,12 @@
     if (!$active_profile_id) {
         // Get user's primary profile
         $primary_profile = get_single_row(
-            "SELECT profile_id, slug FROM profiles WHERE user_id = ? AND is_primary = 1",
+            "SELECT id, slug FROM profiles WHERE user_id = ? AND display_order = 0 ORDER BY id ASC LIMIT 1",
             [$current_user_id],
             'i'
         );
         if ($primary_profile) {
-            $active_profile_id = $primary_profile['profile_id'];
+            $active_profile_id = $primary_profile['id'];
             $_SESSION['active_profile_id'] = $active_profile_id;
             $_SESSION['page_slug'] = $primary_profile['slug'];
         }
@@ -31,7 +36,7 @@
             $error = 'Judul dan URL harus diisi';
         } else {
             // Multi-profile: Use active_profile_id for new link
-            $last_order_row = get_single_row("SELECT MAX(order_index) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
+            $last_order_row = get_single_row("SELECT MAX(position) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
             $last_order = $last_order_row['max_order'] ?? 0;
             $new_order = $last_order + 1;
 
@@ -40,7 +45,7 @@
             $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
 
             if ($has_categories) {
-                $query = "INSERT INTO links (user_id, profile_id, title, url, icon_class, category_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $query = "INSERT INTO links (user_id, profile_id, title, url, icon, category_id, position) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
                     mysqli_stmt_bind_param($stmt, 'iisssii', $current_user_id, $active_profile_id, $title, $url, $icon_class, $category_id, $new_order);
@@ -54,7 +59,7 @@
                 }
             } else {
                 // Fallback to old schema without category_id
-                $query = "INSERT INTO links (user_id, profile_id, title, url, icon_class, order_index) VALUES (?, ?, ?, ?, ?, ?)";
+                $query = "INSERT INTO links (user_id, profile_id, title, url, icon, position) VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
                     mysqli_stmt_bind_param($stmt, 'iisssi', $current_user_id, $active_profile_id, $title, $url, $icon_class, $new_order);
