@@ -259,6 +259,34 @@
         }
     }
 
+    // Gradient presets CSS mapping (define early for use in POST handlers)
+    $gradient_css_map = [
+        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
+        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
+        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
+        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
+        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
+        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
+        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
+        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
+        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
+        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
+        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
+        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
+        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
+        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+    ];
+
     // DEBUG: Log all POST data
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("POST received: " . print_r($_POST, true));
@@ -390,34 +418,6 @@
         $gradient_presets = [];
         error_log('gradient_presets table missing or query failed: ' . $e->getMessage());
     }
-    
-    // Gradient presets CSS mapping for preview
-    $gradient_css_map = [
-        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
-        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
-        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
-        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
-        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
-        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
-        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
-        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
-        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
-        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
-        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
-        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
-        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
-        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
-        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
-        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
-        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
-        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
-    ];
     
     // If DB presets missing, fall back to hard-coded list from CSS map
     if (empty($gradient_presets)) {

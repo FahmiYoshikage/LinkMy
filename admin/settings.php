@@ -23,6 +23,7 @@ if (!$user) {
 
 // Get all user profiles for slug management
 $all_profiles = [];
+$user_profiles = []; // Alias for compatibility
 $p_query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY display_order ASC";
 $p_stmt = mysqli_prepare($conn, $p_query);
 mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
@@ -30,6 +31,7 @@ mysqli_stmt_execute($p_stmt);
 $p_result = mysqli_stmt_get_result($p_stmt);
 while ($row = mysqli_fetch_assoc($p_result)) {
     $all_profiles[] = $row;
+    $user_profiles[] = $row; // Populate both arrays
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
@@ -44,10 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     } elseif (strlen($new_password) < 6) {
         $error = 'Password baru minimal 6 karakter!';
     } else {
-        if (password_verify($current_password, $user['password'])) {
+        // Handle both 'password' and 'password_hash' column names
+        $password_field = $user['password_hash'] ?? $user['password'];
+        if (password_verify($current_password, $password_field)) {
             $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
             
-            $query = "UPDATE users SET password = ? WHERE id = ?";
+            $query = "UPDATE users SET password_hash = ? WHERE id = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'si', $new_hash, $current_user_id);
             
@@ -664,15 +668,6 @@ if (isset($_GET['debug'])) {
                                     <i class="bi bi-send"></i> Kirim Kode OTP
                                 </button>
                             </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                                <i class="bi bi-check-circle"></i> Verifikasi & Ganti Slug
-                            </button>
-                            <a href="settings.php" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> Batal
-                            </a>
-                        </form>
                         <?php endif; ?>
                     </div>
                 </div>
