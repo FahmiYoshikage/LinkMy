@@ -271,7 +271,7 @@
                 error_log("SUCCESS! Affected rows: $affected");
                 
                 // Reload data from database to ensure we have latest - Multi-profile
-                $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
+                $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
                 
                 error_log("After save - gradient: " . ($appearance['gradient_preset'] ?? 'NULL'));
                 
@@ -317,7 +317,7 @@
         if (mysqli_stmt_execute($stmt)) {
             $success = '✅ Boxed Layout berhasil disimpan!';
             // Multi-profile: Reload appearance for active profile
-            $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
+            $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
             $_SESSION['show_boxed_tab'] = true;
         } else {
             $error = 'Gagal menyimpan Boxed Layout!';
@@ -2445,4 +2445,5 @@
 // Close the connection
 mysqli_close($conn);
 ?>
+
 
