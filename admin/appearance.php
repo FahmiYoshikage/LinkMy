@@ -318,8 +318,24 @@
         error_log("COLORS: bg=$custom_bg_color, btn=$custom_button_color, txt=$custom_text_color, link_txt=$custom_link_text_color");
         
         // Determine bg_value: prefer gradient preset CSS, fallback to custom color
-        $bg_value = $gradient_preset ? ($gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)') : $custom_bg_color;
-        $bg_type = $gradient_preset ? 'gradient' : 'color';
+        // BUT: Only update if user changed gradient/color fields
+        // Check if current bg_type is 'image' - if so, don't overwrite unless new gradient selected
+        $current_bg_type = $appearance['bg_type'] ?? 'gradient';
+        $current_bg_value = $appearance['bg_value'] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        
+        if ($gradient_preset) {
+            // User selected a gradient preset - update bg
+            $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $bg_type = 'gradient';
+        } elseif ($custom_bg_color && $custom_bg_color !== '#ffffff') {
+            // User entered custom color
+            $bg_value = $custom_bg_color;
+            $bg_type = 'color';
+        } else {
+            // No new gradient/color selected - keep existing
+            $bg_value = $current_bg_value;
+            $bg_type = $current_bg_type;
+        }
         
         $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
@@ -442,11 +458,17 @@
 
     // Determine preview background (use v3 schema: bg_type and bg_value)
     $preview_bg = '#ffffff'; // default
+    $preview_bg_image = null;
+    
     if (!empty($appearance['boxed_layout']) && !empty($appearance['outer_bg_value'])) {
         // Boxed mode: use outer background
         $preview_bg = $appearance['outer_bg_value'];
+    } elseif (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
+        // Image background: set both bg and image URL
+        $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // fallback gradient
+        $preview_bg_image = '../uploads/backgrounds/' . $appearance['bg_value'];
     } elseif (!empty($appearance['bg_value'])) {
-        // Use stored bg_value directly from themes table
+        // Use stored bg_value directly from themes table (gradient or color)
         $preview_bg = $appearance['bg_value'];
     } else {
         // Fallback to defaults
@@ -1855,7 +1877,7 @@
                     
                     <div class="preview-phone">
                         <div class="preview-content" id="previewContent" 
-                             style="background: <?= $preview_bg ?>;">
+                             style="background: <?= $preview_bg ?>; <?= $preview_bg_image ? 'background-image: url(' . $preview_bg_image . '); background-size: cover; background-position: center;' : '' ?>">
                             
                             <?php
                             $profile_pic_url = '../uploads/profile_pics/' . (($appearance['avatar'] ?? '') ?: 'default-avatar.png');

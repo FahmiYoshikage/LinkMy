@@ -398,50 +398,36 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Get user's all profiles (slugs) with stats
+// Get user's all profiles (slugs) with stats - use get_all_rows helper
 $user_slugs = [];
 $user_profiles = [];
 $slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at
                 FROM profiles p
                 WHERE p.user_id = ?
                 ORDER BY p.display_order ASC, p.created_at ASC";
-$slugs_stmt = mysqli_prepare($conn, $slugs_query);
-if ($slugs_stmt) {
-    mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
-    mysqli_stmt_execute($slugs_stmt);
-    $slugs_result = mysqli_stmt_get_result($slugs_stmt);
-    if ($slugs_result) {
-        while ($row = mysqli_fetch_assoc($slugs_result)) {
-            // Manually fetch link count and clicks for this profile
-            $link_count_query = "SELECT COUNT(*) as count FROM links WHERE profile_id = ?";
-            $link_count_stmt = mysqli_prepare($conn, $link_count_query);
-            if ($link_count_stmt) {
-                mysqli_stmt_bind_param($link_count_stmt, 'i', $row['id']);
-                mysqli_stmt_execute($link_count_stmt);
-                $link_count_result = mysqli_stmt_get_result($link_count_stmt);
-                $link_count_data = mysqli_fetch_assoc($link_count_result);
-                $row['link_count'] = $link_count_data['count'] ?? 0;
-            } else {
-                $row['link_count'] = 0;
-            }
-            
-            // Fetch total clicks
-            $clicks_query = "SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id = ?";
-            $clicks_stmt = mysqli_prepare($conn, $clicks_query);
-            if ($clicks_stmt) {
-                mysqli_stmt_bind_param($clicks_stmt, 'i', $row['id']);
-                mysqli_stmt_execute($clicks_stmt);
-                $clicks_result = mysqli_stmt_get_result($clicks_stmt);
-                $clicks_data = mysqli_fetch_assoc($clicks_result);
-                $row['total_clicks'] = $clicks_data['total'] ?? 0;
-            } else {
-                $row['total_clicks'] = 0;
-            }
-            
-            $user_slugs[] = $row;
-            $user_profiles[] = $row;
-        }
-    }
+$profiles_list = get_all_rows($slugs_query, [$current_user_id], 'i');
+
+// For each profile, get link count and total clicks
+foreach ($profiles_list as $profile) {
+    // Get link count
+    $link_count_row = get_single_row(
+        "SELECT COUNT(*) as count FROM links WHERE profile_id = ?",
+        [$profile['id']],
+        'i'
+    );
+    $profile['link_count'] = $link_count_row['count'] ?? 0;
+    
+    // Get total clicks
+    $clicks_row = get_single_row(
+        "SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id = ?",
+        [$profile['id']],
+        'i'
+    );
+    $profile['total_clicks'] = $clicks_row['total'] ?? 0;
+    
+    $user_slugs[] = $profile;
+    $user_profiles[] = $profile;
+}
     mysqli_stmt_close($slugs_stmt);
 } else {
     error_log("Error preparing slugs query: " . mysqli_error($conn));

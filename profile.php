@@ -87,6 +87,12 @@
     $bg_type = $user_data['bg_type'] ?? null;
     $bg_value = $user_data['bg_value'] ?? null;
     
+    // Handle background images
+    $bg_image = null;
+    if ($bg_type === 'image' && !empty($bg_value)) {
+        $bg_image = $bg_value; // This is the filename
+    }
+    
     // Fallback logic for missing v3 columns
     if (empty($bg_type)) {
         $theme_name = $user_data['theme_name'] ?? 'light';
