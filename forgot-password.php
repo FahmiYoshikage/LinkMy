@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Format email tidak valid';
     } else {
         // Check if email exists
-        $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = ?");
+            // Check if email exists (v3: users.id)
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -34,14 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generate reset token
             $resetToken = bin2hex(random_bytes(32)); // 64 character hex
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null; // Capture IP address
             
             // Save to database
-            $insertStmt = $conn->prepare("
-                INSERT INTO password_resets (email, reset_token, expires_at, ip_address) 
-                VALUES (?, ?, ?, ?)
-            ");
-            $insertStmt->bind_param("ssss", $email, $resetToken, $expiresAt, $ipAddress);
+                // v3 columns: email, token, ip, is_used, created_at, expires_at
+                $insertStmt = $conn->prepare("
+                    INSERT INTO password_resets (email, token, ip, is_used, created_at, expires_at) 
+                    VALUES (?, ?, ?, 0, NOW(), ?)
+                ");
+                $insertStmt->bind_param("ssss", $email, $resetToken, $ipAddress, $expiresAt);
             
             if ($insertStmt->execute()) {
                 // Send email

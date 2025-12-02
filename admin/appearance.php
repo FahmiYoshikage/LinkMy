@@ -73,6 +73,29 @@
                                         WHERE t.profile_id = ?", [$active_profile_id], 'i');
     }
 
+    // Load theme_boxed for preview and form defaults
+    $theme_id_row = get_single_row("SELECT id FROM themes WHERE profile_id = ? LIMIT 1", [$active_profile_id], 'i');
+    if ($theme_id_row) {
+        $theme_id = $theme_id_row['id'];
+        $boxed = get_single_row("SELECT enabled, outer_bg_type, outer_bg_value, container_max_width, container_radius, container_shadow FROM theme_boxed WHERE theme_id = ? LIMIT 1", [$theme_id], 'i');
+        if ($boxed) {
+            $appearance['boxed_layout'] = (int)$boxed['enabled'];
+            $appearance['outer_bg_type'] = $boxed['outer_bg_type'];
+            $appearance['outer_bg_value'] = $boxed['outer_bg_value'];
+            $appearance['container_max_width'] = (int)$boxed['container_max_width'];
+            $appearance['container_border_radius'] = (int)$boxed['container_radius'];
+            $appearance['container_shadow'] = (int)$boxed['container_shadow'];
+        } else {
+            // Defaults if no boxed row
+            $appearance['boxed_layout'] = 0;
+            $appearance['outer_bg_type'] = 'gradient';
+            $appearance['outer_bg_value'] = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $appearance['container_max_width'] = 480;
+            $appearance['container_border_radius'] = 30;
+            $appearance['container_shadow'] = 0;
+        }
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
         $profile_title = trim($_POST['profile_title']);
         $bio = trim($_POST['bio']);
@@ -285,9 +308,9 @@
         }
     }
 
-    // Handle Boxed Layout Update
+    // Handle Boxed Layout Update (migrated to theme_boxed)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_boxed_layout'])) {
-        $boxed_layout = isset($_POST['boxed_layout']) ? 1 : 0;
+        $boxed_enabled = isset($_POST['boxed_layout']) ? 1 : 0;
         $outer_bg_type = $_POST['outer_bg_type'] ?? 'gradient';
         $outer_bg_color = $_POST['outer_bg_color'] ?? '#667eea';
         $outer_bg_gradient_start = $_POST['outer_bg_gradient_start'] ?? '#667eea';
@@ -295,38 +318,58 @@
         $container_max_width = intval($_POST['container_max_width'] ?? 480);
         $container_border_radius = intval($_POST['container_border_radius'] ?? 30);
         $container_shadow = isset($_POST['container_shadow']) ? 1 : 0;
-        
-        $query = "UPDATE user_appearance SET 
-                  boxed_layout = ?,
-                  outer_bg_type = ?,
-                  outer_bg_color = ?,
-                  outer_bg_gradient_start = ?,
-                  outer_bg_gradient_end = ?,
-                  container_max_width = ?,
-                  container_border_radius = ?,
-                  container_shadow = ?
-                  WHERE profile_id = ?";
-        $stmt = mysqli_prepare($conn, $query);
-        // Multi-profile: Update boxed layout for active profile
-        mysqli_stmt_bind_param($stmt, 'issssiiii', 
-            $boxed_layout, $outer_bg_type, $outer_bg_color, 
-            $outer_bg_gradient_start, $outer_bg_gradient_end, 
-            $container_max_width, $container_border_radius, 
-            $container_shadow, $active_profile_id);
-        
-        if (mysqli_stmt_execute($stmt)) {
+
+        // Resolve theme_id for active profile
+        $theme_row = get_single_row("SELECT id FROM themes WHERE profile_id = ? LIMIT 1", [$active_profile_id], 'i');
+        if (!$theme_row) {
+            // Create default theme if missing
+            $create = mysqli_prepare($conn, "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', '#667eea', '#333333')");
+            mysqli_stmt_bind_param($create, 'i', $active_profile_id);
+            mysqli_stmt_execute($create);
+            mysqli_stmt_close($create);
+            $theme_row = get_single_row("SELECT id FROM themes WHERE profile_id = ? LIMIT 1", [$active_profile_id], 'i');
+        }
+        $theme_id = $theme_row['id'];
+
+        // Ensure theme_boxed row exists
+        $boxed_row = get_single_row("SELECT id FROM theme_boxed WHERE theme_id = ? LIMIT 1", [$theme_id], 'i');
+        if (!$boxed_row) {
+            $ins = mysqli_prepare($conn, "INSERT INTO theme_boxed (theme_id, enabled, outer_bg_type, outer_bg_value, container_max_width, container_radius, container_shadow) VALUES (?, 0, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 480, 30, 0)");
+            mysqli_stmt_bind_param($ins, 'i', $theme_id);
+            mysqli_stmt_execute($ins);
+            mysqli_stmt_close($ins);
+            $boxed_row = get_single_row("SELECT id FROM theme_boxed WHERE theme_id = ? LIMIT 1", [$theme_id], 'i');
+        }
+
+        // Compute outer_bg_value based on type
+        $outer_bg_value = $outer_bg_type === 'gradient'
+            ? "linear-gradient(135deg, {$outer_bg_gradient_start} 0%, {$outer_bg_gradient_end} 100%)"
+            : $outer_bg_color;
+
+        // Update boxed settings
+        $upd = mysqli_prepare($conn, "UPDATE theme_boxed SET enabled = ?, outer_bg_type = ?, outer_bg_value = ?, container_max_width = ?, container_radius = ?, container_shadow = ? WHERE theme_id = ?");
+        mysqli_stmt_bind_param($upd, 'issiiii', $boxed_enabled, $outer_bg_type, $outer_bg_value, $container_max_width, $container_border_radius, $container_shadow, $theme_id);
+
+        if (mysqli_stmt_execute($upd)) {
             $success = '✅ Boxed Layout berhasil disimpan!';
-            // Multi-profile: Reload appearance for active profile
+            // Reload appearance for active profile
             $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
             $_SESSION['show_boxed_tab'] = true;
         } else {
             $error = 'Gagal menyimpan Boxed Layout!';
         }
-        mysqli_stmt_close($stmt);
+        mysqli_stmt_close($upd);
     }
 
-    // Fetch gradient presets
-    $gradient_presets = get_all_rows("SELECT * FROM gradient_presets WHERE is_default = 1 ORDER BY preset_name", [], '');
+    // Fetch gradient presets (guard if table missing)
+    $gradient_presets = [];
+    $presets_query = "SELECT * FROM gradient_presets WHERE is_default = 1 ORDER BY preset_name";
+    try {
+        $gradient_presets = get_all_rows($presets_query, [], '');
+    } catch (Throwable $e) {
+        $gradient_presets = [];
+        error_log('gradient_presets table missing or query failed: ' . $e->getMessage());
+    }
     
     // Gradient presets CSS mapping for preview
     $gradient_css_map = [
@@ -356,6 +399,13 @@
         'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
     ];
     
+    // If DB presets missing, fall back to hard-coded list from CSS map
+    if (empty($gradient_presets)) {
+        foreach ($gradient_css_map as $name => $css) {
+            $gradient_presets[] = ['preset_name' => $name, 'css_value' => $css];
+        }
+    }
+
     // Determine preview background
     $preview_bg = '#ffffff'; // default
     if (!empty($appearance['gradient_preset']) && isset($gradient_css_map[$appearance['gradient_preset']])) {

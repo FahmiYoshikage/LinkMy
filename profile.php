@@ -596,10 +596,10 @@
                            target="_blank"
                            rel="noopener noreferrer">
                             <div class="link-icon" style="color: <?= $current_theme['link_text'] ?>;">
-                                <i class="<?= htmlspecialchars($link['icon_class']) ?>"></i>
+                                <i class="<?= htmlspecialchars($link['icon_class'] ?? 'bi-link-45deg') ?>"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title']) ?></p>
+                                <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title'] ?? '') ?></p>
                             </div>
                             <div style="color: <?= $current_theme['link_text'] ?>;">
                                 <i class="bi bi-arrow-right"></i>
@@ -615,10 +615,10 @@
                        target="_blank"
                        rel="noopener noreferrer">
                         <div class="link-icon" style="color: <?= $current_theme['link_text'] ?>;">
-                            <i class="<?= htmlspecialchars($link['icon_class']) ?>"></i>
+                            <i class="<?= htmlspecialchars($link['icon_class'] ?? 'bi-link-45deg') ?>"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title']) ?></p>
+                            <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title'] ?? '') ?></p>
                         </div>
                         <div style="color: <?= $current_theme['link_text'] ?>;">
                             <i class="bi bi-arrow-right"></i>
