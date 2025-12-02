@@ -32,7 +32,7 @@ function init_db_session() {
         return;
     }
     
-    // Check if sessions table exists
+    // Check if sessions table exists and verify structure
     $check = @mysqli_query($conn, "SHOW TABLES LIKE 'sessions'");
     if (!$check || mysqli_num_rows($check) === 0) {
         // Sessions table doesn't exist, use default file handler
@@ -40,9 +40,35 @@ function init_db_session() {
         return;
     }
     
+    // Verify table has correct columns
+    $columns = @mysqli_query($conn, "SHOW COLUMNS FROM sessions");
+    $has_correct_structure = false;
+    if ($columns) {
+        $col_names = [];
+        while ($col = mysqli_fetch_assoc($columns)) {
+            $col_names[] = $col['Field'];
+        }
+        // Check for required columns: session_id, session_data, session_expire
+        if (in_array('session_id', $col_names) && 
+            in_array('session_data', $col_names) && 
+            in_array('session_expire', $col_names)) {
+            $has_correct_structure = true;
+        }
+    }
+    
+    if (!$has_correct_structure) {
+        error_log("Sessions table structure incorrect, using default file session handler");
+        return;
+    }
+    
     // Set up database session handler
-    $handler = new DatabaseSessionHandler($conn);
-    session_set_save_handler($handler, true);
+    try {
+        $handler = new DatabaseSessionHandler($conn);
+        session_set_save_handler($handler, true);
+    } catch (Exception $e) {
+        error_log("Failed to set database session handler: " . $e->getMessage());
+        return;
+    }
     
     // Extended session lifetime (7 days)
     ini_set('session.gc_maxlifetime', 604800);
@@ -105,35 +131,45 @@ class DatabaseSessionHandler implements SessionHandlerInterface {
         $conn = $this->getConnection();
         if (!$conn) return '';
         
-        $stmt = mysqli_prepare($conn, "SELECT session_data FROM sessions WHERE session_id = ? AND session_expire > ?");
-        if (!$stmt) return '';
-        
-        $current_time = time();
-        mysqli_stmt_bind_param($stmt, 'si', $session_id, $current_time);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        
-        if ($row = mysqli_fetch_assoc($result)) {
-            return $row['session_data'];
+        try {
+            $stmt = mysqli_prepare($conn, "SELECT session_data FROM sessions WHERE session_id = ? AND session_expire > ?");
+            if (!$stmt) return '';
+            
+            $current_time = time();
+            mysqli_stmt_bind_param($stmt, 'si', $session_id, $current_time);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            if ($row = mysqli_fetch_assoc($result)) {
+                return $row['session_data'];
+            }
+            return '';
+        } catch (Exception $e) {
+            error_log("Session read error: " . $e->getMessage());
+            return '';
         }
-        return '';
     }
     
     public function write($session_id, $session_data): bool {
         $conn = $this->getConnection();
         if (!$conn) return false;
         
-        $expire = time() + (int)ini_get('session.gc_maxlifetime');
-        
-        $stmt = mysqli_prepare($conn, 
-            "INSERT INTO sessions (session_id, session_data, session_expire) 
-             VALUES (?, ?, ?) 
-             ON DUPLICATE KEY UPDATE session_data = ?, session_expire = ?");
-        
-        if (!$stmt) return false;
-        
-        mysqli_stmt_bind_param($stmt, 'ssisi', $session_id, $session_data, $expire, $session_data, $expire);
-        return mysqli_stmt_execute($stmt);
+        try {
+            $expire = time() + (int)ini_get('session.gc_maxlifetime');
+            
+            $stmt = mysqli_prepare($conn, 
+                "INSERT INTO sessions (session_id, session_data, session_expire) 
+                 VALUES (?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE session_data = ?, session_expire = ?");
+            
+            if (!$stmt) return false;
+            
+            mysqli_stmt_bind_param($stmt, 'ssisi', $session_id, $session_data, $expire, $session_data, $expire);
+            return mysqli_stmt_execute($stmt);
+        } catch (Exception $e) {
+            error_log("Session write error: " . $e->getMessage());
+            return false;
+        }
     }
     
     public function destroy($session_id): bool {
