@@ -21,6 +21,17 @@ if (!$user) {
     die('User not found!');
 }
 
+// Get all user profiles for slug management
+$all_profiles = [];
+$p_query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY display_order ASC";
+$p_stmt = mysqli_prepare($conn, $p_query);
+mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
+mysqli_stmt_execute($p_stmt);
+$p_result = mysqli_stmt_get_result($p_stmt);
+while ($row = mysqli_fetch_assoc($p_result)) {
+    $all_profiles[] = $row;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
@@ -127,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                 $expires_at = date('Y-m-d H:i:s', strtotime('+15 minutes'));
                 
                 // Store OTP
-                $query = "INSERT INTO email_verifications (email, otp_code, expires_at, is_used, verification_type, ip_address) 
+                $query = "INSERT INTO email_verifications (email, otp, expires_at, is_used, type, ip) 
                               VALUES (?, ?, ?, 0, 'slug_change', ?)";
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $stmt = mysqli_prepare($conn, $query);
@@ -167,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                             
                             if ($mail->send()) {
                                 $_SESSION['pending_slug_change'] = $new_slug;
+                                $_SESSION['pending_slug_change_id'] = intval($_POST['target_profile_id']);
                                 $success = "Kode OTP telah dikirim ke {$user['email']}. Silakan cek email Anda!";
                             } else {
                                 $error = 'Gagal mengirim email OTP!';
@@ -193,11 +205,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
     if (empty($new_slug)) {
         $error = 'Tidak ada permintaan perubahan slug!';
     } else {
+        $target_profile_id = $_SESSION['pending_slug_change_id'] ?? 0;
+        
         // Verify OTP
         $verification = get_single_row(
             "SELECT * FROM email_verifications 
-             WHERE email = ? AND otp_code = ? AND is_used = 0 
-             AND expires_at > NOW() AND verification_type = 'slug_change'
+             WHERE email = ? AND otp = ? AND is_used = 0 
+             AND expires_at > NOW() AND type = 'slug_change'
              ORDER BY id DESC LIMIT 1",
             [$user['email'], $otp],
             'ss'
@@ -206,10 +220,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
         if (!$verification) {
             $error = 'Kode OTP salah atau sudah kadaluarsa!';
         } else {
-            // Update primary slug
-            $query = "UPDATE profiles SET slug = ? WHERE user_id = ? AND display_order = 0";
-            $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
+            // Update slug for specific profile
+            if ($target_profile_id > 0) {
+                $query = "UPDATE profiles SET slug = ? WHERE id = ? AND user_id = ?";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'sii', $new_slug, $target_profile_id, $current_user_id);
+            } else {
+                // Fallback to primary if ID missing (should not happen)
+                $query = "UPDATE profiles SET slug = ? WHERE user_id = ? AND display_order = 0";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
+            }
             
             if (mysqli_stmt_execute($stmt)) {
                 // Removed last_slug_change_at update for v3 compatibility
@@ -221,8 +242,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
                 mysqli_stmt_execute($stmt3);
                 
                 // Update session
-                $_SESSION['page_slug'] = $new_slug;
+                if ($target_profile_id > 0) {
+                    // Check if we updated the primary profile
+                    $updated_profile = get_single_row("SELECT display_order FROM profiles WHERE id = ?", [$target_profile_id], 'i');
+                    if ($updated_profile && $updated_profile['display_order'] == 0) {
+                        $_SESSION['page_slug'] = $new_slug;
+                    }
+                } else {
+                    $_SESSION['page_slug'] = $new_slug;
+                }
+                
                 unset($_SESSION['pending_slug_change']);
+                unset($_SESSION['pending_slug_change_id']);
                 
                 $success = "Slug berhasil diubah menjadi: {$new_slug}";
                 
@@ -370,7 +401,7 @@ $slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.cre
                 (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
                 FROM profiles p
                 WHERE p.user_id = ?
-                ORDER BY p.display_order DESC, p.created_at ASC";
+                ORDER BY p.display_order ASC, p.created_at ASC";
 $slugs_stmt = mysqli_prepare($conn, $slugs_query);
 if ($slugs_stmt) {
     mysqli_stmt_bind_param($slugs_stmt, 'i', $current_user_id);
@@ -576,67 +607,66 @@ if (isset($_GET['debug'])) {
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-link-45deg"></i> Ganti Slug Utama
+                            <i class="bi bi-link-45deg"></i> Ganti Slug
                             <span class="badge bg-warning text-dark ms-2">Verifikasi OTP</span>
                         </h5>
                         
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle-fill me-2"></i>
                             <strong>Slug saat ini:</strong> 
-                            <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($user['page_slug']) ?></code>
-                            <br>
-                            <small class="text-muted">
-                                Link profil Anda: <strong>linkmy.iet.ovh/<?= htmlspecialchars($user['page_slug']) ?></strong>
-                            </small>
+                            <ul class="mb-0 mt-2">
+                                <?php foreach ($user_profiles as $p): ?>
+                                    <li>
+                                        <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($p['slug']) ?></code>
+                                        <?php if ($p['display_order'] == 0): ?>
+                                            <span class="badge bg-success ms-1">Utama</span>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
                         </div>
                         
-                        <?php if ($user['last_slug_change_at']): 
-                            $days_since = (time() - strtotime($user['last_slug_change_at'])) / (60 * 60 * 24);
-                            $days_left = max(0, ceil(30 - $days_since));
-                        ?>
-                            <?php if ($days_left > 0): ?>
-                                <div class="alert alert-warning">
-                                    <i class="bi bi-clock-fill me-2"></i>
-                                    Anda bisa mengganti slug lagi dalam <strong><?= $days_left ?> hari</strong>.
-                                    <br>
-                                    <small>Terakhir diubah: <?= date('d M Y', strtotime($user['last_slug_change_at'])) ?></small>
+                        <?php if (isset($_SESSION['pending_slug_change'])): ?>
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Masukkan Kode OTP</label>
+                                    <input type="text" class="form-control" name="otp_code" 
+                                           placeholder="6 digit kode OTP" required maxlength="6">
+                                    <div class="form-text">Kode OTP telah dikirim ke email Anda.</div>
                                 </div>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                        
-                        <?php if (!isset($_SESSION['pending_slug_change'])): ?>
-                        <form method="POST" id="requestSlugChangeForm">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Slug Baru</label>
-                                <input type="text" class="form-control" name="new_slug" id="new_slug_input"
-                                       placeholder="contoh: nama-anda" pattern="[a-z0-9-]+" 
-                                       minlength="3" maxlength="50" required>
-                                <div id="slug_check_feedback" class="form-text"></div>
-                                <small class="text-muted">
-                                    Hanya huruf kecil, angka, dan tanda hubung (-). Minimal 3 karakter.
-                                </small>
-                            </div>
-                            
-                            <button type="submit" name="request_slug_change" class="btn btn-primary" 
-                                    id="requestSlugBtn" disabled>
-                                <i class="bi bi-send"></i> Kirim Kode OTP
-                            </button>
-                        </form>
+                                
+                                <button type="submit" name="verify_slug_change" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Verifikasi & Ganti Slug
+                                </button>
+                            </form>
                         <?php else: ?>
-                        <div class="alert alert-success">
-                            <i class="bi bi-envelope-check-fill me-2"></i>
-                            Kode OTP telah dikirim ke email Anda! Silakan masukkan kode di bawah.
-                        </div>
-                        
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Kode OTP (6 digit)</label>
-                                <input type="text" class="form-control" name="otp_code" 
-                                       placeholder="123456" pattern="[0-9]{6}" maxlength="6" required>
-                                <small class="text-muted">Cek email Anda untuk kode OTP.</small>
-                            </div>
-                            
-                            <button type="submit" name="verify_slug_change" class="btn btn-success">
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Pilih Profile untuk Diganti</label>
+                                    <select class="form-select" name="target_profile_id" required>
+                                        <?php foreach ($user_profiles as $p): ?>
+                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['slug']) ?> (<?= $p['display_order'] == 0 ? 'Utama' : 'Sekunder' ?>)</option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Slug Baru</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">linkmy.iet.ovh/</span>
+                                        <input type="text" class="form-control" name="new_slug" id="new_slug_input"
+                                               placeholder="slug-baru" required minlength="3" maxlength="50">
+                                    </div>
+                                    <div id="slug_check_feedback" class="form-text"></div>
+                                </div>
+                                
+                                <button type="submit" name="request_slug_change" class="btn btn-primary" id="requestSlugBtn">
+                                    <i class="bi bi-send"></i> Kirim Kode OTP
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                </div>
                                 <i class="bi bi-check-circle"></i> Verifikasi & Ganti Slug
                             </button>
                             <a href="settings.php" class="btn btn-secondary">

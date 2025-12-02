@@ -53,8 +53,62 @@
     $profile_title = $user_data['title'] ?? $user_data['username'];
     $bio = $user_data['bio'] ?? '';
     $profile_pic = $user_data['avatar'] ?? 'default-avatar.png';
-    $bg_type = $user_data['bg_type'] ?? 'gradient';
-    $bg_value = $user_data['bg_value'] ?? '';
+    
+    // Gradient presets mapping (v2.0 + v2.1)
+    $gradient_presets = [
+        // V2.0 Original
+        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
+        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
+        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
+        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
+        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
+        // V2.1 New
+        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
+        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
+        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
+        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
+        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
+        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
+        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
+        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
+        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
+        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
+    ];
+
+    $bg_type = $user_data['bg_type'] ?? null;
+    $bg_value = $user_data['bg_value'] ?? null;
+    
+    // Fallback logic for missing v3 columns
+    if (empty($bg_type)) {
+        $theme_name = $user_data['theme_name'] ?? 'light';
+        if ($theme_name === 'light') {
+            $bg_type = 'color';
+            $bg_value = $user_data['custom_bg_color'] ?? '#ffffff';
+        } elseif ($theme_name === 'dark') {
+            $bg_type = 'color';
+            $bg_value = $user_data['custom_bg_color'] ?? '#000000';
+        } elseif ($theme_name === 'gradient') {
+            $bg_type = 'gradient';
+            $preset_name = $user_data['gradient_preset'] ?? 'Purple Dream';
+            $bg_value = $gradient_presets[$preset_name] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        } elseif ($theme_name === 'image') {
+            $bg_type = 'image';
+            $bg_value = $user_data['bg_image_filename'] ?? '';
+        } else {
+            $bg_type = 'gradient';
+            $bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+    }
+
     $theme_name = ($bg_type === 'color') ? 'light' : 'gradient'; // backward compat
     $button_style = $user_data['button_style'] ?? 'rounded';
     
@@ -88,36 +142,6 @@
     $enable_categories = 1; // v3 always supports categories
     $container_border_radius = $user_data['container_border_radius'] ?? 30;
     $container_shadow = $user_data['container_shadow'] ?? 1;
-    
-    // Gradient presets mapping (v2.0 + v2.1)
-    $gradient_presets = [
-        // V2.0 Original
-        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
-        'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
-        'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
-        'Pink Lemonade' => 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'Royal Purple' => 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
-        'Fire Blaze' => 'linear-gradient(135deg, #f85032 0%, #e73827 100%)',
-        'Emerald Water' => 'linear-gradient(135deg, #348f50 0%, #56b4d3 100%)',
-        'Candy Shop' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'Cool Blues' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'Warm Flame' => 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
-        'Deep Sea' => 'linear-gradient(135deg, #2e3192 0%, #1bffff 100%)',
-        // V2.1 New
-        'Nebula Night' => 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)',
-        'Aurora Borealis' => 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)',
-        'Crimson Tide' => 'linear-gradient(135deg, #c31432 0%, #240b36 100%)',
-        'Golden Hour' => 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%)',
-        'Midnight Blue' => 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
-        'Rose Petal' => 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-        'Electric Violet' => 'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
-        'Jungle Green' => 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
-        'Peach Cream' => 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
-        'Arctic Ice' => 'linear-gradient(135deg, #667db6 0%, #0082c8 50%, #0082c8 100%, #667db6 100%)',
-        'Sunset Glow' => 'linear-gradient(135deg, #ffa751 0%, #ffe259 100%)',
-        'Purple Haze' => 'linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)'
-    ];
 
     // Fetch links with correct column names from VPS database structure
     // Column mapping: id (PK), profile_id, title, url, position, icon, is_active, category_id
