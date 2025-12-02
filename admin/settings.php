@@ -433,6 +433,17 @@ foreach ($profiles_list as $profile) {
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['count'];
 $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['total'] ?? 0;
 
+    // Multi-profile: Load links for active profile only (v3 schema)
+    $links = get_all_rows("SELECT id as link_id, title, url, icon as icon_class, position as order_index, clicks as click_count, category_id, is_active FROM links WHERE profile_id = ? ORDER BY position ASC", [$active_profile_id], 'i');
+    
+    // Get analytics data for charts
+    // Get link performance data (top 10 most clicked links) - Multi-profile
+    $link_performance = get_all_rows(
+        "SELECT title, clicks as click_count FROM links WHERE profile_id = ? AND is_active = 1 ORDER BY clicks DESC LIMIT 10",
+        [$active_profile_id],
+        'i'
+    );
+
 // DEBUG: Check what's in $user_profiles (remove after verifying)
 if (isset($_GET['debug'])) {
     echo "<pre style='background:#f0f0f0;padding:20px;border:2px solid #333;'>";
@@ -542,13 +553,13 @@ if (isset($_GET['debug'])) {
                         <div class="row">
                             <div class="col-6">
                                 <div class="stat-box mb-2">
-                                    <h3 class="fw-bold mb-0"><?= $total_links ?></h3>
+                                    <h3 class="fw-bold mb-0"><?= count($links) ?></h3>
                                     <small>Total Links</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="stat-box mb-2">
-                                    <h3 class="fw-bold mb-0"><?= $total_clicks ?></h3>
+                                    <h3 class="fw-bold mb-0"><?= array_sum(array_column($links, 'click_count')) ?></h3>
                                     <small>Total Klik</small>
                                 </div>
                             </div>
