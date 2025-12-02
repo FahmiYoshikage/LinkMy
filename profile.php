@@ -319,7 +319,13 @@
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <style>
         body {
+            <?php if ($boxed_layout): ?>
+            /* Boxed mode: Use outer background */
+            background: <?= $outer_bg_value ?: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' ?>;
+            <?php else: ?>
+            /* Non-boxed mode: Use theme background directly */
             background: <?= $current_theme['bg'] ?>;
+            <?php endif; ?>
             color: <?= $current_theme['text'] ?>;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
@@ -331,7 +337,7 @@
             background-attachment: fixed;
             position: relative;
             <?php else: ?>
-            <?php if ($is_gradient): ?>
+            <?php if ($is_gradient || $boxed_layout): ?>
             background-attachment: fixed;
             <?php endif; ?>
             <?php endif; ?>
@@ -351,18 +357,19 @@
         <?php endif; ?>
         
         .profile-container {
-            <?php if ($container_style === 'boxed'): ?>
-            /* Linktree-style: Small centered box on desktop */
-            max-width: 480px;
-            background: <?= $theme_name === 'light' ? 'rgba(255,255,255,0.98)' : 'rgba(30,30,30,0.98)' ?>;
-            border-radius: 25px;
+            <?php if ($boxed_layout && $container_style === 'boxed'): ?>
+            /* Boxed Layout: Container dengan background terpisah */
+            max-width: <?= $container_max_width ?>px;
+            background: <?= $container_bg_color ?>;
+            border-radius: <?= $container_border_radius ?>px;
             padding: 2.5rem 2rem;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            box-shadow: <?= $container_shadow ? '0 15px 50px rgba(0,0,0,0.2)' : 'none' ?>;
             margin: 2rem auto;
             <?php else: ?>
-            /* Wide layout: Full width container */
+            /* Non-Boxed / Wide Layout: Background transparan, gradient di body */
             max-width: <?= $profile_layout === 'minimal' ? '480px' : '680px' ?>;
             padding: 0 1rem;
+            background: transparent;
             <?php endif; ?>
             margin-left: auto;
             margin-right: auto;

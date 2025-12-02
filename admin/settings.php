@@ -183,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                             if ($mail->send()) {
                                 $_SESSION['pending_slug_change'] = $new_slug;
                                 $_SESSION['pending_slug_change_id'] = intval($_POST['target_profile_id']);
+                                $_SESSION['slug_change_scroll'] = true; // Keep scroll position
                                 $success = "Kode OTP telah dikirim ke {$user['email']}. Silakan cek email Anda!";
                             } else {
                                 $error = 'Gagal mengirim email OTP!';
@@ -617,14 +618,12 @@ if (isset($_GET['debug'])) {
                         
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle-fill me-2"></i>
-                            <strong>Slug saat ini:</strong> 
+                            <strong>Slug Anda saat ini:</strong> 
                             <ul class="mb-0 mt-2">
                                 <?php foreach ($user_profiles as $p): ?>
                                     <li>
                                         <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($p['slug']) ?></code>
-                                        <?php if ($p['display_order'] == 0): ?>
-                                            <span class="badge bg-success ms-1">Utama</span>
-                                        <?php endif; ?>
+                                        <small class="text-muted ms-2">(<?= $p['link_count'] ?? 0 ?> link)</small>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -644,12 +643,12 @@ if (isset($_GET['debug'])) {
                                 </button>
                             </form>
                         <?php else: ?>
-                            <form method="POST">
+                            <form method="POST" id="slugChangeForm">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Pilih Profile untuk Diganti</label>
+                                    <label class="form-label fw-semibold">Pilih Slug yang Ingin Diganti</label>
                                     <select class="form-select" name="target_profile_id" required>
                                         <?php foreach ($user_profiles as $p): ?>
-                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['slug']) ?> (<?= $p['display_order'] == 0 ? 'Utama' : 'Sekunder' ?>)</option>
+                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['slug']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -895,6 +894,16 @@ if (isset($_GET['debug'])) {
         
         // Attach event listeners
         $(document).ready(function() {
+            // Restore scroll position after OTP sent
+            <?php if (isset($_SESSION['slug_change_scroll'])): ?>
+                setTimeout(function() {
+                    $('html, body').animate({
+                        scrollTop: $('#slugChangeForm').offset().top - 100
+                    }, 500);
+                }, 100);
+                <?php unset($_SESSION['slug_change_scroll']); ?>
+            <?php endif; ?>
+            
             // For "Change Slug" form
             $('#new_slug_input').on('input', function() {
                 // Auto-sanitize input in real-time
@@ -912,9 +921,9 @@ if (isset($_GET['debug'])) {
             });
             
             // Form submission validation
-            $('#requestSlugChangeForm').on('submit', function(e) {
+            $('#slugChangeForm').on('submit', function(e) {
                 const button = document.getElementById('requestSlugBtn');
-                if (button.disabled) {
+                if (button && button.disabled) {
                     e.preventDefault();
                     alert('Slug tidak tersedia atau tidak valid!');
                     return false;

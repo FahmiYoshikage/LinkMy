@@ -436,17 +436,16 @@
         }
     }
 
-    // Determine preview background (prefer boxed outer when enabled)
+    // Determine preview background (use v3 schema: bg_type and bg_value)
     $preview_bg = '#ffffff'; // default
     if (!empty($appearance['boxed_layout']) && !empty($appearance['outer_bg_value'])) {
+        // Boxed mode: use outer background
         $preview_bg = $appearance['outer_bg_value'];
-    } elseif (!empty($appearance['gradient_preset']) && isset($gradient_css_map[$appearance['gradient_preset']])) {
-        $preview_bg = $gradient_css_map[$appearance['gradient_preset']];
-    } elseif (!empty($appearance['custom_bg_color'])) {
-        $preview_bg = $appearance['custom_bg_color'];
-    } elseif (($appearance['theme_name'] ?? 'light') == 'dark') {
-        $preview_bg = '#1a1a1a';
-    } elseif (($appearance['theme_name'] ?? '') == 'gradient') {
+    } elseif (!empty($appearance['bg_value'])) {
+        // Use stored bg_value directly from themes table
+        $preview_bg = $appearance['bg_value'];
+    } else {
+        // Fallback to defaults
         $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
     
@@ -1178,23 +1177,33 @@
                                 <h5 class="card-title fw-bold mb-4">
                                     <i class="bi bi-card-image text-primary"></i> Background Image
                                 </h5>
-                                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-                                    <div class="upload-area mb-3 <?= !empty($appearance['bg_image_filename']) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
-                                        <?php if (!empty($appearance['bg_image_filename'])): ?>
-                                            <img src="../uploads/backgrounds/<?= htmlspecialchars($appearance['bg_image_filename']) ?>" id="bgImagePreview" class="image-preview">
-                                            <a href="?remove_bg=1" class="btn btn-danger btn-sm mt-2" onclick="event.stopPropagation(); return confirm('Remove background image?')">
-                                                <i class="bi bi-trash"></i> Remove Background
+                                
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <strong>Rekomendasi:</strong> 1080x1920px (portrait) atau 1920x1080px (landscape) • Max 5MB
+                                </div>
+                                
+                                <div class="upload-area mb-3 <?= !empty($appearance['bg_image_filename']) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
+                                    <?php if (!empty($appearance['bg_image_filename'])): ?>
+                                        <img src="../uploads/backgrounds/<?= htmlspecialchars($appearance['bg_image_filename']) ?>?t=<?= time() ?>" id="bgImagePreview" class="image-preview">
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-primary btn-sm me-2" onclick="event.stopPropagation(); document.getElementById('bgImageInput').click()">
+                                                <i class="bi bi-arrow-repeat"></i> Change
+                                            </button>
+                                            <a href="?remove_bg=1" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); return confirm('Remove background image?')">
+                                                <i class="bi bi-trash"></i> Remove
                                             </a>
-                                        <?php else: ?>
-                                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
-                                            <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Background</p>
-                                            <small class="text-muted">Max 5MB • JPG, PNG, GIF, WebP</small>
-                                        <?php endif; ?>
-                                    </div>
-                                    <input type="file" id="bgImageInput" name="bg_image" accept="image/*" style="display: none;" onchange="previewImage(this, 'bgImagePreview')">
-                                    <button type="submit" name="upload_background" class="btn btn-primary btn-lg w-100">
-                                        <i class="bi bi-upload me-2"></i>Upload Background Image
-                                    </button>
+                                        </div>
+                                    <?php else: ?>
+                                        <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                                        <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Background</p>
+                                        <small class="text-muted">Pilih gambar landscape/portrait untuk background profil Anda</small>
+                                    <?php endif; ?>
+                                </div>
+                                <input type="file" id="bgImageInput" name="bg_image" accept="image/*" style="display: none;" onchange="handleBackgroundUpload(this)">
+                                <form id="bgUploadForm" method="POST" enctype="multipart/form-data" style="display: none;">
+                                    <input type="hidden" name="bg_image_data" id="bgImageData">
+                                    <input type="hidden" name="upload_background" value="1">
                                 </form>
                             </div>
                         </div>
@@ -1276,6 +1285,57 @@
                                     </button>
                                     <button type="button" class="btn btn-primary" onclick="applyCrop()">
                                         <i class="bi bi-check-circle"></i> Apply & Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Background Crop Modal -->
+                    <div class="modal fade" id="bgCropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-xl modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">
+                                        <i class="bi bi-crop"></i> Adjust Background Image
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="resetBgCropper()"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-lg-9">
+                                            <div class="crop-container" style="max-height: 500px; overflow: hidden; background: #000; border-radius: 10px;">
+                                                <img id="bgCropImage" style="max-width: 100%; display: block;">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <h6 class="fw-semibold mb-2"><i class="bi bi-sliders"></i> Controls</h6>
+                                            <div class="d-grid gap-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="bgCropper.zoom(0.1)">
+                                                    <i class="bi bi-zoom-in"></i> Zoom In
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="bgCropper.zoom(-0.1)">
+                                                    <i class="bi bi-zoom-out"></i> Zoom Out
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="bgCropper.rotate(-90)">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Rotate Left
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="bgCropper.rotate(90)">
+                                                    <i class="bi bi-arrow-clockwise"></i> Rotate Right
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="bgCropper.reset()">
+                                                    <i class="bi bi-arrow-repeat"></i> Reset
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="resetBgCropper()">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="applyBgCrop()">
+                                        <i class="bi bi-check-circle"></i> Save Background
                                     </button>
                                 </div>
                             </div>
@@ -1809,15 +1869,15 @@
                                 $button_radius = '50px';
                             }
                             
-                            // Use actual saved colors if available
-                            $has_gradient = !empty($appearance['gradient_preset']);
-                            $btn_bg = $appearance['custom_button_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.2)' : '#f8f9fa');
+                            // Use actual saved colors from v3 schema
+                            $has_gradient = ($appearance['bg_type'] ?? 'color') === 'gradient';
+                            $btn_bg = $appearance['button_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.2)' : '#f8f9fa');
                             $btn_border = $has_gradient ? 'rgba(255,255,255,0.3)' : '#dee2e6';
-                            $btn_color = $appearance['custom_link_text_color'] ?? ($has_gradient ? '#fff' : '#333');
+                            $btn_color = $appearance['text_color'] ?? ($has_gradient ? '#fff' : '#333');
                             
-                            // Text colors
-                            $preview_text_color = $appearance['custom_text_color'] ?? ($has_gradient ? '#fff' : '#333');
-                            $preview_bio_color = $appearance['custom_text_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.8)' : '#666');
+                            // Text colors from database
+                            $preview_text_color = $appearance['text_color'] ?? ($has_gradient ? '#fff' : '#333');
+                            $preview_bio_color = $appearance['text_color'] ?? ($has_gradient ? 'rgba(255,255,255,0.8)' : '#666');
                             
                             // Shadow
                             $shadow_map = [
@@ -2000,6 +2060,99 @@
                 cropper.destroy();
                 cropper = null;
             }
+        }
+        
+        // Background Image Cropper
+        let bgCropper = null;
+        let bgCropModal = null;
+        
+        function handleBackgroundUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File terlalu besar! Maksimal 5MB.');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('bgCropImage');
+                    image.src = e.target.result;
+                    
+                    // Open modal
+                    bgCropModal = new bootstrap.Modal(document.getElementById('bgCropModal'));
+                    bgCropModal.show();
+                    
+                    // Initialize cropper after modal is shown
+                    document.getElementById('bgCropModal').addEventListener('shown.bs.modal', function() {
+                        if (bgCropper) {
+                            bgCropper.destroy();
+                        }
+                        
+                        bgCropper = new Cropper(image, {
+                            viewMode: 2,
+                            dragMode: 'move',
+                            autoCropArea: 1,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false
+                        });
+                    }, { once: true });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function applyBgCrop() {
+            if (!bgCropper) return;
+            
+            // Get cropped canvas
+            const canvas = bgCropper.getCroppedCanvas({
+                maxWidth: 1920,
+                maxHeight: 1920,
+                imageSmoothingQuality: 'high'
+            });
+            
+            if (!canvas) return;
+            
+            // Show loading
+            showLoading();
+            
+            // Convert to blob and upload
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append('bg_image', blob, 'background.jpg');
+                formData.append('upload_background', '1');
+                
+                fetch('', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(() => {
+                    // Reload page to show new background
+                    window.location.reload();
+                })
+                .catch(error => {
+                    alert('Error uploading background: ' + error);
+                    document.getElementById('loadingOverlay').classList.remove('show');
+                });
+            }, 'image/jpeg', 0.9);
+        }
+        
+        function resetBgCropper() {
+            if (bgCropper) {
+                bgCropper.destroy();
+                bgCropper = null;
+            }
+            document.getElementById('bgImageInput').value = '';
         }
         
         // Show loading overlay
