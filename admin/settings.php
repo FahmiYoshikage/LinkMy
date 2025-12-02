@@ -10,13 +10,16 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
-// Get user data
-$query = "SELECT * FROM users WHERE id = ?";
+// Get user data with primary profile slug
+$query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($result);
+if (!$user) {
+    die('User not found!');
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
@@ -339,11 +342,7 @@ if (isset($_GET['set_primary'])) {
         mysqli_stmt_bind_param($stmt2, 'ii', $id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt2)) {
-            // Update users.page_slug and active_id
-            $query3 = "UPDATE users SET page_slug = ?, active_id = ? WHERE user_id = ?";
-            $stmt3 = mysqli_prepare($conn, $query3);
-            mysqli_stmt_bind_param($stmt3, 'sii', $profile_data['slug'], $id, $current_user_id);
-            mysqli_stmt_execute($stmt3);
+            // v3: No page_slug or active_id in users table - profiles only
             
             // Update session
             $_SESSION['page_slug'] = $profile_data['slug'];

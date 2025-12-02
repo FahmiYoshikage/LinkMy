@@ -232,14 +232,27 @@
         $theme_name = $_POST['theme_name'];
         $button_style = $_POST['button_style'];
         
+        // Determine bg_type and bg_value based on theme_name
+        if ($theme_name === 'gradient') {
+            $bg_type = 'gradient';
+            $bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        } elseif ($theme_name === 'dark') {
+            $bg_type = 'color';
+            $bg_value = '#1a1a1a';
+        } else { // light
+            $bg_type = 'color';
+            $bg_value = '#ffffff';
+        }
+        
         // Multi-profile: Update theme for active profile
-        $query = "UPDATE themes SET button_style = ? WHERE profile_id = ?";
+        $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'si', $button_style, $active_profile_id);
+        mysqli_stmt_bind_param($stmt, 'sssi', $bg_type, $bg_value, $button_style, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Tema berhasil diupdate!';
-            $appearance['theme_name'] = $theme_name;
+            $appearance['bg_type'] = $bg_type;
+            $appearance['bg_value'] = $bg_value;
             $appearance['button_style'] = $button_style;
         } else {
             $error = 'Gagal mengupdate tema!';
