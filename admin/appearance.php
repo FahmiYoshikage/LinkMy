@@ -137,8 +137,8 @@
                 if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $upload_path)) {
                     chmod($upload_path, 0644); // Set file permissions
                     // Delete old file
-                    $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/profile_pics/' . $appearance['profile_pic_filename'];
-                    if ($appearance['profile_pic_filename'] !== 'default-avatar.png' && file_exists($old_file)) {
+                    $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/profile_pics/' . ($appearance['avatar'] ?? '');
+                    if (!empty($appearance['avatar']) && $appearance['avatar'] !== 'default-avatar.png' && file_exists($old_file)) {
                         unlink($old_file);
                     }
                     // Multi-profile: Update profile pic for active profile
@@ -148,7 +148,7 @@
                     
                     if (mysqli_stmt_execute($stmt)) {
                         $success = 'Foto profil berhasil diupload!';
-                        $appearance['profile_pic_filename'] = $new_filename;
+                        $appearance['avatar'] = $new_filename;
                     } else {
                         $error = 'Gagal menyimpan foto ke database!';
                     }
@@ -402,7 +402,17 @@
     // If DB presets missing, fall back to hard-coded list from CSS map
     if (empty($gradient_presets)) {
         foreach ($gradient_css_map as $name => $css) {
-            $gradient_presets[] = ['preset_name' => $name, 'css_value' => $css];
+            // Try to extract two colors from the CSS string for preview dots
+            $matches = [];
+            preg_match_all('/#([0-9a-fA-F]{3,6})/', $css, $matches);
+            $c1 = isset($matches[0][0]) ? $matches[0][0] : '#667eea';
+            $c2 = isset($matches[0][1]) ? $matches[0][1] : '#764ba2';
+            $gradient_presets[] = [
+                'preset_name' => $name,
+                'gradient_css' => $css,
+                'preview_color_1' => $c1,
+                'preview_color_2' => $c2
+            ];
         }
     }
 
@@ -1122,9 +1132,9 @@
                                     <i class="bi bi-person-circle text-primary"></i> Profile Picture
                                 </h5>
                                 <form method="POST" enctype="multipart/form-data" id="profilePicForm" onsubmit="showLoading()">
-                                    <div class="upload-area mb-3 <?= !empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png' ? 'has-image' : '' ?>" onclick="document.getElementById('profilePicInput').click()">
-                                        <?php if (!empty($appearance['profile_pic_filename']) && $appearance['profile_pic_filename'] != 'default-avatar.png'): ?>
-                                            <img src="../uploads/profile_pics/<?= htmlspecialchars($appearance['profile_pic_filename']) ?>" id="profilePicPreview" class="image-preview">
+                                    <div class="upload-area mb-3 <?= !empty($appearance['avatar']) && $appearance['avatar'] != 'default-avatar.png' ? 'has-image' : '' ?>" onclick="document.getElementById('profilePicInput').click()">
+                                        <?php if (!empty($appearance['avatar']) && $appearance['avatar'] != 'default-avatar.png'): ?>
+                                            <img src="../uploads/profile_pics/<?= htmlspecialchars($appearance['avatar']) ?>" id="profilePicPreview" class="image-preview">
                                         <?php else: ?>
                                             <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
                                             <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Profile Photo</p>
@@ -1764,7 +1774,7 @@
                              style="background: <?= $preview_bg ?>;">
                             
                             <?php
-                            $profile_pic_url = '../uploads/profile_pics/' . ($appearance['profile_pic_filename'] ?? 'default-avatar.png');
+                            $profile_pic_url = '../uploads/profile_pics/' . (($appearance['avatar'] ?? '') ?: 'default-avatar.png');
                             if (!file_exists($profile_pic_url)) {
                                 $profile_pic_url = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="90" height="90"%3E%3Ccircle cx="45" cy="45" r="45" fill="%236c757d"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
                             }

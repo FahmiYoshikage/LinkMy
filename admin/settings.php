@@ -11,7 +11,7 @@ $success = '';
 $error = '';
 
 // Get user data
-$query = "SELECT * FROM users WHERE user_id = ?";
+$query = "SELECT * FROM users WHERE id = ?";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
 mysqli_stmt_execute($stmt);
@@ -30,10 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     } elseif (strlen($new_password) < 6) {
         $error = 'Password baru minimal 6 karakter!';
     } else {
-        if (password_verify($current_password, $user['password_hash'])) {
+        if (password_verify($current_password, $user['password'])) {
             $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
             
-            $query = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+            $query = "UPDATE users SET password = ? WHERE id = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'si', $new_hash, $current_user_id);
             
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_email'])) {
     if (empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Email tidak valid!';
     } else {
-        $query = "UPDATE users SET email = ? WHERE user_id = ?";
+        $query = "UPDATE users SET email = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'si', $new_email, $current_user_id);
         
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
         $error = 'Slug harus 3-50 karakter, hanya huruf, angka, dan tanda hubung!';
     } else {
         // Check cooldown (30 days)
-        if ($user['last_slug_change_at']) {
+        if (!empty($user['last_slug_change_at'])) {
             $last_change = strtotime($user['last_slug_change_at']);
             $days_since = (time() - $last_change) / (60 * 60 * 24);
             
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                 
                 // Store OTP
                 $query = "INSERT INTO email_verifications (email, otp_code, expires_at, is_used, verification_type, ip_address) 
-                          VALUES (?, ?, ?, 0, 'slug_change', ?)";
+                              VALUES (?, ?, ?, 0, 'slug_change', ?)";
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $stmt = mysqli_prepare($conn, $query);
                 mysqli_stmt_bind_param($stmt, 'ssss', $user['email'], $otp, $expires_at, $ip);
@@ -215,10 +215,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
             mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
             
             if (mysqli_stmt_execute($stmt)) {
-                // Update users.page_slug for backward compatibility
-                $query2 = "UPDATE users SET page_slug = ?, last_slug_change_at = NOW() WHERE user_id = ?";
+                // Record slug change timestamp
+                $query2 = "UPDATE users SET last_slug_change_at = NOW() WHERE id = ?";
                 $stmt2 = mysqli_prepare($conn, $query2);
-                mysqli_stmt_bind_param($stmt2, 'si', $new_slug, $current_user_id);
+                mysqli_stmt_bind_param($stmt2, 'i', $current_user_id);
                 mysqli_stmt_execute($stmt2);
                 
                 // Mark OTP as used
@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
                 $success = "Slug berhasil diubah menjadi: {$new_slug}";
                 
                 // Refresh user data
-                $user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_id], 'i');
+                $user = get_single_row("SELECT * FROM users WHERE id = ?", [$current_user_id], 'i');
             } else {
                 $error = 'Gagal mengubah slug!';
             }
@@ -360,7 +360,7 @@ if (isset($_GET['set_primary'])) {
 }
 
 if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
-    $query = "DELETE FROM users WHERE user_id = ?";
+    $query = "DELETE FROM users WHERE id = ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, 'i', $current_user_id);
     
@@ -375,8 +375,8 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
 $user_slugs = [];
 $user_profiles = [];
 $slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
-                (SELECT COUNT(*) FROM links WHERE id = p.id) as link_count,
-                (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE id = p.id) as total_clicks
+                (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
+                (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
                 FROM profiles p
                 WHERE p.user_id = ?
                 ORDER BY p.display_order DESC, p.created_at ASC";
@@ -396,8 +396,9 @@ if ($slugs_stmt) {
     error_log("Error preparing slugs query: " . mysqli_error($conn));
 }
 
-$total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE user_id = ?", [$current_user_id], 'i')['count'];
-$total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHERE user_id = ?", [$current_user_id], 'i')['total'] ?? 0;
+// Totals across user's profiles
+$total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['count'];
+$total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['total'] ?? 0;
 
 // DEBUG: Check what's in $user_profiles (remove after verifying)
 if (isset($_GET['debug'])) {
