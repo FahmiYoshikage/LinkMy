@@ -11,8 +11,8 @@
         die('Page not found!');
     }
 
-    // Multi-profile support: Load profile by slug
-    $query = "SELECT * FROM v_public_page_data WHERE page_slug = ?";
+    // Multi-profile support: Load profile by slug using v3 view
+    $query = "SELECT * FROM v_public_profiles WHERE slug = ?";
     $result = execute_query($query, [$slug], 's');
 
     if (!$result || mysqli_num_rows($result) === 0){
@@ -48,41 +48,40 @@
     }
 
     $user_data = mysqli_fetch_assoc($result);
-    $user_id = $user_data['user_id'];
-    $profile_id = $user_data['profile_id']; // Multi-profile support
-    $profile_title = $user_data['profile_title'] ?? $user_data['username'];
+    // v3 schema mapping: view returns id, slug, name, title, bio, avatar, username, is_verified, bg_type, bg_value, etc.
+    $profile_id = $user_data['id']; // v3: profiles.id
+    $profile_title = $user_data['title'] ?? $user_data['username'];
     $bio = $user_data['bio'] ?? '';
-    $profile_pic = $user_data['profile_pic_filename'] ?? 'default-avatar.png';
-    $bg_image = $user_data['bg_image_filename'] ?? '';
-    $theme_name = $user_data['theme_name'] ?? 'light';
+    $profile_pic = $user_data['avatar'] ?? 'default-avatar.png';
+    $bg_type = $user_data['bg_type'] ?? 'gradient';
+    $bg_value = $user_data['bg_value'] ?? '';
+    $theme_name = ($bg_type === 'color') ? 'light' : 'gradient'; // backward compat
     $button_style = $user_data['button_style'] ?? 'rounded';
     
-    // V2.0 Advanced Customization
-    $gradient_preset = $user_data['gradient_preset'] ?? null;
-    $custom_bg_color = $user_data['custom_bg_color'] ?? null;
-    $custom_button_color = $user_data['custom_button_color'] ?? null;
-    $custom_text_color = $user_data['custom_text_color'] ?? null;
-    $custom_link_text_color = $user_data['custom_link_text_color'] ?? null;
-    $profile_layout = $user_data['profile_layout'] ?? 'centered';
-    $show_profile_border = $user_data['show_profile_border'] ?? 1;
+    // V3 schema: themes table fields
+    $custom_button_color = $user_data['button_color'] ?? '#667eea';
+    $custom_text_color = $user_data['text_color'] ?? '#333333';
+    $font_family = $user_data['font'] ?? 'Inter';
+    $profile_layout = $user_data['layout'] ?? 'centered';
+    $container_style = $user_data['container_style'] ?? 'wide';
     $enable_animations = $user_data['enable_animations'] ?? 1;
-    
-    // V2.1 New Features
     $enable_glass_effect = $user_data['enable_glass_effect'] ?? 0;
     $shadow_intensity = $user_data['shadow_intensity'] ?? 'medium';
     
-    // V2.2 Linktree Features
-    $container_style = $user_data['container_style'] ?? 'wide';
-    $enable_categories = $user_data['enable_categories'] ?? 0;
-    
-    // V2.3 Boxed Layout Features
-    $boxed_layout = $user_data['boxed_layout'] ?? 0;
+    // V3 boxed layout (from theme_boxed table)
+    $boxed_layout = $user_data['boxed_enabled'] ?? 0;
     $outer_bg_type = $user_data['outer_bg_type'] ?? 'gradient';
-    $outer_bg_color = $user_data['outer_bg_color'] ?? '#667eea';
-    $outer_bg_gradient_start = $user_data['outer_bg_gradient_start'] ?? '#667eea';
-    $outer_bg_gradient_end = $user_data['outer_bg_gradient_end'] ?? '#764ba2';
+    $outer_bg_value = $user_data['outer_bg_value'] ?? '';
     $container_bg_color = $user_data['container_bg_color'] ?? '#ffffff';
     $container_max_width = $user_data['container_max_width'] ?? 480;
+    $container_border_radius = $user_data['container_radius'] ?? 30;
+    $container_shadow = $user_data['container_shadow'] ?? 1;
+    
+    // Parse bg_value for gradient or image
+    $bg_image = ($bg_type === 'image') ? $bg_value : '';
+    $gradient_css = ($bg_type === 'gradient') ? $bg_value : '';
+    $custom_bg_color = ($bg_type === 'color') ? $bg_value : null;
+    $enable_categories = 1; // v3 always supports categories
     $container_border_radius = $user_data['container_border_radius'] ?? 30;
     $container_shadow = $user_data['container_shadow'] ?? 1;
     
@@ -138,13 +137,12 @@
                         WHERE l.profile_id = ? AND l.is_active = 1
                         ORDER BY l.position ASC, l.id ASC";
     } else {
-        // Simple query without categories
-        // Multi-profile: Filter by profile_id instead of user_id
-        $links_query = "SELECT link_id, user_id, profile_id, title, url, order_index, 
-                        icon_class, click_count, is_active, created_at, category_id
-                        FROM links
-                        WHERE profile_id = ? AND is_active = 1
-                        ORDER BY order_index ASC, link_id ASC";
+        // Simple query without categories (v3 schema)
+        $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
+                        l.icon as icon_class, l.clicks as click_count, l.is_active, l.created_at, l.category_id
+                        FROM links l
+                        WHERE l.profile_id = ? AND l.is_active = 1
+                        ORDER BY l.position ASC, l.id ASC";
     }
     
     $stmt_links = mysqli_prepare($conn, $links_query);

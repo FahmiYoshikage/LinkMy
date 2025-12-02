@@ -5,8 +5,8 @@
         die('Invalid link!');
     }
 
-    // Update click counter
-    $update_query = "UPDATE links SET click_count = click_count + 1 WHERE link_id = ?";
+    // Update click counter (v3 schema: clicks field, id PK)
+    $update_query = "UPDATE links SET clicks = clicks + 1 WHERE id = ?";
     $stmt = mysqli_prepare($conn, $update_query);
     mysqli_stmt_bind_param($stmt, 'i', $link_id);
     mysqli_stmt_execute($stmt);
@@ -47,8 +47,8 @@
         $country = 'Local Network';
     }
     
-    // Insert analytics record (realtime tracking)
-    $analytics_query = "INSERT INTO link_analytics (link_id, referrer, user_agent, ip_address, country, city, clicked_at) 
+    // Insert analytics record (v3 schema: clicks table)
+    $analytics_query = "INSERT INTO clicks (link_id, referrer, user_agent, ip, country, city, clicked_at) 
                         VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $stmt_analytics = mysqli_prepare($conn, $analytics_query);
     if ($stmt_analytics) {
@@ -57,8 +57,8 @@
         mysqli_stmt_close($stmt_analytics);
     }
     
-    // Get link URL and redirect
-    $link_data = get_single_row("SELECT url FROM links WHERE link_id = ?", [$link_id], 'i');
+    // Get link URL and redirect (v3: id PK)
+    $link_data = get_single_row("SELECT url FROM links WHERE id = ?", [$link_id], 'i');
 
     if ($link_data && !empty($link_data['url'])){
         $url = $link_data['url'];

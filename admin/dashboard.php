@@ -80,21 +80,10 @@
         if (empty($title) || empty($url)) {
             $error = 'Judul dan URL harus diisi!';
         } else {
-            // Check if category_id column exists
-            $check_col = mysqli_query($conn, "SHOW COLUMNS FROM links LIKE 'category_id'");
-            $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
-
-            // Multi-profile: Update link within active profile
-            if ($has_categories) {
-                $query = "UPDATE links SET title = ?, url = ?, icon_class = ?, category_id = ? WHERE link_id = ? AND profile_id = ?";
-                $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $active_profile_id);
-            } else {
-                // Fallback to old schema
-                $query = "UPDATE links SET title = ?, url = ?, icon_class = ? WHERE link_id = ? AND profile_id = ?";
-                $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'sssii', $title, $url, $icon_class, $link_id, $active_profile_id);
-            }
+            // V3 schema: always has category_id
+            $query = "UPDATE links SET title = ?, url = ?, icon = ?, category_id = ? WHERE id = ? AND profile_id = ?";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $active_profile_id);
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Link berhasil diupdate!';
@@ -108,7 +97,7 @@
     if (isset($_GET['delete'])) {
         $link_id = intval($_GET['delete']);
         
-        $query = "DELETE FROM links WHERE link_id = ? AND profile_id = ?";
+        $query = "DELETE FROM links WHERE id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'ii', $link_id, $active_profile_id);
         
@@ -128,7 +117,7 @@
                 $link_id = intval($item['id']);
                 $order_index = intval($item['order']);
                 
-                $query = "UPDATE links SET order_index = ? WHERE link_id = ? AND profile_id = ?";
+                $query = "UPDATE links SET position = ? WHERE id = ? AND profile_id = ?";
                 $stmt = mysqli_prepare($conn, $query);
                 mysqli_stmt_bind_param($stmt, 'iii', $order_index, $link_id, $active_profile_id);
                 mysqli_stmt_execute($stmt);
@@ -138,13 +127,13 @@
             exit;
         }
     }
-    // Multi-profile: Load links for active profile only
-    $links = get_all_rows("SELECT * FROM links WHERE profile_id = ? ORDER BY order_index ASC", [$active_profile_id], 'i');
+    // Multi-profile: Load links for active profile only (v3 schema)
+    $links = get_all_rows("SELECT id as link_id, title, url, icon as icon_class, position as order_index, clicks as click_count, category_id, is_active FROM links WHERE profile_id = ? ORDER BY position ASC", [$active_profile_id], 'i');
     
     // Get analytics data for charts
     // Get link performance data (top 10 most clicked links) - Multi-profile
     $link_performance = get_all_rows(
-        "SELECT title, click_count FROM links WHERE profile_id = ? AND is_active = 1 ORDER BY click_count DESC LIMIT 10",
+        "SELECT title, clicks as click_count FROM links WHERE profile_id = ? AND is_active = 1 ORDER BY clicks DESC LIMIT 10",
         [$active_profile_id],
         'i'
     );
