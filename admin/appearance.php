@@ -2152,7 +2152,7 @@
                 })
                 .then(() => {
                     // Reload to Media tab to show uploaded image
-                    window.location.href = window.location.pathname + '?tab=media&uploaded=1';
+                    window.location.href = window.location.protocol + '//' + window.location.host + window.location.pathname + '?tab=media&uploaded=1';
                 })
                 .catch(error => {
                     alert('Error uploading background: ' + error.message);

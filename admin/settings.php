@@ -398,12 +398,10 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Get user's all profiles (slugs) with stats (using subquery method for better compatibility)
+// Get user's all profiles (slugs) with stats
 $user_slugs = [];
 $user_profiles = [];
-$slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
-                (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
-                (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
+$slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at
                 FROM profiles p
                 WHERE p.user_id = ?
                 ORDER BY p.display_order ASC, p.created_at ASC";
@@ -414,8 +412,34 @@ if ($slugs_stmt) {
     $slugs_result = mysqli_stmt_get_result($slugs_stmt);
     if ($slugs_result) {
         while ($row = mysqli_fetch_assoc($slugs_result)) {
+            // Manually fetch link count and clicks for this profile
+            $link_count_query = "SELECT COUNT(*) as count FROM links WHERE profile_id = ?";
+            $link_count_stmt = mysqli_prepare($conn, $link_count_query);
+            if ($link_count_stmt) {
+                mysqli_stmt_bind_param($link_count_stmt, 'i', $row['id']);
+                mysqli_stmt_execute($link_count_stmt);
+                $link_count_result = mysqli_stmt_get_result($link_count_stmt);
+                $link_count_data = mysqli_fetch_assoc($link_count_result);
+                $row['link_count'] = $link_count_data['count'] ?? 0;
+            } else {
+                $row['link_count'] = 0;
+            }
+            
+            // Fetch total clicks
+            $clicks_query = "SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id = ?";
+            $clicks_stmt = mysqli_prepare($conn, $clicks_query);
+            if ($clicks_stmt) {
+                mysqli_stmt_bind_param($clicks_stmt, 'i', $row['id']);
+                mysqli_stmt_execute($clicks_stmt);
+                $clicks_result = mysqli_stmt_get_result($clicks_stmt);
+                $clicks_data = mysqli_fetch_assoc($clicks_result);
+                $row['total_clicks'] = $clicks_data['total'] ?? 0;
+            } else {
+                $row['total_clicks'] = 0;
+            }
+            
             $user_slugs[] = $row;
-            $user_profiles[] = $row; // Also populate $user_profiles
+            $user_profiles[] = $row;
         }
     }
     mysqli_stmt_close($slugs_stmt);
