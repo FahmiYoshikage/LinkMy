@@ -127,16 +127,16 @@
     
     // Build query with actual column names from database
     if ($categories_exists && $enable_categories) {
-        // Query with categories JOIN using correct link_categories table structure
+        // Query with categories JOIN using v3 schema (categories_v3)
         // Multi-profile: Filter by profile_id instead of user_id
-        $links_query = "SELECT l.link_id, l.user_id, l.profile_id, l.title, l.url, l.order_index, 
-                        l.icon_class, l.click_count, l.is_active, l.created_at, l.category_id,
-                        c.category_name as category_name, c.category_icon as category_icon, 
-                        c.category_color as category_color, c.is_expanded as category_expanded
+        $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
+                        l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id,
+                        c.name as category_name, c.icon as category_icon, 
+                        c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
-                        LEFT JOIN link_categories c ON l.category_id = c.category_id
+                        LEFT JOIN categories_v3 c ON l.category_id = c.id
                         WHERE l.profile_id = ? AND l.is_active = 1
-                        ORDER BY l.order_index ASC, l.link_id ASC";
+                        ORDER BY l.position ASC, l.id ASC";
     } else {
         // Simple query without categories
         // Multi-profile: Filter by profile_id instead of user_id

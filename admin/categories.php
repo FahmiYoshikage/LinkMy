@@ -32,12 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
     } else {
-        $last_order = get_single_row("SELECT MAX(display_order) as max_order FROM link_categories WHERE profile_id = ?", [$active_profile_id], 'i');
+        $last_order = get_single_row("SELECT MAX(position) as max_order FROM categories_v3 WHERE profile_id = ?", [$active_profile_id], 'i');
         $new_order = ($last_order['max_order'] ?? 0) + 1;
         
-        $query = "INSERT INTO link_categories (user_id, profile_id, category_name, category_icon, category_color, display_order) VALUES (?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO categories_v3 (profile_id, name, icon, color, position) VALUES (?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'iisssi', $current_user_id, $active_profile_id, $category_name, $category_icon, $category_color, $new_order);
+        mysqli_stmt_bind_param($stmt, 'isssi', $active_profile_id, $category_name, $category_icon, $category_color, $new_order);
     
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Kategori berhasil ditambahkan!';
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
     } else {
-        $query = "UPDATE link_categories SET category_name = ?, category_icon = ?, category_color = ? WHERE category_id = ? AND profile_id = ?";
+        $query = "UPDATE categories_v3 SET name = ?, icon = ?, color = ? WHERE id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'sssii', $category_name, $category_icon, $category_color, $category_id, $active_profile_id);
         
@@ -78,7 +78,7 @@ if (isset($_GET['delete'])) {
     if ($check['count'] > 0) {
         $error = 'Kategori tidak bisa dihapus karena masih ada ' . $check['count'] . ' link!';
     } else {
-        $query = "DELETE FROM link_categories WHERE category_id = ? AND profile_id = ?";
+        $query = "DELETE FROM categories_v3 WHERE id = ? AND profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'ii', $category_id, $active_profile_id);
         
@@ -91,7 +91,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Load categories for active profile
-$categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link_categories c LEFT JOIN links l ON c.category_id = l.category_id WHERE c.profile_id = ? GROUP BY c.category_id ORDER BY c.display_order ASC", [$active_profile_id], 'i');
+$categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categories_v3 c LEFT JOIN links l ON c.id = l.category_id WHERE c.profile_id = ? GROUP BY c.id ORDER BY c.position ASC", [$active_profile_id], 'i');
 ?>
 <!DOCTYPE html>
 <html lang="id">

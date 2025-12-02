@@ -153,11 +153,11 @@
     $user_categories = [];
     try {
         // Check if table exists first
-        $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'link_categories'");
+        $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories_v3'");
         if ($check_table && mysqli_num_rows($check_table) > 0) {
             // Multi-profile: Load categories for active profile
             $user_categories = get_all_rows(
-                "SELECT category_id, category_name, category_icon, category_color FROM link_categories WHERE profile_id = ? ORDER BY display_order ASC",
+                "SELECT id as category_id, name as category_name, icon as category_icon, color as category_color FROM categories_v3 WHERE profile_id = ? ORDER BY position ASC",
                 [$active_profile_id],
                 'i'
             ) ?? [];
