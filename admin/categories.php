@@ -245,19 +245,19 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                     </div>
                 <?php else: ?>
                     <?php foreach ($categories as $cat): ?>
-                        <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color']) ?>;">
+                        <div class="category-card" data-id="<?= $cat['id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['color'] ?? '#667eea') ?>;">
                             <div class="d-flex align-items-center flex-wrap gap-3">
-                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color']) ?>;">
-                                    <i class="<?= htmlspecialchars($cat['category_icon']) ?>"></i>
+                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['color'] ?? '#667eea') ?>;">
+                                    <i class="<?= htmlspecialchars($cat['icon'] ?? 'bi-folder') ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h5 class="mb-1 fw-bold"><?= htmlspecialchars($cat['category_name']) ?></h5>
+                                    <h5 class="mb-1 fw-bold"><?= htmlspecialchars($cat['name']) ?></h5>
                                     <div class="d-flex align-items-center gap-3 flex-wrap">
                                         <span class="badge bg-light text-dark">
                                             <i class="bi bi-link-45deg"></i> <?= $cat['link_count'] ?> links
                                         </span>
                                         <small class="text-muted">
-                                            <code><?= htmlspecialchars($cat['category_icon']) ?></code>
+                                            <code><?= htmlspecialchars($cat['icon'] ?? 'bi-folder') ?></code>
                                         </small>
                                     </div>
                                 </div>

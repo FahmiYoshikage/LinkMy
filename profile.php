@@ -143,7 +143,7 @@
     } else {
         // Simple query without categories (v3 schema)
         $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
-                        l.icon as icon_class, l.clicks as click_count, l.is_active, l.created_at, l.category_id
+                        l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id
                         FROM links l
                         WHERE l.profile_id = ? AND l.is_active = 1
                         ORDER BY l.position ASC, l.id ASC";
@@ -167,9 +167,10 @@
     if ($links_result) {
         while ($row = mysqli_fetch_assoc($links_result)){
             // Add alias for compatibility with profile rendering code
-            // Database uses: link_id, title, icon_class
+            // Database v3 uses: link_id, title, icon
             // Code expects: link_id, link_title, icon_class
             $row['link_title'] = $row['title'];
+            $row['icon_class'] = $row['icon'] ?? 'bi-link-45deg';
             
             $links[] = $row;
             
@@ -207,45 +208,32 @@
         mysqli_stmt_close($stmt_links);
     }
 
-    // Determine background based on priority: bg_type=image > gradient > custom_bg_color > theme_name
+    // Determine background based on themes.bg_type and bg_value (v3)
     $background_css = '#ffffff';
     $text_color = $custom_text_color ?? '#333333';
     $is_gradient = false;
     $bg_image = null;
     
-    // Priority 0: Background image (v3: check themes.bg_type and bg_value)
-    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
-        $bg_image = $appearance['bg_value'];
+    // Use bg_type and bg_value directly from DB
+    if ($bg_type === 'image' && !empty($bg_value)) {
+        // Background image
+        $bg_image = $bg_value;
+        $background_css = '#667eea'; // fallback color behind image
         $text_color = $custom_text_color ?? '#ffffff';
-    }
-    // Priority 1: Gradient (from bg_type='gradient' and bg_value contains CSS)
-    elseif (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'gradient' && !empty($appearance['bg_value'])) {
-        $background_css = $appearance['bg_value'];
-        $text_color = $custom_text_color ?? '#ffffff';
-        $is_gradient = true;
-    }
-    // Priority 2: Gradient preset (legacy)
-    elseif (!empty($gradient_preset) && isset($gradient_presets[$gradient_preset])) {
-        $background_css = $gradient_presets[$gradient_preset];
+    } elseif ($bg_type === 'gradient' && !empty($bg_value)) {
+        // Gradient background from DB
+        $background_css = $bg_value;
         $text_color = $custom_text_color ?? '#ffffff';
         $is_gradient = true;
-    }
-    // Priority 3: Custom background color
-    elseif (!empty($custom_bg_color)) {
-        $background_css = $custom_bg_color;
+    } elseif ($bg_type === 'color' && !empty($bg_value)) {
+        // Solid color background from DB
+        $background_css = $bg_value;
         $text_color = $custom_text_color ?? '#333333';
-    }
-    // Priority 4: Theme name fallback
-    elseif ($theme_name === 'gradient') {
+    } else {
+        // Fallback: default gradient
         $background_css = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         $text_color = $custom_text_color ?? '#ffffff';
         $is_gradient = true;
-    } elseif ($theme_name === 'dark') {
-        $background_css = '#1a1a1a';
-        $text_color = $custom_text_color ?? '#ffffff';
-    } else {
-        $background_css = '#ffffff';
-        $text_color = $custom_text_color ?? '#333333';
     }
     
     // Button/link colors
@@ -604,7 +592,7 @@
                            target="_blank"
                            rel="noopener noreferrer">
                             <div class="link-icon" style="color: <?= $current_theme['link_text'] ?>;">
-                                <i class="<?= htmlspecialchars($link['icon_class'] ?? 'bi-link-45deg') ?>"></i>
+                                    <i class="<?= htmlspecialchars($link['icon'] ?? 'bi-link-45deg') ?>"></i>
                             </div>
                             <div class="flex-grow-1">
                                 <p class="link-title" style="color: <?= $current_theme['link_text'] ?>;"><?= htmlspecialchars($link['link_title'] ?? '') ?></p>
