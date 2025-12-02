@@ -72,10 +72,14 @@
     $boxed_layout = $user_data['boxed_enabled'] ?? 0;
     $outer_bg_type = $user_data['outer_bg_type'] ?? 'gradient';
     $outer_bg_value = $user_data['outer_bg_value'] ?? '';
+    $outer_bg_gradient_start = '#667eea';
+    $outer_bg_gradient_end = '#764ba2';
+    $outer_bg_color = '#f0f0f0';
     $container_bg_color = $user_data['container_bg_color'] ?? '#ffffff';
     $container_max_width = $user_data['container_max_width'] ?? 480;
     $container_border_radius = $user_data['container_radius'] ?? 30;
     $container_shadow = $user_data['container_shadow'] ?? 1;
+    $show_profile_border = $user_data['show_profile_border'] ?? 1;
     
     // Parse bg_value for gradient or image
     $bg_image = ($bg_type === 'image') ? $bg_value : '';
@@ -262,7 +266,8 @@
         'link_text' => $link_text_color,
         'link_hover_text' => $link_hover_text_color,
         'shadow_normal' => $shadow_normal,
-        'shadow_hover' => $shadow_hover
+        'shadow_hover' => $shadow_hover,
+        'shadow' => 'rgba(0, 0, 0, 0.2)' // For profile pic border
     ];
     $button_classes = [
         'rounded' => 'border-radius: 12px;',

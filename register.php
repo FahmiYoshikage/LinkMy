@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step1'])) {
     } elseif (strlen($password) < 6) {
         $error = 'Password minimal 6 karakter!';
     } else {
-        $check_email = get_single_row("SELECT user_id FROM users WHERE email = ?", [$email], 's');
+        $check_email = get_single_row("SELECT id FROM users WHERE email = ?", [$email], 's');
         
         if ($check_email) {
             $error = 'Email sudah terdaftar! Gunakan email lain atau <a href="login.php">login</a>.';
@@ -91,12 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step3'])) {
         } elseif (strlen($page_slug) < 3) {
             $error = 'Page slug minimal 3 karakter!';
         } else {
-            $check_username = get_single_row("SELECT user_id FROM users WHERE username = ?", [$username], 's');
+            $check_username = get_single_row("SELECT id FROM users WHERE username = ?", [$username], 's');
             
             if ($check_username) {
                 $error = 'Username sudah digunakan! Pilih yang lain.';
             } else {
-                $check_slug = get_single_row("SELECT user_id FROM users WHERE page_slug = ?", [$page_slug], 's');
+                $check_slug = get_single_row("SELECT id FROM profiles WHERE slug = ?", [$page_slug], 's');
                 
                 if ($check_slug) {
                     $error = 'Page slug sudah digunakan! Pilih yang lain.';
