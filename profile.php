@@ -120,10 +120,10 @@
     ];
 
     // Fetch links with correct column names from VPS database structure
-    // Column mapping: link_id (PK), user_id, title, url, order_index, icon_class, is_active, category_id
+    // Column mapping: id (PK), profile_id, title, url, position, icon, is_active, category_id
     
     $categories_exists = false;
-    $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories'");
+    $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories_v3'");
     if ($check_table && mysqli_num_rows($check_table) > 0) {
         $categories_exists = true;
     }

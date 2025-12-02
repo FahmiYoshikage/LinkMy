@@ -12,13 +12,13 @@ $error = '';
 
 // Get current user's profiles with stats (using subquery method for better compatibility)
 $user_profiles = [];
-$profiles_query = "SELECT p.profile_id, p.slug, p.profile_name, p.is_primary, p.is_active, p.created_at,
-                   p.profile_description, p.profile_title, p.bio, p.profile_pic_filename,
-                   (SELECT COUNT(*) FROM links WHERE profile_id = p.profile_id) as link_count,
-                   (SELECT COALESCE(SUM(click_count), 0) FROM links WHERE profile_id = p.profile_id) as total_clicks
+$profiles_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
+                   p.title, p.bio, p.avatar,
+                   (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
+                   (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
                    FROM profiles p
                    WHERE p.user_id = ?
-                   ORDER BY p.is_primary DESC, p.created_at ASC";
+                   ORDER BY p.display_order ASC, p.created_at ASC";
 $profiles_stmt = mysqli_prepare($conn, $profiles_query);
 if ($profiles_stmt) {
     mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
@@ -37,13 +37,18 @@ if ($profiles_stmt) {
 // Get active profile
 $active_profile_id = $_SESSION['active_profile_id'] ?? null;
 if (!$active_profile_id && !empty($user_profiles)) {
-    // Set to primary profile
+    // Set to primary profile (display_order = 0)
     foreach ($user_profiles as $prof) {
-        if ($prof['is_primary']) {
-            $active_profile_id = $prof['profile_id'];
+        if ($prof['display_order'] == 0) {
+            $active_profile_id = $prof['id'];
             $_SESSION['active_profile_id'] = $active_profile_id;
             break;
         }
+    }
+    // If no primary found, use first profile
+    if (!$active_profile_id && !empty($user_profiles)) {
+        $active_profile_id = $user_profiles[0]['id'];
+        $_SESSION['active_profile_id'] = $active_profile_id;
     }
 }
 
@@ -53,7 +58,7 @@ if (isset($_GET['switch_profile'])) {
     
     // Verify profile belongs to user
     $profile = get_single_row(
-        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
+        "SELECT * FROM profiles WHERE id = ? AND user_id = ?",
         [$profile_id, $current_user_id],
         'ii'
     );
@@ -61,12 +66,6 @@ if (isset($_GET['switch_profile'])) {
     if ($profile) {
         $_SESSION['active_profile_id'] = $profile_id;
         $_SESSION['page_slug'] = $profile['slug'];
-        
-        // Update user's active_profile_id
-        $update_query = "UPDATE users SET active_profile_id = ? WHERE user_id = ?";
-        $stmt = mysqli_prepare($conn, $update_query);
-        mysqli_stmt_bind_param($stmt, 'ii', $profile_id, $current_user_id);
-        mysqli_stmt_execute($stmt);
         
         $success = "Beralih ke profil: {$profile['profile_name']}";
         header("Location: dashboard.php");

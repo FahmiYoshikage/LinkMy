@@ -52,8 +52,26 @@
     $success = '';
     $error = '';
 
-    // Multi-profile: Load appearance for active profile
-    $appearance = get_single_row("SELECT * FROM user_appearance WHERE profile_id = ?", [$active_profile_id], 'i');
+    // Multi-profile: Load theme and profile for active profile
+    $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio 
+                                    FROM themes t 
+                                    LEFT JOIN profiles p ON t.profile_id = p.id 
+                                    WHERE t.profile_id = ?", [$active_profile_id], 'i');
+    
+    if (!$appearance) {
+        // Create default theme if not exists
+        $query = "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) 
+                  VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', '#667eea', '#333333')";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'i', $active_profile_id);
+        mysqli_stmt_execute($stmt);
+        
+        // Reload appearance
+        $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio 
+                                        FROM themes t 
+                                        LEFT JOIN profiles p ON t.profile_id = p.id 
+                                        WHERE t.profile_id = ?", [$active_profile_id], 'i');
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
         $profile_title = trim($_POST['profile_title']);
