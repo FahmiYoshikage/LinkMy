@@ -428,10 +428,6 @@ foreach ($profiles_list as $profile) {
     $user_slugs[] = $profile;
     $user_profiles[] = $profile;
 }
-    mysqli_stmt_close($slugs_stmt);
-} else {
-    error_log("Error preparing slugs query: " . mysqli_error($conn));
-}
 
 // Totals across user's profiles
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['count'];

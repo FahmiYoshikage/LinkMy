@@ -141,8 +141,7 @@
     $container_shadow = $user_data['container_shadow'] ?? 1;
     $show_profile_border = $user_data['show_profile_border'] ?? 1;
     
-    // Parse bg_value for gradient or image
-    $bg_image = ($bg_type === 'image') ? $bg_value : '';
+    // Parse bg_value for gradient or image (already set above at line 90)
     $gradient_css = ($bg_type === 'gradient') ? $bg_value : '';
     $custom_bg_color = ($bg_type === 'color') ? $bg_value : null;
     $enable_categories = 1; // v3 always supports categories
@@ -242,12 +241,11 @@
     $background_css = '#ffffff';
     $text_color = $custom_text_color ?? '#333333';
     $is_gradient = false;
-    $bg_image = null;
+    // Note: $bg_image already set at line 90-93
     
     // Use bg_type and bg_value directly from DB
     if ($bg_type === 'image' && !empty($bg_value)) {
-        // Background image
-        $bg_image = $bg_value;
+        // Background image (bg_image already set above)
         $background_css = '#667eea'; // fallback color behind image
         $text_color = $custom_text_color ?? '#ffffff';
     } elseif ($bg_type === 'gradient' && !empty($bg_value)) {

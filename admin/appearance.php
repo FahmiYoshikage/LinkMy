@@ -2695,6 +2695,17 @@
             endif; 
             ?>
             
+            <?php if (isset($_GET['uploaded']) && !empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])): ?>
+            // Update preview background with uploaded image
+            const previewContent = document.getElementById('previewContent');
+            if (previewContent) {
+                const bgImage = '../uploads/backgrounds/<?= $appearance['bg_value'] ?>';
+                previewContent.style.backgroundImage = `url(${bgImage})`;
+                previewContent.style.backgroundSize = 'cover';
+                previewContent.style.backgroundPosition = 'center';
+            }
+            <?php endif; ?>
+            
             <?php if (isset($_SESSION['show_boxed_tab'])): ?>
             // Switch to Boxed Layout tab
             const boxedTab = document.querySelector('[href="#boxed-layout-tab"]');
