@@ -166,8 +166,8 @@
         "SELECT 
             DATE(clicked_at) as date,
             COUNT(*) as clicks
-        FROM link_analytics la
-        INNER JOIN links l ON la.link_id = l.link_id
+        FROM clicks c
+        INNER JOIN links l ON c.link_id = l.id
         WHERE l.profile_id = ? 
           AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
           AND DATE(clicked_at) <= CURDATE()
@@ -196,8 +196,8 @@
                 ELSE COALESCE(NULLIF(country, ''), 'Unknown')
             END as location,
             COUNT(*) as clicks
-        FROM link_analytics la
-        INNER JOIN links l ON la.link_id = l.link_id
+        FROM clicks c
+        INNER JOIN links l ON c.link_id = l.id
         WHERE l.profile_id = ?
         GROUP BY location
         ORDER BY clicks DESC
@@ -211,13 +211,13 @@
         $click_by_location = get_all_rows(
             "SELECT 
                 CASE 
-                    WHEN ip_address LIKE '172.%' OR ip_address LIKE '192.168.%' THEN 'Local Network'
-                    WHEN ip_address IS NULL OR ip_address = '' THEN 'Unknown'
-                    ELSE CONCAT('IP: ', SUBSTRING(ip_address, 1, 10), '...')
+                    WHEN ip LIKE '172.%' OR ip LIKE '192.168.%' THEN 'Local Network'
+                    WHEN ip IS NULL OR ip = '' THEN 'Unknown'
+                    ELSE CONCAT('IP: ', SUBSTRING(ip, 1, 10), '...')
                 END as location,
                 COUNT(*) as clicks
-            FROM link_analytics la
-            INNER JOIN links l ON la.link_id = l.link_id
+            FROM clicks c
+            INNER JOIN links l ON c.link_id = l.id
             WHERE l.profile_id = ?
             GROUP BY location
             ORDER BY clicks DESC
