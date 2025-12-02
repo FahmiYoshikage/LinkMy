@@ -342,7 +342,7 @@
             background-attachment: fixed;
             <?php else: ?>
             /* Non-boxed mode: Use theme background directly */
-            background: <?= $current_theme['bg'] ?>;
+            background: <?= $background_css ?>;
             <?php if ($is_gradient): ?>
             background-attachment: fixed;
             <?php endif; ?>

@@ -294,6 +294,7 @@
         $custom_button_color = !empty($_POST['custom_button_color']) ? $_POST['custom_button_color'] : null;
         $custom_text_color = !empty($_POST['custom_text_color']) ? $_POST['custom_text_color'] : null;
         $custom_link_text_color = !empty($_POST['custom_link_text_color']) ? $_POST['custom_link_text_color'] : null;
+        $button_style = !empty($_POST['button_style']) ? $_POST['button_style'] : 'rounded';
         $profile_layout = !empty($_POST['profile_layout']) ? $_POST['profile_layout'] : 'centered';
         $container_style = !empty($_POST['container_style']) ? $_POST['container_style'] : 'wide';
         $enable_categories = isset($_POST['enable_categories']) ? 1 : 0;
@@ -336,7 +337,7 @@
             $bg_type = $current_bg_type;
         }
         
-        $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
+        $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         
         if (!$stmt) {
@@ -344,8 +345,8 @@
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
             // Multi-profile: Update advanced settings for active profile
-            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiisi', 
-                $bg_type, $bg_value, $custom_button_color, $custom_text_color,
+            $bind_result = mysqli_stmt_bind_param($stmt, 'sssssssiisi', 
+                $bg_type, $bg_value, $button_style, $custom_button_color, $custom_text_color,
                 $profile_layout, $container_style, $enable_animations, $enable_glass_effect, $shadow_intensity, $active_profile_id);
             
             if (!$bind_result) {
@@ -423,15 +424,17 @@
             // Reload full appearance data including boxed settings
             $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
             
-            // Also reload boxed layout data
+            // CRITICAL: Also reload boxed layout data with correct mapping
             $boxed_data = get_single_row("SELECT * FROM theme_boxed WHERE theme_id = ?", [$theme_id], 'i');
             if ($boxed_data) {
-                $appearance['boxed_enabled'] = $boxed_data['enabled'];
+                $appearance['boxed_layout'] = (int)$boxed_data['enabled']; // Map enabled -> boxed_layout
                 $appearance['outer_bg_type'] = $boxed_data['outer_bg_type'];
                 $appearance['outer_bg_value'] = $boxed_data['outer_bg_value'];
-                $appearance['container_max_width'] = $boxed_data['container_max_width'];
-                $appearance['container_border_radius'] = $boxed_data['container_radius'];
-                $appearance['container_shadow'] = $boxed_data['container_shadow'];
+                $appearance['container_max_width'] = (int)$boxed_data['container_max_width'];
+                $appearance['container_border_radius'] = (int)$boxed_data['container_radius'];
+                $appearance['container_shadow'] = (int)$boxed_data['container_shadow'];
+            } else {
+                $appearance['boxed_layout'] = 0; // Ensure defaults
             }
             
             $_SESSION['show_boxed_tab'] = true;
@@ -1293,7 +1296,7 @@
                                                     <input class="form-check-input" type="checkbox" name="show_profile_border" 
                                                            id="showProfileBorder" value="1" <?= ($appearance['show_profile_border'] ?? 1) ? 'checked' : '' ?>>
                                                     <label class="form-check-label" for="showProfileBorder">
-                                                        <i class="bi bi-circle"></i> Profile Border
+                                                        <i class="bi"></i> Profile Border
                                                     </label>
                                                 </div>
                                             </div>
