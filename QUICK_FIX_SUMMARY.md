@@ -42,11 +42,13 @@ preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
 ### Option 1: Automatic (Recommended)
 
 **Windows:**
+
 ```powershell
 .\upgrade_docker.bat
 ```
 
 **Ubuntu/Linux:**
+
 ```bash
 chmod +x upgrade_docker.sh
 ./upgrade_docker.sh
@@ -55,6 +57,7 @@ chmod +x upgrade_docker.sh
 ### Option 2: Manual
 
 **All platforms:**
+
 ```bash
 # Stop containers
 docker-compose down

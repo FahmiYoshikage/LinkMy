@@ -101,11 +101,13 @@ preg_match_all('/DELIMITER \$\$(.*?)DELIMITER ;/s', $schema, $procedures);
 ### Quick Start (Automated)
 
 **Windows:**
+
 ```powershell
 .\upgrade_docker.bat
 ```
 
 **Ubuntu/Linux:**
+
 ```bash
 chmod +x upgrade_docker.sh
 ./upgrade_docker.sh

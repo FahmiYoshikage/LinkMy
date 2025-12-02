@@ -1,17 +1,21 @@
 # 🚨 URGENT FIX: MySQL 8.4 Boot Loop Issue
 
 ## Problem
+
 MySQL 8.4 keeps restarting with error:
+
 ```
 [ERROR] [MY-000067] [Server] unknown variable 'default-authentication-plugin=mysql_native_password'
 ```
 
 ## Root Cause
+
 MySQL 8.4 **removed** the deprecated parameter `--default-authentication-plugin`. This parameter was deprecated in MySQL 8.0 and completely removed in 8.4.
 
 ## Solution Applied ✅
 
 **Changed in `docker-compose.yml`:**
+
 ```yaml
 # ❌ OLD (BROKEN)
 command: --default-authentication-plugin=mysql_native_password --sql-mode="..."
@@ -23,23 +27,27 @@ command: --sql-mode="..." --authentication-policy=mysql_native_password
 ## How to Apply Fix on Server
 
 ### Step 1: Pull Latest Changes
+
 ```bash
 cd /opt/LinkMy
 git pull origin master
 ```
 
 ### Step 2: Stop and Remove Failing Container
+
 ```bash
 docker-compose down
 docker rm -f linkmy_mysql 2>/dev/null || true
 ```
 
 ### Step 3: Start Fresh
+
 ```bash
 docker-compose up -d
 ```
 
 ### Step 4: Verify MySQL Started Successfully
+
 ```bash
 # Check logs (should not show error anymore)
 docker logs linkmy_mysql
@@ -49,6 +57,7 @@ docker logs linkmy_mysql
 ```
 
 ### Step 5: Test Connection
+
 ```bash
 docker exec linkmy_mysql mysql -u root -prootpassword -e "SELECT VERSION();"
 # Should output: 8.4.7
@@ -58,11 +67,11 @@ docker exec linkmy_mysql mysql -u root -prootpassword -e "SELECT VERSION();"
 
 ## Why This Happened
 
-| MySQL Version | Parameter                          | Status     |
-|---------------|------------------------------------|------------|
-| 8.0.x         | `--default-authentication-plugin` | Deprecated ⚠️ |
+| MySQL Version | Parameter                         | Status         |
+| ------------- | --------------------------------- | -------------- |
+| 8.0.x         | `--default-authentication-plugin` | Deprecated ⚠️  |
 | 8.4.x         | `--default-authentication-plugin` | **Removed** ❌ |
-| 8.4.x         | `--authentication-policy`         | **New** ✅ |
+| 8.4.x         | `--authentication-policy`         | **New** ✅     |
 
 MySQL 8.4 introduced a new parameter `--authentication-policy` to replace the old one.
 
@@ -75,7 +84,7 @@ If you want to avoid these breaking changes, you can use MySQL 8.0 LTS instead:
 ```yaml
 # In docker-compose.yml
 db:
-    image: mysql:8.0.40  # Specific LTS version
+    image: mysql:8.0.40 # Specific LTS version
     command: --default-authentication-plugin=mysql_native_password --sql-mode="..."
 ```
 
@@ -134,6 +143,7 @@ linkmy_phpmyadmin Up 20 seconds
 ## Rollback (If Needed)
 
 If something breaks:
+
 ```bash
 cd /opt/LinkMy
 git checkout HEAD~1 -- docker-compose.yml
