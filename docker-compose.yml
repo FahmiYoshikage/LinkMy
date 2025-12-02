@@ -4,7 +4,8 @@ services:
         image: mysql:8.4-oracle
         container_name: linkmy_mysql
         restart: always
-        command: --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION" --authentication-policy=mysql_native_password
+        # MySQL 8.4: remove deprecated/invalid auth options; set desired sql-mode & charset
+        command: --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION" --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         environment:
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
             MYSQL_DATABASE: ${DB_NAME:-linkmy_db}
