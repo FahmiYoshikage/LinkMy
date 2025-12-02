@@ -14,14 +14,14 @@ require_once __DIR__ . '/../config/db.php';
 $user_profiles = [];
 $active_profile_name = 'Profile';
 if (isset($_SESSION['user_id'])) {
-    $stmt = mysqli_prepare($conn, "SELECT profile_id, profile_name, slug, is_primary FROM profiles WHERE user_id = ? ORDER BY is_primary DESC, created_at ASC");
+    $stmt = mysqli_prepare($conn, "SELECT id, name, slug, display_order FROM profiles WHERE user_id = ? ORDER BY display_order ASC, created_at ASC");
     mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     while ($row = mysqli_fetch_assoc($result)) {
         $user_profiles[] = $row;
-        if (isset($_SESSION['active_profile_id']) && $row['profile_id'] == $_SESSION['active_profile_id']) {
-            $active_profile_name = $row['profile_name'];
+        if (isset($_SESSION['active_profile_id']) && $row['id'] == $_SESSION['active_profile_id']) {
+            $active_profile_name = $row['name'];
         }
     }
     mysqli_stmt_close($stmt);
@@ -74,10 +74,10 @@ if (isset($_SESSION['user_id'])) {
                         <li><h6 class="dropdown-header">Switch Profile</h6></li>
                         <?php foreach ($user_profiles as $profile): ?>
                             <li>
-                                <a class="dropdown-item <?= (isset($_SESSION['active_profile_id']) && $profile['profile_id'] == $_SESSION['active_profile_id']) ? 'active' : '' ?>" 
-                                   href="profiles.php?switch_profile=<?= $profile['profile_id'] ?>">
-                                    <?= $profile['is_primary'] ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
-                                    <?= htmlspecialchars($profile['profile_name']) ?>
+                                <a class="dropdown-item <?= (isset($_SESSION['active_profile_id']) && $profile['id'] == $_SESSION['active_profile_id']) ? 'active' : '' ?>" 
+                                   href="profiles.php?switch_profile=<?= $profile['id'] ?>">
+                                    <?= $profile['display_order'] == 0 ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
+                                    <?= htmlspecialchars($profile['name']) ?>
                                     <small class="text-muted">(<?= htmlspecialchars($profile['slug']) ?>)</small>
                                 </a>
                             </li>

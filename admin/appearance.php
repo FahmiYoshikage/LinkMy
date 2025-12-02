@@ -9,12 +9,12 @@
     if (!$active_profile_id) {
         // Get user's primary profile
         $primary_profile = get_single_row(
-            "SELECT profile_id FROM profiles WHERE user_id = ? AND is_primary = 1",
+            "SELECT id FROM profiles WHERE user_id = ? AND display_order = 0 ORDER BY id ASC LIMIT 1",
             [$current_user_id],
             'i'
         );
         if ($primary_profile) {
-            $active_profile_id = $primary_profile['profile_id'];
+            $active_profile_id = $primary_profile['id'];
             $_SESSION['active_profile_id'] = $active_profile_id;
         }
     }
