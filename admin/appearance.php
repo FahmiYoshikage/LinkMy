@@ -233,33 +233,21 @@
         }
     }
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_theme'])) {
-        $theme_name = $_POST['theme_name'];
         $button_style = $_POST['button_style'];
         
-        // Determine bg_type and bg_value based on theme_name
-        if ($theme_name === 'gradient') {
-            $bg_type = 'gradient';
-            $bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        } elseif ($theme_name === 'dark') {
-            $bg_type = 'color';
-            $bg_value = '#1a1a1a';
-        } else { // light
-            $bg_type = 'color';
-            $bg_value = '#ffffff';
-        }
-        
-        // Multi-profile: Update theme for active profile
-        $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ? WHERE profile_id = ?";
+        // ONLY update button_style, DO NOT touch bg_type or bg_value
+        $query = "UPDATE themes SET button_style = ? WHERE profile_id = ?";
         $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'sssi', $bg_type, $bg_value, $button_style, $active_profile_id);
+        mysqli_stmt_bind_param($stmt, 'si', $button_style, $active_profile_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            $success = 'Tema berhasil diupdate!';
-            $appearance['bg_type'] = $bg_type;
-            $appearance['bg_value'] = $bg_value;
+            $success = 'Button style berhasil diupdate!';
             $appearance['button_style'] = $button_style;
+            
+            // Reload full appearance data
+            $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
         } else {
-            $error = 'Gagal mengupdate tema!';
+            $error = 'Gagal mengupdate button style!';
         }
     }
 
@@ -420,8 +408,21 @@
 
         if (mysqli_stmt_execute($upd)) {
             $success = '✅ Boxed Layout berhasil disimpan!';
-            // Reload appearance for active profile
+            
+            // Reload full appearance data including boxed settings
             $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
+            
+            // Also reload boxed layout data
+            $boxed_data = get_single_row("SELECT * FROM theme_boxed WHERE theme_id = ?", [$theme_id], 'i');
+            if ($boxed_data) {
+                $appearance['boxed_enabled'] = $boxed_data['enabled'];
+                $appearance['outer_bg_type'] = $boxed_data['outer_bg_type'];
+                $appearance['outer_bg_value'] = $boxed_data['outer_bg_value'];
+                $appearance['container_max_width'] = $boxed_data['container_max_width'];
+                $appearance['container_border_radius'] = $boxed_data['container_radius'];
+                $appearance['container_shadow'] = $boxed_data['container_shadow'];
+            }
+            
             $_SESSION['show_boxed_tab'] = true;
         } else {
             $error = 'Gagal menyimpan Boxed Layout!';
@@ -1006,17 +1007,12 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#theme-tab">
-                            <i class="bi bi-palette me-2"></i>Theme
+                            <i class="bi bi-palette me-2"></i>Theme & Colors
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#media-tab">
                             <i class="bi bi-image me-2"></i>Media
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#advanced-tab">
-                            <i class="bi bi-magic me-2"></i>Advanced
                         </a>
                     </li>
                     <li class="nav-item">
@@ -1059,110 +1055,176 @@
                         </div>
                     </div>
                     
-                    <!-- Theme Tab -->
+                    <!-- Theme & Colors Tab (Merged from Theme + Advanced) -->
                     <div class="tab-pane fade" id="theme-tab">
                         <div class="card mb-4">
                             <div class="card-body">
                                 <h5 class="card-title fw-bold mb-4">
-                                    <i class="bi bi-palette text-primary"></i> Color Theme
+                                    <i class="bi bi-palette2 text-primary"></i> Background & Colors
                                 </h5>
-                                <form method="POST" id="themeForm">
+                                <form method="POST" id="advancedForm">
+                                    <!-- Gradient Presets -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-rainbow text-primary me-2"></i>Gradient Backgrounds
+                                    </h6>
+                                    <p class="text-muted mb-3">Pilih gradient preset yang sudah jadi</p>
+                                    
                                     <div class="row g-3 mb-4">
-                                        <div class="col-md-4">
-                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? 'light') == 'light' ? 'active' : '' ?>" onclick="selectTheme('light')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body" style="background: #ffffff;">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div style="width: 30px; height: 30px; background: #333; border-radius: 50%; margin-right: 10px;"></div>
-                                                        <div style="flex: 1; height: 10px; background: #333; border-radius: 5px;"></div>
+                                        <?php $shown_presets = array_slice($gradient_presets, 0, 12); // Show 12 gradients ?>
+                                        <?php foreach ($shown_presets as $preset): ?>
+                                        <div class="col-md-3 col-6">
+                                            <label style="cursor: pointer; display: block; margin: 0;">
+                                                <input type="radio" name="gradient_preset" value="<?= htmlspecialchars($preset['preset_name']) ?>" 
+                                                       <?= ($appearance['gradient_preset'] ?? '') == $preset['preset_name'] ? 'checked' : '' ?>
+                                                       style="position: absolute; opacity: 0; pointer-events: none;"
+                                                       onchange="selectGradientFromRadio(this, '<?= htmlspecialchars($preset['gradient_css']) ?>')">
+                                                <div class="gradient-preset-card <?= ($appearance['gradient_preset'] ?? '') == $preset['preset_name'] ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="gradient-preview" style="background: <?= htmlspecialchars($preset['gradient_css']) ?>;">
+                                                        <div class="gradient-colors">
+                                                            <span class="color-dot" style="background: <?= htmlspecialchars($preset['preview_color_1']) ?>;"></span>
+                                                            <span class="color-dot" style="background: <?= htmlspecialchars($preset['preview_color_2']) ?>;"></span>
+                                                        </div>
                                                     </div>
-                                                    <div style="height: 40px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 8px;"></div>
-                                                    <div style="height: 40px; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px;"></div>
+                                                    <p class="gradient-name"><?= htmlspecialchars($preset['preset_name']) ?></p>
                                                 </div>
-                                                <div class="card-footer text-center bg-white">
-                                                    <i class="bi bi-sun-fill text-warning display-6"></i>
-                                                    <p class="mb-0 mt-2 fw-bold">Light</p>
-                                                    <small class="text-muted">Clean & bright</small>
-                                                </div>
-                                            </div>
-                                            <input type="radio" name="theme_name" value="light" <?= ($appearance['theme_name'] ?? 'light') == 'light' ? 'checked' : '' ?> hidden>
+                                            </label>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? '') == 'dark' ? 'active' : '' ?>" onclick="selectTheme('dark')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body" style="background: #1a1a1a;">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div style="width: 30px; height: 30px; background: #ffffff; border-radius: 50%; margin-right: 10px;"></div>
-                                                        <div style="flex: 1; height: 10px; background: #ffffff; border-radius: 5px;"></div>
-                                                    </div>
-                                                    <div style="height: 40px; background: #2d2d2d; border: 2px solid #444; border-radius: 8px; margin-bottom: 8px;"></div>
-                                                    <div style="height: 40px; background: #2d2d2d; border: 2px solid #444; border-radius: 8px;"></div>
-                                                </div>
-                                                <div class="card-footer text-center bg-white">
-                                                    <i class="bi bi-moon-stars-fill text-dark display-6"></i>
-                                                    <p class="mb-0 mt-2 fw-bold">Dark</p>
-                                                    <small class="text-muted">Sleek & modern</small>
-                                                </div>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <hr class="my-4">
+
+                                    <!-- Custom Colors Section -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-droplet text-primary me-2"></i>Custom Colors
+                                    </h6>
+                                    <p class="text-muted small mb-3">Atau buat kombinasi warna sendiri</p>
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Background</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_bg_color" id="customBgColor"
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>"
+                                                       id="customBgColorHex" readonly>
                                             </div>
-                                            <input type="radio" name="theme_name" value="dark" <?= ($appearance['theme_name'] ?? '') == 'dark' ? 'checked' : '' ?> hidden>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="theme-card card h-100 <?= ($appearance['theme_name'] ?? '') == 'gradient' ? 'active' : '' ?>" onclick="selectTheme('gradient')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                                    <div class="d-flex align-items-center mb-2">
-                                                        <div style="width: 30px; height: 30px; background: rgba(255,255,255,0.9); border-radius: 50%; margin-right: 10px;"></div>
-                                                        <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.9); border-radius: 5px;"></div>
-                                                    </div>
-                                                    <div style="height: 40px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; margin-bottom: 8px;"></div>
-                                                    <div style="height: 40px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px;"></div>
-                                                </div>
-                                                <div class="card-footer text-center bg-white">
-                                                    <i class="bi bi-rainbow display-6" style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                                                    <p class="mb-0 mt-2 fw-bold">Gradient</p>
-                                                    <small class="text-muted">Colorful & vibrant</small>
-                                                </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Button</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_button_color" id="customButtonColor"
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>"
+                                                       id="customButtonColorHex" readonly>
                                             </div>
-                                            <input type="radio" name="theme_name" value="gradient" <?= ($appearance['theme_name'] ?? '') == 'gradient' ? 'checked' : '' ?> hidden>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Text</label>
+                                            <div class="color-picker-wrapper">
+                                                <input type="color" class="form-control form-control-color" 
+                                                       name="custom_text_color" id="customTextColor"
+                                                       value="<?= htmlspecialchars($appearance['text_color'] ?? '#ffffff') ?>">
+                                                <input type="text" class="form-control form-control-sm mt-1" 
+                                                       value="<?= htmlspecialchars($appearance['text_color'] ?? '#ffffff') ?>"
+                                                       id="customTextColorHex" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Shadow</label>
+                                            <select class="form-select" name="shadow_intensity" id="shadowIntensity">
+                                                <option value="none" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'none' ? 'selected' : '' ?>>None</option>
+                                                <option value="light" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'light' ? 'selected' : '' ?>>Light</option>
+                                                <option value="medium" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'medium' ? 'selected' : '' ?>>Medium</option>
+                                                <option value="heavy" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'heavy' ? 'selected' : '' ?>>Heavy</option>
+                                            </select>
                                         </div>
                                     </div>
 
+                                    <hr class="my-4">
+
+                                    <!-- Button Style -->
                                     <h6 class="fw-bold mb-3"><i class="bi bi-square text-primary me-2"></i>Button Style</h6>
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-4">
-                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'active' : '' ?>" onclick="selectButtonStyle('rounded')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body">
-                                                    <div class="button-preview" style="border-radius: 12px;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
-                                                    <p class="mt-3 mb-0 fw-semibold">Rounded</p>
+                                            <label style="cursor: pointer; display: block;">
+                                                <input type="radio" name="button_style" value="rounded" <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'checked' : '' ?> hidden>
+                                                <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="card-body">
+                                                        <div class="button-preview" style="border-radius: 12px;"><i class="bi bi-link-45deg me-2"></i>Link</div>
+                                                        <p class="mt-3 mb-0 fw-semibold">Rounded</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <input type="radio" name="button_style" value="rounded" <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'checked' : '' ?> hidden>
+                                            </label>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'active' : '' ?>" onclick="selectButtonStyle('sharp')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body">
-                                                    <div class="button-preview" style="border-radius: 0;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
-                                                    <p class="mt-3 mb-0 fw-semibold">Sharp</p>
+                                            <label style="cursor: pointer; display: block;">
+                                                <input type="radio" name="button_style" value="sharp" <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'checked' : '' ?> hidden>
+                                                <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="card-body">
+                                                        <div class="button-preview" style="border-radius: 0;"><i class="bi bi-link-45deg me-2"></i>Link</div>
+                                                        <p class="mt-3 mb-0 fw-semibold">Sharp</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <input type="radio" name="button_style" value="sharp" <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'checked' : '' ?> hidden>
+                                            </label>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'pill' ? 'active' : '' ?>" onclick="selectButtonStyle('pill')">
-                                                <div class="check-badge"><i class="bi bi-check-lg"></i></div>
-                                                <div class="card-body">
-                                                    <div class="button-preview" style="border-radius: 50px;"><i class="bi bi-link-45deg me-2"></i>Link Button</div>
-                                                    <p class="mt-3 mb-0 fw-semibold">Pill</p>
+                                            <label style="cursor: pointer; display: block;">
+                                                <input type="radio" name="button_style" value="pill" <?= ($appearance['button_style'] ?? '') == 'pill' ? 'checked' : '' ?> hidden>
+                                                <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'pill' ? 'active' : '' ?>">
+                                                    <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                                                    <div class="card-body">
+                                                        <div class="button-preview" style="border-radius: 50px;"><i class="bi bi-link-45deg me-2"></i>Link</div>
+                                                        <p class="mt-3 mb-0 fw-semibold">Pill</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <input type="radio" name="button_style" value="pill" <?= ($appearance['button_style'] ?? '') == 'pill' ? 'checked' : '' ?> hidden>
+                                            </label>
                                         </div>
                                     </div>
 
-                                    <button type="submit" name="update_theme" class="btn btn-primary btn-lg">
-                                        <i class="bi bi-save me-2"></i>Save Theme Settings
+                                    <hr class="my-4">
+
+                                    <!-- Layout Options -->
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="bi bi-layout-text-window text-primary me-2"></i>Layout & Style
+                                    </h6>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Profile Layout</label>
+                                            <select class="form-select" name="profile_layout">
+                                                <option value="centered" <?= ($appearance['layout'] ?? 'centered') == 'centered' ? 'selected' : '' ?>>Centered</option>
+                                                <option value="left" <?= ($appearance['layout'] ?? '') == 'left' ? 'selected' : '' ?>>Left Aligned</option>
+                                                <option value="minimal" <?= ($appearance['layout'] ?? '') == 'minimal' ? 'selected' : '' ?>>Minimal</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Container Style</label>
+                                            <select class="form-select" name="container_style">
+                                                <option value="wide" <?= ($appearance['container_style'] ?? 'wide') == 'wide' ? 'selected' : '' ?>>Wide - Full Width</option>
+                                                <option value="boxed" <?= ($appearance['container_style'] ?? '') == 'boxed' ? 'selected' : '' ?>>Boxed - Linktree Style</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Animations</label>
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="enable_animations" 
+                                                       id="enableAnimations" value="1" <?= ($appearance['enable_animations'] ?? 1) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="enableAnimations">
+                                                    Enable Animations
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" name="update_advanced" class="btn btn-success btn-lg w-100">
+                                        <i class="bi bi-save me-2"></i>Save Theme & Colors
                                     </button>
                                 </form>
                             </div>
@@ -1368,8 +1430,8 @@
                         </div>
                     </div>
 
-                    <!-- Advanced Tab -->
-                    <div class="tab-pane fade" id="advanced-tab">
+                    <!-- Advanced Tab (MERGED INTO THEME TAB) -->
+                    <div class="tab-pane fade" id="advanced-tab" style="display:none;">
                         <!-- Gradient Presets -->
                         <div class="card mb-4">
                             <div class="card-body">

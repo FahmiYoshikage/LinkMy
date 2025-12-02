@@ -53,12 +53,6 @@ if (isset($_SESSION['user_id'])) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= $current_page === 'profiles.php' ? 'active' : '' ?>" href="profiles.php">
-                        <i class="bi bi-person-badge"></i> Profiles
-                        <span class="badge bg-primary ms-1">Multi</span>
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'settings.php' ? 'active' : '' ?>" href="settings.php">
                         <i class="bi bi-gear-fill"></i> Settings
                     </a>
@@ -83,7 +77,7 @@ if (isset($_SESSION['user_id'])) {
                             </li>
                         <?php endforeach; ?>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="profiles.php"><i class="bi bi-plus-circle"></i> Manage Profiles</a></li>
+                        <li><a class="dropdown-item" href="settings.php"><i class="bi bi-gear"></i> Profile Settings</a></li>
                     </ul>
                 </li>
                 <?php endif; ?>
