@@ -199,6 +199,10 @@
                         $success = 'Background berhasil diupload!';
                         $appearance['bg_type'] = 'image';
                         $appearance['bg_value'] = $new_filename;
+                        $_SESSION['show_media_tab'] = true; // Stay on Media tab
+                        
+                        // Reload appearance data
+                        $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
                     } else {
                         $error = 'Gagal menyimpan background ke database!';
                     }
@@ -2122,6 +2126,11 @@
             
             if (!canvas) return;
             
+            // Close modal first
+            if (bgCropModal) {
+                bgCropModal.hide();
+            }
+            
             // Show loading
             showLoading();
             
@@ -2131,20 +2140,26 @@
                 formData.append('bg_image', blob, 'background.jpg');
                 formData.append('upload_background', '1');
                 
-                fetch('', {
+                fetch(window.location.href, {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+                    return response.text();
+                })
                 .then(() => {
-                    // Reload page to show new background
-                    window.location.reload();
+                    // Reload to Media tab to show uploaded image
+                    window.location.href = window.location.pathname + '?tab=media&uploaded=1';
                 })
                 .catch(error => {
-                    alert('Error uploading background: ' + error);
-                    document.getElementById('loadingOverlay').classList.remove('show');
+                    alert('Error uploading background: ' + error.message);
+                    document.getElementById('loadingOverlay')?.classList.remove('show');
+                    resetBgCropper();
                 });
-            }, 'image/jpeg', 0.9);
+            }, 'image/jpeg', 0.92);
         }
         
         function resetBgCropper() {
@@ -2632,7 +2647,7 @@
             }
         }
         
-        // Scroll to alert and switch to Advanced tab after page load (if success/error exists)
+        // Scroll to alert and switch to tab after page load (if success/error exists)
         window.addEventListener('DOMContentLoaded', function() {
             <?php if (isset($_SESSION['show_advanced_tab'])): ?>
             // Switch to Advanced tab
@@ -2643,6 +2658,18 @@
             }
             <?php 
                 unset($_SESSION['show_advanced_tab']); 
+            endif; 
+            ?>
+            
+            <?php if (isset($_SESSION['show_media_tab'])): ?>
+            // Switch to Media tab
+            const mediaTab = document.querySelector('[href="#media-tab"]');
+            if (mediaTab) {
+                const tab = new bootstrap.Tab(mediaTab);
+                tab.show();
+            }
+            <?php 
+                unset($_SESSION['show_media_tab']); 
             endif; 
             ?>
             

@@ -616,14 +616,17 @@ if (isset($_GET['debug'])) {
                             <span class="badge bg-warning text-dark ms-2">Verifikasi OTP</span>
                         </h5>
                         
-                        <div class="alert alert-info">
+                        <div class="alert alert-info mb-4">
                             <i class="bi bi-info-circle-fill me-2"></i>
                             <strong>Slug Anda saat ini:</strong> 
                             <ul class="mb-0 mt-2">
                                 <?php foreach ($user_profiles as $p): ?>
                                     <li>
                                         <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($p['slug']) ?></code>
-                                        <small class="text-muted ms-2">(<?= $p['link_count'] ?? 0 ?> link)</small>
+                                        <small class="text-muted ms-2">
+                                            (<?= intval($p['link_count'] ?? 0) ?> link, <?= intval($p['total_clicks'] ?? 0) ?> klik, 
+                                            dibuat: <?= !empty($p['created_at']) && $p['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($p['created_at'])) : date('d M Y') ?>)
+                                        </small>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
