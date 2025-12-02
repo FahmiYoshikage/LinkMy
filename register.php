@@ -105,21 +105,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step3'])) {
                     $password = $_SESSION['reg_password'];
                     $password_hash = password_hash($password, PASSWORD_DEFAULT);
                     
-                    // Insert user with email_verified = 1
-                    $query = "INSERT INTO users (username, password_hash, page_slug, email, email_verified, email_verified_at) 
-                              VALUES (?, ?, ?, ?, 1, NOW())";
+                    // v3 schema: Insert user (no page_slug, no email_verified)
+                    $query = "INSERT INTO users (username, password, email, is_verified, is_active) 
+                              VALUES (?, ?, ?, 0, 1)";
                     $stmt = mysqli_prepare($conn, $query);
-                    mysqli_stmt_bind_param($stmt, 'ssss', $username, $password_hash, $page_slug, $email);
+                    mysqli_stmt_bind_param($stmt, 'sss', $username, $password_hash, $email);
                     
                     if (mysqli_stmt_execute($stmt)) {
                         $new_user_id = mysqli_insert_id($conn);
                         
-                        // Insert default appearance
-                        $appearance_query = "INSERT INTO appearance (user_id, profile_title, bio) VALUES (?, ?, ?)";
+                        // v3 schema: Insert default profile with slug
+                        $profile_query = "INSERT INTO profiles (user_id, slug, name, title, bio, is_active, display_order) VALUES (?, ?, ?, ?, ?, 1, 0)";
                         $default_bio = "Welcome to my LinkMy page!";
-                        $stmt2 = mysqli_prepare($conn, $appearance_query);
-                        mysqli_stmt_bind_param($stmt2, 'iss', $new_user_id, $username, $default_bio);
+                        $stmt2 = mysqli_prepare($conn, $profile_query);
+                        mysqli_stmt_bind_param($stmt2, 'issss', $new_user_id, $page_slug, $username, $username, $default_bio);
                         mysqli_stmt_execute($stmt2);
+                        $new_profile_id = mysqli_insert_id($conn);
+                        
+                        // v3: Insert default theme
+                        $theme_query = "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', '#667eea', '#333333')";
+                        $stmt3 = mysqli_prepare($conn, $theme_query);
+                        mysqli_stmt_bind_param($stmt3, 'i', $new_profile_id);
+                        mysqli_stmt_execute($stmt3);
                         
                         // Clear session
                         unset($_SESSION['reg_email']);

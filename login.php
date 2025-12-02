@@ -18,13 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     if (empty($email) || empty($password)) {
         $error = 'Email dan password harus diisi!';
     } else {
-        $query = "SELECT user_id, username, password_hash, page_slug, email FROM users WHERE email = ?";
+        // v3 schema: users.id, users.password (no page_slug in users table)
+        $query = "SELECT id as user_id, username, password, email FROM users WHERE email = ?";
         $user = get_single_row($query, [$email], 's');
         
-        if ($user && password_verify($password, $user['password_hash'])) {
+        if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
-            $_SESSION['page_slug'] = $user['page_slug'];
             $_SESSION['last_activity'] = time();
             
             header('Location: admin/dashboard.php');
