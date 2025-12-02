@@ -10,6 +10,12 @@ require_once '../config/db.php';
 $success = '';
 $error = '';
 
+// Check for session success message
+if (isset($_SESSION['success_message'])) {
+    $success = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
 // Get user data with primary profile slug
 $query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
 $stmt = mysqli_prepare($conn, $query);
@@ -346,6 +352,7 @@ if (isset($_GET['delete_slug'])) {
 // Toggle profile active/inactive status
 if (isset($_GET['toggle_active'])) {
     $id = intval($_GET['toggle_active']);
+    error_log("Toggle active requested for profile ID: $id by user: $current_user_id");
     
     // Check if profile belongs to user
     $profile_data = get_single_row(
@@ -356,22 +363,31 @@ if (isset($_GET['toggle_active'])) {
     
     if (!$profile_data) {
         $error = 'Profile tidak ditemukan!';
+        error_log("Toggle failed: Profile not found or doesn't belong to user");
     } else {
+        error_log("Current is_active value: " . ($profile_data['is_active'] ?? 'NULL'));
+        
         // Toggle is_active status (1 -> 0 or 0 -> 1)
         $new_status = $profile_data['is_active'] ? 0 : 1;
+        error_log("New is_active value will be: $new_status");
+        
         $query = "UPDATE profiles SET is_active = ? WHERE id = ? AND user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'iii', $new_status, $id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            $status_text = $new_status ? 'diaktifkan' : 'dinonaktifkan';
-            $success = "Profile '{$profile_data['slug']}' berhasil {$status_text}!";
+            $affected = mysqli_stmt_affected_rows($stmt);
+            error_log("Toggle executed successfully. Affected rows: $affected");
             
-            // Refresh user data
-            $query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
-            $user = get_single_row($query, [$current_user_id], 'i');
+            $status_text = $new_status ? 'diaktifkan' : 'dinonaktifkan';
+            $_SESSION['success_message'] = "Profile '{$profile_data['slug']}' berhasil {$status_text}!";
+            
+            // Redirect to avoid form resubmission and ensure clean URL
+            header("Location: settings.php");
+            exit();
         } else {
-            $error = 'Gagal mengubah status profile!';
+            $error = 'Gagal mengubah status profile! ' . mysqli_error($conn);
+            error_log("Toggle failed: " . mysqli_error($conn));
         }
     }
 }
