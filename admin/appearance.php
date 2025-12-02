@@ -406,9 +406,11 @@
         }
     }
 
-    // Determine preview background
+    // Determine preview background (prefer boxed outer when enabled)
     $preview_bg = '#ffffff'; // default
-    if (!empty($appearance['gradient_preset']) && isset($gradient_css_map[$appearance['gradient_preset']])) {
+    if (!empty($appearance['boxed_layout']) && !empty($appearance['outer_bg_value'])) {
+        $preview_bg = $appearance['outer_bg_value'];
+    } elseif (!empty($appearance['gradient_preset']) && isset($gradient_css_map[$appearance['gradient_preset']])) {
         $preview_bg = $gradient_css_map[$appearance['gradient_preset']];
     } elseif (!empty($appearance['custom_bg_color'])) {
         $preview_bg = $appearance['custom_bg_color'];
