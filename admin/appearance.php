@@ -184,10 +184,12 @@
                 
                 if (move_uploaded_file($_FILES['bg_image']['tmp_name'], $upload_path)) {
                     chmod($upload_path, 0644); // Set file permissions
-                    // Delete old file
-                    $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/backgrounds/' . $appearance['bg_image_filename'];
-                    if (!empty($appearance['bg_image_filename']) && file_exists($old_file)) {
-                        unlink($old_file);
+                    // Delete old file if bg_type=image and bg_value is a filename
+                    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
+                        $old_file = $_SERVER['DOCUMENT_ROOT'] . '/uploads/backgrounds/' . $appearance['bg_value'];
+                        if (file_exists($old_file)) {
+                            unlink($old_file);
+                        }
                     }
                     // Multi-profile: Update background for active profile
                     $query = "UPDATE themes SET bg_type = 'image', bg_value = ? WHERE profile_id = ?";
@@ -195,7 +197,8 @@
                     mysqli_stmt_bind_param($stmt, 'si', $new_filename, $active_profile_id);
                     if (mysqli_stmt_execute($stmt)) {
                         $success = 'Background berhasil diupload!';
-                        $appearance['bg_image_filename'] = $new_filename;
+                        $appearance['bg_type'] = 'image';
+                        $appearance['bg_value'] = $new_filename;
                     } else {
                         $error = 'Gagal menyimpan background ke database!';
                     }

@@ -18,11 +18,11 @@ $resetToken = $_GET['token'] ?? '';
 if (empty($resetToken)) {
     $error = 'Token tidak valid';
 } else {
-    // Verify token
+    // Verify token (v3: token column)
     $stmt = $conn->prepare("
         SELECT email, expires_at, is_used 
         FROM password_resets 
-        WHERE reset_token = ? 
+        WHERE token = ? 
         ORDER BY created_at DESC 
         LIMIT 1
     ");
@@ -66,13 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
         // Hash new password
         $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
         
-        // Update user password
-        $updateStmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
+        // Update user password (v3: password column)
+        $updateStmt = $conn->prepare("UPDATE users SET password = ? WHERE email = ?");
         $updateStmt->bind_param("ss", $passwordHash, $email);
         
         if ($updateStmt->execute()) {
-            // Mark token as used
-            $markUsedStmt = $conn->prepare("UPDATE password_resets SET is_used = 1 WHERE reset_token = ?");
+            // Mark token as used (v3: token column)
+            $markUsedStmt = $conn->prepare("UPDATE password_resets SET is_used = 1 WHERE token = ?");
             $markUsedStmt->bind_param("s", $resetToken);
             $markUsedStmt->execute();
             
