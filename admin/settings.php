@@ -113,16 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
     if (strlen($new_slug) < 3 || strlen($new_slug) > 50) {
         $error = 'Slug harus 3-50 karakter, hanya huruf, angka, dan tanda hubung!';
     } else {
-        // Check cooldown (30 days)
-        if (!empty($user['last_slug_change_at'])) {
-            $last_change = strtotime($user['last_slug_change_at']);
-            $days_since = (time() - $last_change) / (60 * 60 * 24);
-            
-            if ($days_since < 30) {
-                $days_left = ceil(30 - $days_since);
-                $error = "Anda bisa mengganti slug lagi dalam {$days_left} hari!";
-            }
-        }
+        // Cooldown check removed for v3 compatibility
         
         if (!$error) {
             // Check availability
@@ -148,13 +139,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                     
                     if ($mail) {
                         try {
-                            $mail->addAddress($user['email'], $user['username']);
+                            // Use email part as username if username column doesn't exist
+                            $display_name = isset($user['username']) ? $user['username'] : explode('@', $user['email'])[0];
+                            
+                            $mail->addAddress($user['email'], $display_name);
                             $mail->isHTML(true);
                             $mail->Subject = "Konfirmasi Perubahan Slug - LinkMy";
                             $mail->Body = "
                                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
                                     <h2 style='color: #667eea;'>Konfirmasi Perubahan Slug</h2>
-                                    <p>Halo <strong>{$user['username']}</strong>,</p>
+                                    <p>Halo <strong>{$display_name}</strong>,</p>
                                     <p>Anda meminta untuk mengganti slug profil menjadi <strong>{$new_slug}</strong>.</p>
                                     <p>Kode OTP Anda adalah:</p>
                                     <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;'>
@@ -218,11 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
             mysqli_stmt_bind_param($stmt, 'si', $new_slug, $current_user_id);
             
             if (mysqli_stmt_execute($stmt)) {
-                // Record slug change timestamp
-                $query2 = "UPDATE users SET last_slug_change_at = NOW() WHERE id = ?";
-                $stmt2 = mysqli_prepare($conn, $query2);
-                mysqli_stmt_bind_param($stmt2, 'i', $current_user_id);
-                mysqli_stmt_execute($stmt2);
+                // Removed last_slug_change_at update for v3 compatibility
                 
                 // Mark OTP as used
                 $query3 = "UPDATE email_verifications SET is_used = 1 WHERE id = ?";
@@ -237,7 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_slug_change'])
                 $success = "Slug berhasil diubah menjadi: {$new_slug}";
                 
                 // Refresh user data
-                $user = get_single_row("SELECT * FROM users WHERE id = ?", [$current_user_id], 'i');
+                $query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
+                $user = get_single_row($query, [$current_user_id], 'i');
             } else {
                 $error = 'Gagal mengubah slug!';
             }
@@ -346,12 +337,13 @@ if (isset($_GET['set_primary'])) {
             
             // Update session
             $_SESSION['page_slug'] = $profile_data['slug'];
-            $_SESSION['active_id'] = $id;
+            // $_SESSION['active_id'] = $id; // Legacy
             
             $success = "Profile '{$profile_data['slug']}' sekarang menjadi profile utama!";
             
             // Refresh user data
-            $user = get_single_row("SELECT * FROM users WHERE user_id = ?", [$current_user_id], 'i');
+            $query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
+            $user = get_single_row($query, [$current_user_id], 'i');
         } else {
             $error = 'Gagal mengubah profile utama!';
         }
@@ -483,7 +475,7 @@ if (isset($_GET['debug'])) {
                         
                         <div class="mb-3">
                             <small class="text-muted">Username</small>
-                            <p class="fw-bold mb-0"><?= htmlspecialchars($user['username']) ?></p>
+                            <p class="fw-bold mb-0"><?= htmlspecialchars($user['username'] ?? explode('@', $user['email'])[0]) ?></p>
                         </div>
                         
                         <div class="mb-3">
