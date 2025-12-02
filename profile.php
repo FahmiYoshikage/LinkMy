@@ -369,10 +369,10 @@
         <?php endif; ?>
         
         .profile-container {
-            <?php if ($boxed_layout && $container_style === 'boxed'): ?>
-            /* Boxed Layout: Container dengan background terpisah */
+            <?php if ($boxed_layout): ?>
+            /* Boxed Layout: Inner container dengan background putih */
             max-width: <?= $container_max_width ?>px;
-            background: <?= $container_bg_color ?>;
+            background: #ffffff;
             border-radius: <?= $container_border_radius ?>px;
             padding: 2.5rem 2rem;
             box-shadow: <?= $container_shadow ? '0 15px 50px rgba(0,0,0,0.2)' : 'none' ?>;

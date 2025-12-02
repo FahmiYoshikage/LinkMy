@@ -413,6 +413,10 @@ $slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.cre
                 ORDER BY p.display_order ASC, p.created_at ASC";
 $profiles_list = get_all_rows($slugs_query, [$current_user_id], 'i');
 
+// Reset arrays to avoid duplicates with old data
+$user_slugs = [];
+$user_profiles = [];
+
 // For each profile, get link count and total clicks
 foreach ($profiles_list as $profile) {
     // Get link count

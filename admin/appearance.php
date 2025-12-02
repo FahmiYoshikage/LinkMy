@@ -505,6 +505,16 @@
     if (empty($appearance['custom_gradient_end'])) $appearance['custom_gradient_end'] = '#764ba2';
     if (empty($appearance['custom_bg_color'])) $appearance['custom_bg_color'] = '#ffffff';
     
+    // Reverse-map bg_value to gradient_preset name for active state detection
+    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'gradient' && !empty($appearance['bg_value'])) {
+        foreach ($gradient_css_map as $preset_name => $gradient_css) {
+            if (trim($appearance['bg_value']) === trim($gradient_css)) {
+                $appearance['gradient_preset'] = $preset_name;
+                break;
+            }
+        }
+    }
+    
     // Fetch social icons
     $social_icons = get_all_rows("SELECT * FROM social_icons ORDER BY platform_name", [], '');
 ?>
