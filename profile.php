@@ -207,27 +207,36 @@
         mysqli_stmt_close($stmt_links);
     }
 
-    // Determine background based on priority: gradient_preset > custom_bg_color > theme_name
+    // Determine background based on priority: bg_type=image > gradient > custom_bg_color > theme_name
     $background_css = '#ffffff';
     $text_color = $custom_text_color ?? '#333333';
     $is_gradient = false;
+    $bg_image = null;
     
-    // Priority 1: Gradient preset (highest priority - v2.0 feature)
-    if (!empty($gradient_preset) && isset($gradient_presets[$gradient_preset])) {
-        // Use gradient preset - overrides everything
+    // Priority 0: Background image (v3: check themes.bg_type and bg_value)
+    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
+        $bg_image = $appearance['bg_value'];
+        $text_color = $custom_text_color ?? '#ffffff';
+    }
+    // Priority 1: Gradient (from bg_type='gradient' and bg_value contains CSS)
+    elseif (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'gradient' && !empty($appearance['bg_value'])) {
+        $background_css = $appearance['bg_value'];
+        $text_color = $custom_text_color ?? '#ffffff';
+        $is_gradient = true;
+    }
+    // Priority 2: Gradient preset (legacy)
+    elseif (!empty($gradient_preset) && isset($gradient_presets[$gradient_preset])) {
         $background_css = $gradient_presets[$gradient_preset];
         $text_color = $custom_text_color ?? '#ffffff';
         $is_gradient = true;
     }
-    // Priority 2: Custom background color (only if NO gradient preset)
-    elseif (empty($gradient_preset) && !empty($custom_bg_color)) {
-        // Use custom solid color
+    // Priority 3: Custom background color
+    elseif (!empty($custom_bg_color)) {
         $background_css = $custom_bg_color;
         $text_color = $custom_text_color ?? '#333333';
     }
-    // Priority 3: Theme name fallback
+    // Priority 4: Theme name fallback
     elseif ($theme_name === 'gradient') {
-        // Use default gradient theme
         $background_css = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         $text_color = $custom_text_color ?? '#ffffff';
         $is_gradient = true;
@@ -235,7 +244,6 @@
         $background_css = '#1a1a1a';
         $text_color = $custom_text_color ?? '#ffffff';
     } else {
-        // Light theme (default)
         $background_css = '#ffffff';
         $text_color = $custom_text_color ?? '#333333';
     }

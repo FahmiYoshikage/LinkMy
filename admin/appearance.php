@@ -284,7 +284,7 @@
             error_log("PREPARE ERROR: " . mysqli_error($conn));
         } else {
             // Multi-profile: Update advanced settings for active profile
-            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiiisi', 
+            $bind_result = mysqli_stmt_bind_param($stmt, 'ssssssiisi', 
                 $bg_type, $bg_value, $custom_button_color, $custom_text_color,
                 $profile_layout, $container_style, $enable_animations, $enable_glass_effect, $shadow_intensity, $active_profile_id);
             
