@@ -311,12 +311,23 @@
         $current_bg_type = $appearance['bg_type'] ?? 'gradient';
         $current_bg_value = $appearance['bg_value'] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         
-        if ($gradient_preset) {
+        // Check for custom gradient first
+        $custom_gradient_start = !empty($_POST['custom_gradient_start']) ? $_POST['custom_gradient_start'] : null;
+        $custom_gradient_end = !empty($_POST['custom_gradient_end']) ? $_POST['custom_gradient_end'] : null;
+        
+        if ($custom_gradient_start && $custom_gradient_end) {
+            // User created custom gradient
+            $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
+            $bg_type = 'gradient';
+            // Store gradient colors for editing
+            $appearance['custom_gradient_start'] = $custom_gradient_start;
+            $appearance['custom_gradient_end'] = $custom_gradient_end;
+        } elseif ($gradient_preset) {
             // User selected a gradient preset - update bg
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
         } elseif ($custom_bg_color && $custom_bg_color !== '#ffffff') {
-            // User entered custom color
+            // User entered custom solid color
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
         } else {
@@ -475,6 +486,21 @@
         // Fallback to defaults
         $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
+    
+    // Extract custom gradient colors from bg_value if it's a gradient
+    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'gradient' && !empty($appearance['bg_value'])) {
+        // Parse gradient to extract colors: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+        preg_match_all('/(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})/', $appearance['bg_value'], $gradient_colors);
+        if (!empty($gradient_colors[0])) {
+            $appearance['custom_gradient_start'] = $gradient_colors[0][0] ?? '#667eea';
+            $appearance['custom_gradient_end'] = $gradient_colors[0][1] ?? '#764ba2';
+        }
+    }
+    
+    // Set defaults if not set
+    if (empty($appearance['custom_gradient_start'])) $appearance['custom_gradient_start'] = '#667eea';
+    if (empty($appearance['custom_gradient_end'])) $appearance['custom_gradient_end'] = '#764ba2';
+    if (empty($appearance['custom_bg_color'])) $appearance['custom_bg_color'] = '#ffffff';
     
     // Fetch social icons
     $social_icons = get_all_rows("SELECT * FROM social_icons ORDER BY platform_name", [], '');
@@ -1101,20 +1127,61 @@
                                     </h6>
                                     <p class="text-muted small mb-3">Atau buat kombinasi warna sendiri</p>
                                     
+                                    <!-- Custom Gradient Builder -->
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold mb-3">
+                                                <i class="bi bi-brush text-primary me-2"></i>Custom Gradient Builder
+                                                <span class="badge bg-primary ms-2">New!</span>
+                                            </h6>
+                                            <p class="text-muted small mb-3">Buat gradient sendiri dari 2 warna</p>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Gradient Start Color</label>
+                                                    <div class="color-picker-wrapper">
+                                                        <input type="color" class="form-control form-control-color" 
+                                                               name="custom_gradient_start" id="customGradientStart"
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?>">
+                                                        <input type="text" class="form-control form-control-sm mt-1" 
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?>"
+                                                               id="customGradientStartHex" readonly>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Gradient End Color</label>
+                                                    <div class="color-picker-wrapper">
+                                                        <input type="color" class="form-control form-control-color" 
+                                                               name="custom_gradient_end" id="customGradientEnd"
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?>">
+                                                        <input type="text" class="form-control form-control-sm mt-1" 
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?>"
+                                                               id="customGradientEndHex" readonly>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="gradient-preview" id="customGradientPreview" 
+                                                         style="height: 80px; border-radius: 12px; background: linear-gradient(135deg, <?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?> 0%, <?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?> 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                                        <i class="bi bi-eye me-2"></i>Preview Custom Gradient
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-3">
-                                            <label class="form-label fw-semibold">Background</label>
+                                            <label class="form-label fw-semibold">Background Color</label>
                                             <div class="color-picker-wrapper">
                                                 <input type="color" class="form-control form-control-color" 
                                                        name="custom_bg_color" id="customBgColor"
-                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>">
+                                                       value="<?= htmlspecialchars($appearance['custom_bg_color'] ?? '#ffffff') ?>">
                                                 <input type="text" class="form-control form-control-sm mt-1" 
-                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>"
+                                                       value="<?= htmlspecialchars($appearance['custom_bg_color'] ?? '#ffffff') ?>"
                                                        id="customBgColorHex" readonly>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-semibold">Button</label>
+                                            <label class="form-label fw-semibold">Button Color</label>
                                             <div class="color-picker-wrapper">
                                                 <input type="color" class="form-control form-control-color" 
                                                        name="custom_button_color" id="customButtonColor"
@@ -1125,7 +1192,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-semibold">Text</label>
+                                            <label class="form-label fw-semibold">Text Color</label>
                                             <div class="color-picker-wrapper">
                                                 <input type="color" class="form-control form-control-color" 
                                                        name="custom_text_color" id="customTextColor"
@@ -1136,7 +1203,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-semibold">Shadow</label>
+                                            <label class="form-label fw-semibold">Shadow Intensity</label>
                                             <select class="form-select" name="shadow_intensity" id="shadowIntensity">
                                                 <option value="none" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'none' ? 'selected' : '' ?>>None</option>
                                                 <option value="light" <?= ($appearance['shadow_intensity'] ?? 'medium') == 'light' ? 'selected' : '' ?>>Light</option>
@@ -1152,7 +1219,7 @@
                                     <h6 class="fw-bold mb-3"><i class="bi bi-square text-primary me-2"></i>Button Style</h6>
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-4">
-                                            <label style="cursor: pointer; display: block;">
+                                            <label style="cursor: pointer; display: block;" onclick="selectButtonStyle('rounded')">
                                                 <input type="radio" name="button_style" value="rounded" <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'checked' : '' ?> hidden>
                                                 <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? 'rounded') == 'rounded' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
@@ -1164,7 +1231,7 @@
                                             </label>
                                         </div>
                                         <div class="col-md-4">
-                                            <label style="cursor: pointer; display: block;">
+                                            <label style="cursor: pointer; display: block;" onclick="selectButtonStyle('sharp')">
                                                 <input type="radio" name="button_style" value="sharp" <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'checked' : '' ?> hidden>
                                                 <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'sharp' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
@@ -1176,7 +1243,7 @@
                                             </label>
                                         </div>
                                         <div class="col-md-4">
-                                            <label style="cursor: pointer; display: block;">
+                                            <label style="cursor: pointer; display: block;" onclick="selectButtonStyle('pill')">
                                                 <input type="radio" name="button_style" value="pill" <?= ($appearance['button_style'] ?? '') == 'pill' ? 'checked' : '' ?> hidden>
                                                 <div class="card text-center h-100 theme-card <?= ($appearance['button_style'] ?? '') == 'pill' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
@@ -1193,35 +1260,47 @@
 
                                     <!-- Layout Options -->
                                     <h6 class="fw-bold mb-3">
-                                        <i class="bi bi-layout-text-window text-primary me-2"></i>Layout & Style
+                                        <i class="bi bi-layout-text-window text-primary me-2"></i>Layout & Advanced Options
                                     </h6>
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-4">
                                             <label class="form-label fw-semibold">Profile Layout</label>
-                                            <select class="form-select" name="profile_layout">
+                                            <select class="form-select" name="profile_layout" id="profileLayout" onchange="updatePreviewLayout()">
                                                 <option value="centered" <?= ($appearance['layout'] ?? 'centered') == 'centered' ? 'selected' : '' ?>>Centered</option>
                                                 <option value="left" <?= ($appearance['layout'] ?? '') == 'left' ? 'selected' : '' ?>>Left Aligned</option>
                                                 <option value="minimal" <?= ($appearance['layout'] ?? '') == 'minimal' ? 'selected' : '' ?>>Minimal</option>
                                             </select>
+                                            <small class="text-muted">Posisi konten di halaman</small>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Container Style</label>
-                                            <select class="form-select" name="container_style">
-                                                <option value="wide" <?= ($appearance['container_style'] ?? 'wide') == 'wide' ? 'selected' : '' ?>>Wide - Full Width</option>
-                                                <option value="boxed" <?= ($appearance['container_style'] ?? '') == 'boxed' ? 'selected' : '' ?>>Boxed - Linktree Style</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold">Animations</label>
-                                            <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" name="enable_animations" 
-                                                       id="enableAnimations" value="1" <?= ($appearance['enable_animations'] ?? 1) ? 'checked' : '' ?>>
-                                                <label class="form-check-label" for="enableAnimations">
-                                                    Enable Animations
-                                                </label>
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-semibold">Additional Effects</label>
+                                            <div class="d-flex gap-4 flex-wrap mt-2">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" name="enable_animations" 
+                                                           id="enableAnimations" value="1" <?= ($appearance['enable_animations'] ?? 1) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="enableAnimations">
+                                                        <i class="bi bi-stars"></i> Animations
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" name="enable_glass_effect" 
+                                                           id="enableGlassEffect" value="1" <?= ($appearance['enable_glass_effect'] ?? 0) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="enableGlassEffect">
+                                                        <i class="bi bi-window"></i> Glass Effect
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" name="show_profile_border" 
+                                                           id="showProfileBorder" value="1" <?= ($appearance['show_profile_border'] ?? 1) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="showProfileBorder">
+                                                        <i class="bi bi-circle"></i> Profile Border
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <input type="hidden" name="container_style" value="<?= $appearance['container_style'] ?? 'wide' ?>">
 
                                     <button type="submit" name="update_advanced" class="btn btn-success btn-lg w-100">
                                         <i class="bi bi-save me-2"></i>Save Theme & Colors
@@ -2553,6 +2632,71 @@
         });
         
         // Copy icon class to clipboard
+        // Button style selection function
+        function selectButtonStyle(style) {
+            // Remove active class from all cards
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to selected card
+            const selectedLabel = event.currentTarget;
+            const selectedCard = selectedLabel.querySelector('.theme-card');
+            selectedCard.classList.add('active');
+            
+            // Check the hidden radio button
+            const radio = selectedLabel.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Update preview buttons
+            const previewLinks = document.querySelectorAll('.preview-link');
+            previewLinks.forEach(link => {
+                if (style === 'pill') {
+                    link.style.borderRadius = '50px';
+                } else if (style === 'sharp') {
+                    link.style.borderRadius = '0';
+                } else {
+                    link.style.borderRadius = '12px';
+                }
+            });
+        }
+        
+        // Custom gradient builder preview
+        const gradientStart = document.getElementById('customGradientStart');
+        const gradientEnd = document.getElementById('customGradientEnd');
+        const gradientPreview = document.getElementById('customGradientPreview');
+        const gradientStartHex = document.getElementById('customGradientStartHex');
+        const gradientEndHex = document.getElementById('customGradientEndHex');
+        
+        function updateGradientPreview() {
+            const startColor = gradientStart.value;
+            const endColor = gradientEnd.value;
+            gradientPreview.style.background = `linear-gradient(135deg, ${startColor} 0%, ${endColor} 100%)`;
+            gradientStartHex.value = startColor;
+            gradientEndHex.value = endColor;
+        }
+        
+        gradientStart.addEventListener('input', updateGradientPreview);
+        gradientEnd.addEventListener('input', updateGradientPreview);
+        
+        // Profile layout live preview
+        function updatePreviewLayout() {
+            const layout = document.getElementById('profileLayout').value;
+            const previewContent = document.getElementById('previewContent');
+            
+            if (layout === 'left') {
+                previewContent.style.textAlign = 'left';
+                previewContent.style.paddingLeft = '30px';
+                previewContent.style.paddingRight = '20px';
+            } else if (layout === 'minimal') {
+                previewContent.style.textAlign = 'center';
+                previewContent.style.padding = '20px 15px';
+            } else {
+                previewContent.style.textAlign = 'center';
+                previewContent.style.padding = '30px 20px';
+            }
+        }
+        
         document.querySelectorAll('.social-icon-item').forEach(item => {
             item.addEventListener('click', function() {
                 const iconClass = this.querySelector('i').className;
