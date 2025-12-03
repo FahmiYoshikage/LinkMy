@@ -143,7 +143,8 @@
     // Handle background images
     $bg_image = null;
     if ($bg_type === 'image' && !empty($bg_value)) {
-        $bg_image = $bg_value; // This is the filename
+        // Use absolute path from web root
+        $bg_image = '/uploads/backgrounds/' . basename($bg_value);
     }
     
     // Fallback logic for missing v3 columns
@@ -410,7 +411,7 @@
             
             <?php if (!empty($bg_image)): ?>
             /* Background Image Mode */
-            background: <?= $background_css ?> url('uploads/backgrounds/<?= $bg_image ?>') no-repeat center center fixed;
+            background: url('<?= $bg_image ?>') no-repeat center center fixed;
             background-size: cover;
             <?php elseif ($boxed_layout): ?>
             /* Boxed mode: Use outer background */

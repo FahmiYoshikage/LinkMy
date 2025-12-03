@@ -248,8 +248,8 @@
     }
 
     if (isset($_GET['remove_bg'])) {
-        if (!empty($appearance['bg_image_filename'])) {
-            $bg_path = '../uploads/backgrounds/' . $appearance['bg_image_filename'];
+        if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
+            $bg_path = '../uploads/backgrounds/' . $appearance['bg_value'];
             if (file_exists($bg_path)) {
                 unlink($bg_path);
             }
@@ -260,7 +260,8 @@
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Background berhasil dihapus!';
-                $appearance['bg_image_filename'] = null;
+                $appearance['bg_type'] = 'gradient';
+                $appearance['bg_value'] = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             }
         }
     }
@@ -1443,9 +1444,9 @@
                                     <strong>Rekomendasi:</strong> 1080x1920px (portrait) atau 1920x1080px (landscape) • Max 5MB
                                 </div>
                                 
-                                <div class="upload-area mb-3 <?= !empty($appearance['bg_image_filename']) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
-                                    <?php if (!empty($appearance['bg_image_filename'])): ?>
-                                        <img src="../uploads/backgrounds/<?= htmlspecialchars($appearance['bg_image_filename']) ?>?t=<?= time() ?>" id="bgImagePreview" class="image-preview">
+                                <div class="upload-area mb-3 <?= (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
+                                    <?php if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])): ?>
+                                        <img src="../uploads/backgrounds/<?= htmlspecialchars($appearance['bg_value']) ?>?t=<?= time() ?>" id="bgImagePreview" class="image-preview">
                                         <div class="mt-2">
                                             <button type="button" class="btn btn-primary btn-sm me-2" onclick="event.stopPropagation(); document.getElementById('bgImageInput').click()">
                                                 <i class="bi bi-arrow-repeat"></i> Change
