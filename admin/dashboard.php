@@ -27,16 +27,31 @@
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_link'])){
-        $title = trim($_POST['title']);
-        $url = trim($_POST['url']);
-        $icon_class = trim($_POST['icon_class']);
-        $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
-
-        if (empty($title) || empty($url)){
-            $error = 'Judul dan URL harus diisi';
+        // CRITICAL: Validate active_profile_id exists
+        if (!$active_profile_id) {
+            $error = 'Error: Tidak ada profile aktif. Silakan refresh halaman.';
         } else {
-            // Multi-profile: Use active_profile_id for new link
-            $last_order_row = get_single_row("SELECT MAX(position) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
+            $title = trim($_POST['title']);
+            $url = trim($_POST['url']);
+            $icon_class = trim($_POST['icon_class']);
+            $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
+
+            if (empty($title) || empty($url)){
+                $error = 'Judul dan URL harus diisi';
+            } else {
+                // Verify profile belongs to user before adding link
+                $verify_profile = get_single_row(
+                    "SELECT id FROM profiles WHERE id = ? AND user_id = ?",
+                    [$active_profile_id, $current_user_id],
+                    'ii'
+                );
+                
+                if (!$verify_profile) {
+                    $error = 'Error: Profile tidak valid. Silakan logout dan login kembali.';
+                    $_SESSION['active_profile_id'] = null; // Clear invalid session
+                } else {
+                    // Multi-profile: Use active_profile_id for new link
+                    $last_order_row = get_single_row("SELECT MAX(position) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
             $last_order = $last_order_row['max_order'] ?? 0;
             $new_order = $last_order + 1;
 
@@ -70,6 +85,8 @@
                     }
                 } else {
                     $error = 'Gagal menyiapkan statement';
+                }
+            }
                 }
             }
         }

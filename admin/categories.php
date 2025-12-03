@@ -262,7 +262,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-outline-primary" onclick="editCategory(<?= htmlspecialchars(json_encode($cat)) ?>)" style="border-radius: 10px;">
+                                    <button class="btn btn-outline-primary" onclick='editCategory(<?= json_encode($cat) ?>)' style="border-radius: 10px;">
                                         <i class="bi bi-pencil-fill"></i> Edit
                                     </button>
                                     <?php if ($cat['link_count'] == 0): ?>
