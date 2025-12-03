@@ -1,12 +1,19 @@
 <?php
+// Clear all caches aggressively
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
+
 // Prevent caching to always show fresh data
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0, post-check=0, pre-check=0');
 header('Pragma: no-cache');
-header('Expires: 0');
+header('Expires: Mon, 01 Jan 1990 00:00:00 GMT');
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+header('X-Accel-Expires: 0');
 
 // Add unique page load identifier for debugging
 $page_load_id = uniqid('page_', true);
+$cache_buster = time() . rand(1000, 9999);
 error_log("=== PAGE LOAD START: {$page_load_id} ===");
 
 require_once '../config/auth_check.php';
@@ -773,9 +780,10 @@ if (isset($_GET['debug'])) {
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <i class="bi bi-link-45deg"></i> <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
-                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
+                                                    <i class="bi bi-link-45deg"></i> <strong><?= isset($profile['link_count']) ? intval($profile['link_count']) : 'MISSING' ?></strong> Links
+                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= isset($profile['total_clicks']) ? intval($profile['total_clicks']) : 'MISSING' ?></strong> Klik
                                                     | Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
+                                                    <!-- DEBUG: link_count=<?= $profile['link_count'] ?? 'UNDEFINED' ?>, total_clicks=<?= $profile['total_clicks'] ?? 'UNDEFINED' ?> -->
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
