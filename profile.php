@@ -326,7 +326,8 @@
         if (empty($bg_image)) {
             $bg_image = $bg_value; // Make sure it's set
         }
-        $background_css = 'linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%)'; // semi-transparent gradient overlay
+        // NO gradient overlay - pure image background
+        $background_css = ''; // Empty so image displays without gradient blend
         $text_color = $custom_text_color ?? '#ffffff';
     } elseif ($bg_type === 'gradient' && !empty($bg_value)) {
         // Gradient background from DB
@@ -410,23 +411,27 @@
             position: relative;
             
             <?php if (!empty($bg_image)): ?>
-            /* Background Image Mode - Prioritized over boxed layout */
+            /* Background Image Mode - Works in both boxed and non-boxed */
             background: url('<?= $bg_image ?>') no-repeat center center fixed;
             background-size: cover;
             <?php elseif ($boxed_layout && !empty($outer_bg_value)): ?>
-            /* Boxed mode: Use outer background */
+            /* Boxed mode: Use outer background (only if no image) */
             background: <?= $outer_bg_value ?>;
             background-attachment: fixed;
             <?php elseif ($boxed_layout): ?>
-            /* Boxed mode: Fallback gradient */
+            /* Boxed mode: Fallback gradient (only if no image) */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-attachment: fixed;
-            <?php else: ?>
-            /* Non-boxed mode: Use theme background directly */
+            <?php elseif (!empty($background_css)): ?>
+            /* Non-boxed mode: Use theme background (gradient/color) */
             background: <?= $background_css ?>;
             <?php if ($is_gradient): ?>
             background-attachment: fixed;
             <?php endif; ?>
+            <?php else: ?>
+            /* Fallback */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             <?php endif; ?>
         }
         
