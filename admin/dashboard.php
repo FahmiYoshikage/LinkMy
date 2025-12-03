@@ -45,10 +45,10 @@
             $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
 
             if ($has_categories) {
-                $query = "INSERT INTO links (user_id, profile_id, title, url, icon, category_id, position) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $query = "INSERT INTO links (profile_id, title, url, icon, category_id, position) VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
-                    mysqli_stmt_bind_param($stmt, 'iisssii', $current_user_id, $active_profile_id, $title, $url, $icon_class, $category_id, $new_order);
+                    mysqli_stmt_bind_param($stmt, 'isssii', $active_profile_id, $title, $url, $icon_class, $category_id, $new_order);
                     if (mysqli_stmt_execute($stmt)){
                         $success = 'Link berhasil ditambahkan';
                     } else {
@@ -58,11 +58,11 @@
                     $error = 'Gagal menyiapkan statement';
                 }
             } else {
-                // Fallback to old schema without category_id
-                $query = "INSERT INTO links (user_id, profile_id, title, url, icon, position) VALUES (?, ?, ?, ?, ?, ?)";
+                // Fallback to schema without category_id
+                $query = "INSERT INTO links (profile_id, title, url, icon, position) VALUES (?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $query);
                 if ($stmt){
-                    mysqli_stmt_bind_param($stmt, 'iisssi', $current_user_id, $active_profile_id, $title, $url, $icon_class, $new_order);
+                    mysqli_stmt_bind_param($stmt, 'isssi', $active_profile_id, $title, $url, $icon_class, $new_order);
                     if (mysqli_stmt_execute($stmt)){
                         $success = 'Link berhasil ditambahkan';
                     } else {

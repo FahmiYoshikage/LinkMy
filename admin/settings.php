@@ -342,7 +342,7 @@ if (isset($_GET['delete_slug'])) {
     
     if (!$profile_data) {
         $error = 'Profile tidak ditemukan!';
-    } elseif ($profile_data['display_order'] == 1) {
+    } elseif ($profile_data['display_order'] == 0) {
         $error = 'Tidak bisa menghapus profile utama! Ganti ke profile lain sebagai utama terlebih dahulu.';
     } else {
         $query = "DELETE FROM profiles WHERE id = ? AND user_id = ?";
