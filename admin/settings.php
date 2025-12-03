@@ -1,7 +1,14 @@
 <?php
-// Clear all caches aggressively
+// Clear all caches aggressively - FORCE RELOAD
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate(__FILE__, true);
+}
 if (function_exists('opcache_reset')) {
-    opcache_reset();
+    @opcache_reset();
+}
+// Clear APC cache if available
+if (function_exists('apc_clear_cache')) {
+    @apc_clear_cache();
 }
 
 // Prevent caching to always show fresh data
@@ -116,6 +123,12 @@ error_log("Total profiles loaded: " . count($user_profiles));
 foreach ($user_profiles as $idx => $prof) {
     error_log("Final array check #{$idx}: slug={$prof['slug']}, link_count=" . ($prof['link_count'] ?? 'MISSING') . ", total_clicks=" . ($prof['total_clicks'] ?? 'MISSING'));
 }
+
+// CRITICAL: Make a backup copy of the data RIGHT NOW before anything else touches it
+$BACKUP_user_profiles = $user_profiles;
+$BACKUP_all_profiles = $all_profiles;
+
+error_log("BACKUP CREATED: " . json_encode($BACKUP_user_profiles));
 
 // EMERGENCY DEBUG: Output data before any processing
 if (isset($_GET['debug_raw'])) {
@@ -513,6 +526,23 @@ if (isset($_GET['debug'])) {
     echo "total_clicks: {$total_clicks}\n";
     echo "</pre>";
     exit;
+}
+
+// CRITICAL CHECK: Compare backup with current data RIGHT BEFORE HTML RENDER
+error_log("PRE-RENDER CHECK:");
+error_log("BACKUP keys: " . (isset($BACKUP_user_profiles[0]) ? implode(',', array_keys($BACKUP_user_profiles[0])) : 'NONE'));
+error_log("CURRENT keys: " . (isset($user_profiles[0]) ? implode(',', array_keys($user_profiles[0])) : 'NONE'));
+
+if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
+    $backup_keys = array_keys($BACKUP_user_profiles[0]);
+    $current_keys = array_keys($user_profiles[0]);
+    $missing_keys = array_diff($backup_keys, $current_keys);
+    if (!empty($missing_keys)) {
+        error_log("!!! DATA CORRUPTION DETECTED !!! Missing keys: " . implode(',', $missing_keys));
+        // RESTORE FROM BACKUP
+        $user_profiles = $BACKUP_user_profiles;
+        error_log("DATA RESTORED FROM BACKUP");
+    }
 }
 ?>
 <!DOCTYPE html>
