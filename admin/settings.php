@@ -45,6 +45,10 @@ if (!$user) {
 // Get all user profiles for slug management with stats (always fresh from DB)
 $all_profiles = [];
 $user_profiles = []; // Alias for compatibility
+
+// Debug: Log current user ID
+error_log("Loading profiles for user_id: {$current_user_id}");
+
 $p_query = "SELECT p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
             (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
             (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
@@ -55,9 +59,17 @@ $p_stmt = mysqli_prepare($conn, $p_query);
 mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($p_stmt);
 $p_result = mysqli_stmt_get_result($p_stmt);
+
+if (!$p_result) {
+    error_log("ERROR: Query failed - " . mysqli_error($conn));
+}
+
+$row_count = 0;
 while ($row = mysqli_fetch_assoc($p_result)) {
-    // Debug: Log the profile data
-    error_log("Profile '{$row['slug']}' (ID: {$row['id']}) - is_active: {$row['is_active']}, links: {$row['link_count']}, clicks: {$row['total_clicks']}, created: {$row['created_at']}");
+    $row_count++;
+    // Debug: Log ALL fields from the row
+    error_log("Row {$row_count}: " . json_encode($row));
+    
     $all_profiles[] = $row;
     $user_profiles[] = $row; // Populate both arrays
 }
@@ -754,14 +766,25 @@ if (isset($_GET['debug'])) {
                             
                             <!-- Debug Panel -->
                             <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                                <strong><i class="bi bi-info-circle"></i> Debug Info:</strong>
+                                <strong><i class="bi bi-info-circle"></i> Debug Info (RAW DATA):</strong>
+                                <div class="mt-2" style="font-family: monospace; font-size: 0.75rem; background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto;">
+                                    <pre style="margin: 0;"><?php 
+                                    echo "Current User ID: {$current_user_id}\n";
+                                    echo "Total Profiles: " . count($user_profiles) . "\n\n";
+                                    foreach ($user_profiles as $idx => $p) {
+                                        echo "Profile #{$idx}:\n";
+                                        print_r($p);
+                                        echo "\n---\n";
+                                    }
+                                    ?></pre>
+                                </div>
                                 <ul class="mb-0 mt-2" style="font-family: monospace; font-size: 0.8rem;">
                                     <?php foreach ($user_profiles as $p): ?>
                                     <li>
                                         <strong><?= htmlspecialchars($p['slug']) ?></strong> 
                                         (ID: <?= $p['id'] ?>)
-                                        - Links: <?= $p['link_count'] ?? 0 ?> 
-                                        - Clicks: <?= $p['total_clicks'] ?? 0 ?>
+                                        - Links: <?= isset($p['link_count']) ? $p['link_count'] : 'UNDEFINED' ?> 
+                                        - Clicks: <?= isset($p['total_clicks']) ? $p['total_clicks'] : 'UNDEFINED' ?>
                                         - Created: <?= $p['created_at'] ?? 'N/A' ?>
                                         - is_active: <?= $p['is_active'] ?? 'NULL' ?>
                                     </li>
