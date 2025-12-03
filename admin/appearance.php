@@ -349,7 +349,7 @@
         $custom_gradient_end = !empty($_POST['custom_gradient_end']) ? $_POST['custom_gradient_end'] : null;
         
         // Determine which background option was selected
-        // Priority: custom gradient > gradient preset > solid color > keep existing
+        // Priority (requested): gradient preset > solid color > custom gradient > keep existing
         
         // Log all POST values for debugging
         error_log("POST custom_gradient_start: " . ($custom_gradient_start ?? 'NULL'));
@@ -363,14 +363,7 @@
                                    (!in_array($custom_gradient_start, $custom_gradient_defaults) || 
                                     !in_array($custom_gradient_end, $custom_gradient_defaults));
         
-        if ($custom_gradient_modified) {
-            // User created custom gradient (colors changed from defaults)
-            $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
-            $bg_type = 'gradient';
-            $appearance['custom_gradient_start'] = $custom_gradient_start;
-            $appearance['custom_gradient_end'] = $custom_gradient_end;
-            error_log("✅ Applied custom gradient: {$bg_value}");
-        } elseif (!empty($gradient_preset) && $gradient_preset !== 'none') {
+        if (!empty($gradient_preset) && $gradient_preset !== 'none') {
             // User selected a gradient preset - ALWAYS apply it when present
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
@@ -380,6 +373,13 @@
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
             error_log("✅ Applied solid color: {$bg_value}");
+        } elseif ($custom_gradient_modified) {
+            // User created custom gradient (colors changed from defaults)
+            $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
+            $bg_type = 'gradient';
+            $appearance['custom_gradient_start'] = $custom_gradient_start;
+            $appearance['custom_gradient_end'] = $custom_gradient_end;
+            error_log("✅ Applied custom gradient: {$bg_value}");
         } else {
             // No new gradient/color selected - keep existing
             $bg_value = $current_bg_value;
