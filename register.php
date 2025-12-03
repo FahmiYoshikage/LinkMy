@@ -119,10 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step3'])) {
                         $new_user_id = mysqli_insert_id($conn);
                         
                         // v3 schema: Insert default profile with slug
-                        $profile_query = "INSERT INTO profiles (user_id, slug, name, title, bio, is_active, display_order) VALUES (?, ?, ?, ?, ?, 1, 0)";
+                        $profile_query = "INSERT INTO profiles (user_id, slug, name, title, bio, is_active, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)";
                         $default_bio = "Welcome to my LinkMy page!";
+                        $is_active = 1;
+                        $display_order = 0;
                         $stmt2 = mysqli_prepare($conn, $profile_query);
-                        mysqli_stmt_bind_param($stmt2, 'issss', $new_user_id, $page_slug, $username, $username, $default_bio);
+                        mysqli_stmt_bind_param($stmt2, 'issssii', $new_user_id, $page_slug, $username, $username, $default_bio, $is_active, $display_order);
                         mysqli_stmt_execute($stmt2);
                         $new_profile_id = mysqli_insert_id($conn);
                         
