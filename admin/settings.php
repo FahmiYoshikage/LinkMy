@@ -49,7 +49,7 @@ $user_profiles = []; // Alias for compatibility
 // Debug: Log current user ID
 error_log("Loading profiles for user_id: {$current_user_id}");
 
-// Use LEFT JOIN with GROUP BY for better compatibility
+// Use direct mysqli_query for debugging (without prepared statements)
 $p_query = "SELECT 
             p.id, 
             p.user_id, 
@@ -62,17 +62,20 @@ $p_query = "SELECT
             COALESCE(SUM(l.clicks), 0) as total_clicks
             FROM profiles p 
             LEFT JOIN links l ON l.profile_id = p.id
-            WHERE p.user_id = ? 
+            WHERE p.user_id = {$current_user_id} 
             GROUP BY p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at
             ORDER BY p.display_order ASC";
-$p_stmt = mysqli_prepare($conn, $p_query);
-mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
-mysqli_stmt_execute($p_stmt);
-$p_result = mysqli_stmt_get_result($p_stmt);
+
+error_log("Executing query: {$p_query}");
+
+$p_result = mysqli_query($conn, $p_query);
 
 if (!$p_result) {
     error_log("ERROR: Query failed - " . mysqli_error($conn));
+    die("Query error: " . mysqli_error($conn));
 }
+
+error_log("Query executed successfully. Fetching rows...");
 
 $row_count = 0;
 while ($row = mysqli_fetch_assoc($p_result)) {
