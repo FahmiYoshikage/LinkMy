@@ -322,8 +322,9 @@ function save_otp_to_database($email, $otp) {
         VALUES (?, ?, 'registration', ?, 0, NOW(), ?)
     ");
     
-    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-    $stmt->bind_param("ssss", $email, $otp, $expiresAt, $ipAddress);
+    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    // CRITICAL FIX: Correct parameter order - email, otp, ip, expires_at
+    $stmt->bind_param("ssss", $email, $otp, $ipAddress, $expiresAt);
     
     return $stmt->execute();
 }
