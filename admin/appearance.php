@@ -321,6 +321,9 @@
         error_log("Advanced update triggered!");
         error_log("RAW POST gradient_preset: " . ($_POST['gradient_preset'] ?? 'NOT SET'));
         
+        // Detect user's last choice via hidden field
+        $bg_choice = $_POST['bg_choice'] ?? 'preset';
+        
         $gradient_preset = !empty($_POST['gradient_preset']) ? $_POST['gradient_preset'] : null;
         $custom_bg_color = !empty($_POST['custom_bg_color']) ? $_POST['custom_bg_color'] : null;
         $custom_button_color = !empty($_POST['custom_button_color']) ? $_POST['custom_button_color'] : null;
@@ -363,25 +366,26 @@
                                    (!in_array($custom_gradient_start, $custom_gradient_defaults) || 
                                     !in_array($custom_gradient_end, $custom_gradient_defaults));
         
-        if (!empty($gradient_preset) && $gradient_preset !== 'none') {
-            // User selected a gradient preset - apply if solid not provided
+        // Use bg_choice to determine user's intent
+        if ($bg_choice === 'preset' && !empty($gradient_preset) && $gradient_preset !== 'none') {
+            // User selected a gradient preset
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
             error_log("✅ Applied gradient preset '{$gradient_preset}': {$bg_value}");
-        } elseif ($custom_gradient_modified) {
-            // User created custom gradient (colors changed from defaults)
+        } elseif ($bg_choice === 'custom' && $custom_gradient_modified) {
+            // User created custom gradient
             $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
             $bg_type = 'gradient';
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
             error_log("✅ Applied custom gradient: {$bg_value}");
-        } elseif ($current_bg_type === 'color' && !empty($custom_bg_color)) {
-            // Only apply solid color if current theme already uses solid
+        } elseif ($bg_choice === 'solid' && !empty($custom_bg_color)) {
+            // User entered solid color
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
-            error_log("✅ Applied solid color (explicit): {$bg_value}");
+            error_log("✅ Applied solid color: {$bg_value}");
         } else {
-            // No new gradient/color selected - keep existing
+            // No explicit choice or fallback - keep existing
             $bg_value = $current_bg_value;
             $bg_type = $current_bg_type;
             error_log("⚠️ Keeping existing background: type={$bg_type}, value={$bg_value}");
@@ -1175,6 +1179,9 @@
                                     <i class="bi bi-palette2 text-primary"></i> Background & Colors
                                 </h5>
                                 <form method="POST" id="advancedForm">
+                                    <!-- Hidden field to track user's last background choice -->
+                                    <input type="hidden" name="bg_choice" id="bgChoice" value="preset">
+                                    
                                     <!-- Gradient Presets -->
                                     <h6 class="fw-bold mb-3">
                                         <i class="bi bi-rainbow text-primary me-2"></i>Gradient Backgrounds
@@ -2593,6 +2600,9 @@
         }
         
         function selectGradientFromRadio(radio, css) {
+            // Set bg_choice to 'preset' when gradient preset selected
+            document.getElementById('bgChoice').value = 'preset';
+            
             // Remove active from all cards
             document.querySelectorAll('.gradient-preset-card').forEach(card => {
                 card.classList.remove('active');
@@ -2655,6 +2665,8 @@
         // Color picker hex display
         document.getElementById('customBgColor')?.addEventListener('input', function() {
             document.getElementById('customBgColorHex').value = this.value;
+            // Set bg_choice to 'solid' when solid color changed
+            document.getElementById('bgChoice').value = 'solid';
             // Update preview
             document.getElementById('previewContent').style.background = this.value;
         });
@@ -2673,6 +2685,29 @@
             document.getElementById('previewTitle').style.color = this.value;
             document.getElementById('previewBio').style.color = this.value;
         });
+        
+        // Custom gradient color pickers
+        document.getElementById('customGradientStart')?.addEventListener('input', function() {
+            document.getElementById('customGradientStartHex').value = this.value;
+            // Set bg_choice to 'custom' when custom gradient changed
+            document.getElementById('bgChoice').value = 'custom';
+            updateCustomGradientPreview();
+        });
+        
+        document.getElementById('customGradientEnd')?.addEventListener('input', function() {
+            document.getElementById('customGradientEndHex').value = this.value;
+            // Set bg_choice to 'custom' when custom gradient changed
+            document.getElementById('bgChoice').value = 'custom';
+            updateCustomGradientPreview();
+        });
+        
+        function updateCustomGradientPreview() {
+            const start = document.getElementById('customGradientStart')?.value || '#667eea';
+            const end = document.getElementById('customGradientEnd')?.value || '#764ba2';
+            const gradient = `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
+            document.getElementById('customGradientPreview').style.background = gradient;
+            document.getElementById('previewContent').style.background = gradient;
+        }
         
         document.getElementById('customLinkTextColor')?.addEventListener('input', function() {
             document.getElementById('customLinkTextColorHex').value = this.value;

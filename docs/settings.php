@@ -412,9 +412,40 @@ if (isset($_GET['delete_account']) && $_GET['delete_account'] === 'confirm') {
     }
 }
 
-// Use data already loaded at the top with stats
-// Data already populated in $user_profiles from lines 30-48
-$user_slugs = $user_profiles;
+// Get user's all profiles (slugs) with stats - use get_all_rows helper
+$user_slugs = [];
+$user_profiles = [];
+$slugs_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at
+                FROM profiles p
+                WHERE p.user_id = ?
+                ORDER BY p.display_order ASC, p.created_at ASC";
+$profiles_list = get_all_rows($slugs_query, [$current_user_id], 'i');
+
+// Reset arrays to avoid duplicates with old data
+$user_slugs = [];
+$user_profiles = [];
+
+// For each profile, get link count and total clicks
+foreach ($profiles_list as $profile) {
+    // Get link count
+    $link_count_row = get_single_row(
+        "SELECT COUNT(*) as count FROM links WHERE profile_id = ?",
+        [$profile['id']],
+        'i'
+    );
+    $profile['link_count'] = $link_count_row['count'] ?? 0;
+    
+    // Get total clicks
+    $clicks_row = get_single_row(
+        "SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id = ?",
+        [$profile['id']],
+        'i'
+    );
+    $profile['total_clicks'] = $clicks_row['total'] ?? 0;
+    
+    $user_slugs[] = $profile;
+    $user_profiles[] = $profile;
+}
 
 // Totals across user's profiles
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['count'];
