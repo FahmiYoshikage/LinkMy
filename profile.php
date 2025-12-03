@@ -410,12 +410,16 @@
             position: relative;
             
             <?php if (!empty($bg_image)): ?>
-            /* Background Image Mode */
+            /* Background Image Mode - Prioritized over boxed layout */
             background: url('<?= $bg_image ?>') no-repeat center center fixed;
             background-size: cover;
-            <?php elseif ($boxed_layout): ?>
+            <?php elseif ($boxed_layout && !empty($outer_bg_value)): ?>
             /* Boxed mode: Use outer background */
-            background: <?= $outer_bg_value ?: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' ?>;
+            background: <?= $outer_bg_value ?>;
+            background-attachment: fixed;
+            <?php elseif ($boxed_layout): ?>
+            /* Boxed mode: Fallback gradient */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-attachment: fixed;
             <?php else: ?>
             /* Non-boxed mode: Use theme background directly */
