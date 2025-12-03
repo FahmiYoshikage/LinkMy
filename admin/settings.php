@@ -551,6 +551,11 @@ if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - LinkMy</title>
+    <!-- Disable Cloudflare optimizations that might corrupt data -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>if(typeof Rocketloader !== 'undefined'){Rocketloader.stop();}</script>
     <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
     <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -795,7 +800,11 @@ if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
                                 <p class="text-muted">Belum ada profile. Silakan tambahkan profile pertama Anda!</p>
                             <?php else: ?>
                                 <div class="list-group">
-                                    <?php foreach ($user_profiles as $profile): ?>
+                                    <?php 
+                                    // CRITICAL FIX: Use BACKUP data to prevent corruption
+                                    $profiles_to_render = isset($BACKUP_user_profiles) ? $BACKUP_user_profiles : $user_profiles;
+                                    foreach ($profiles_to_render as $profile): 
+                                    ?>
                                         <div class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
                                                 <code class="fs-5"><?= htmlspecialchars($profile['slug']) ?></code>
