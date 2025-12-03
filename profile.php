@@ -238,20 +238,24 @@
     if ($categories_exists && $enable_categories) {
         // Query with categories JOIN using v3 schema (categories_v3)
         // Multi-profile: Filter by profile_id instead of user_id
+        // INNER JOIN with profiles to prevent orphaned links from appearing
         $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
                         l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id,
                         c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
+                        INNER JOIN profiles p ON l.profile_id = p.id
                         LEFT JOIN categories_v3 c ON l.category_id = c.id
-                        WHERE l.profile_id = ? AND l.is_active = 1
+                        WHERE l.profile_id = ? AND l.is_active = 1 AND p.id = ?
                         ORDER BY l.position ASC, l.id ASC";
     } else {
         // Simple query without categories (v3 schema)
+        // INNER JOIN with profiles to prevent orphaned links from appearing
         $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
                         l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id
                         FROM links l
-                        WHERE l.profile_id = ? AND l.is_active = 1
+                        INNER JOIN profiles p ON l.profile_id = p.id
+                        WHERE l.profile_id = ? AND l.is_active = 1 AND p.id = ?
                         ORDER BY l.position ASC, l.id ASC";
     }
     
@@ -261,7 +265,8 @@
         error_log("Error preparing links query: " . mysqli_error($conn));
         $links_result = false;
     } else {
-        mysqli_stmt_bind_param($stmt_links, 'i', $profile_id);
+        // Bind profile_id twice for double validation (l.profile_id = ? AND p.id = ?)
+        mysqli_stmt_bind_param($stmt_links, 'ii', $profile_id, $profile_id);
         mysqli_stmt_execute($stmt_links);
         $links_result = mysqli_stmt_get_result($stmt_links);
     }
@@ -436,22 +441,7 @@
         }
         
         <?php if (!empty($bg_image)): ?>
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: <?= $background_css ?>; /* Use the semi-transparent gradient overlay */
-            z-index: 0;
-            pointer-events: none;
-        }
-        
-        body > * {
-            position: relative;
-            z-index: 1;
-        }
+        /* Background image mode - no overlay needed, pure image background */
         <?php endif; ?>
         
         .profile-container {
@@ -645,14 +635,14 @@
     <?php if ($boxed_layout): ?>
     <div class="boxed-wrapper">
         <!-- Top Action Buttons Inside Boxed Wrapper -->
-        <div class="btn-top-action left">
-            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
+        <div class="btn-top-action left" style="z-index: 1050; position: relative;">
+            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); position: relative; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
                 <i class="bi bi-link-45deg" style="font-size: 1.3rem; color: #667eea;"></i>
             </button>
         </div>
         
-        <div class="btn-top-action right">
-            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
+        <div class="btn-top-action right" style="z-index: 1050; position: relative;">
+            <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); position: relative; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
                 <i class="bi bi-share-fill" style="font-size: 1.1rem; color: #667eea;"></i>
             </button>
         </div>
