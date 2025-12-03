@@ -16,6 +16,21 @@ if (isset($_SESSION['success_message'])) {
     unset($_SESSION['success_message']);
 }
 
+// Helper function to check if profile page is accessible
+function check_profile_accessibility($slug) {
+    // Direct query check - more efficient than curl
+    global $conn;
+    $profile_check = get_single_row(
+        "SELECT is_active FROM profiles WHERE slug = ? LIMIT 1",
+        [$slug],
+        's'
+    );
+    if (!$profile_check) {
+        return false; // Profile not found
+    }
+    return (int)$profile_check['is_active'] === 1;
+}
+
 // Get user data with primary profile slug
 $query = "SELECT u.*, p.slug as page_slug FROM users u LEFT JOIN profiles p ON u.id = p.user_id AND p.display_order = 0 WHERE u.id = ? LIMIT 1";
 $stmt = mysqli_prepare($conn, $query);
@@ -691,13 +706,13 @@ if (isset($_GET['debug'])) {
                                             <div>
                                                 <code class="fs-5"><?= htmlspecialchars($profile['slug']) ?></code>
                                                 <?php 
-                                                // Explicit cast to int to ensure correct comparison
-                                                $is_active = (int)($profile['is_active'] ?? 0);
+                                                // Check actual page accessibility
+                                                $is_accessible = check_profile_accessibility($profile['slug']);
                                                 ?>
-                                                <?php if ($is_active === 1): ?>
+                                                <?php if ($is_accessible): ?>
                                                     <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Aktif</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-secondary ms-2"><i class="bi bi-x-circle-fill"></i> Nonaktif</span>
+                                                    <span class="badge bg-danger ms-2"><i class="bi bi-x-circle-fill"></i> Nonaktif</span>
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
@@ -711,16 +726,16 @@ if (isset($_GET['debug'])) {
                                                 </small>
                                             </div>
                                             <div class="d-flex gap-2">
-                                                <?php if ($is_active === 1): ?>
+                                                <?php if ($is_accessible): ?>
                                                 <a href="?toggle_active=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-warning"
+                                                   class="btn btn-sm btn-warning text-white"
                                                    onclick="return confirm('Nonaktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
                                                     <i class="bi bi-pause-circle"></i> 
                                                     Nonaktifkan
                                                 </a>
                                                 <?php else: ?>
                                                 <a href="?toggle_active=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-success"
+                                                   class="btn btn-sm btn-success text-white"
                                                    onclick="return confirm('Aktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
                                                     <i class="bi bi-play-circle"></i> 
                                                     Aktifkan

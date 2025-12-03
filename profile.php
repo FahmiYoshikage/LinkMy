@@ -48,6 +48,41 @@
     }
 
     $user_data = mysqli_fetch_assoc($result);
+    
+    // Check if profile is active - show 404 if inactive
+    $is_profile_active = (int)($user_data['is_active'] ?? 0);
+    if ($is_profile_active !== 1) {
+?>
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>404 - LinkMy</title>
+            <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="text-center">
+                <h1 class="display-1 fw-bold">404</h1>
+                <p class="fs-3">Halaman tidak ditemukan!</p>
+                <a href="index.php" class="btn btn-light btn-lg mt-3">Kembali ke Home</a>
+            </div>
+        </body>
+        </html>
+<?php
+        exit;
+    }
+    
     // v3 schema mapping: view returns id, slug, name, title, bio, avatar, username, is_verified, bg_type, bg_value, etc.
     $profile_id = $user_data['id']; // v3: profiles.id
     $profile_title = $user_data['title'] ?? $user_data['username'];
