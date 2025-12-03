@@ -110,6 +110,16 @@ foreach ($user_profiles as $idx => $prof) {
     error_log("Final array check #{$idx}: slug={$prof['slug']}, link_count=" . ($prof['link_count'] ?? 'MISSING') . ", total_clicks=" . ($prof['total_clicks'] ?? 'MISSING'));
 }
 
+// EMERGENCY DEBUG: Output data before any processing
+if (isset($_GET['debug_raw'])) {
+    echo "<h1>RAW DEBUG OUTPUT</h1>";
+    echo "<pre>";
+    echo "user_profiles count: " . count($user_profiles) . "\n\n";
+    var_dump($user_profiles);
+    echo "</pre>";
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
