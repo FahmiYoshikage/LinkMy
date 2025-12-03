@@ -11,9 +11,13 @@
         die('Page not found!');
     }
 
-    // Multi-profile support: Load profile by slug using v3 view
-    $query = "SELECT * FROM v_public_profiles WHERE slug = ?";
-    $result = execute_query($query, [$slug], 's');
+    // Multi-profile support: Load profile by slug - check is_active first
+    // Query directly from profiles to get is_active status
+    $profile_check = "SELECT p.*, u.username, u.is_verified 
+                      FROM profiles p 
+                      JOIN users u ON p.user_id = u.id 
+                      WHERE p.slug = ?";
+    $result = execute_query($profile_check, [$slug], 's');
 
     if (!$result || mysqli_num_rows($result) === 0){
 ?>
@@ -47,10 +51,10 @@
     exit;
     }
 
-    $user_data = mysqli_fetch_assoc($result);
+    $profile_data = mysqli_fetch_assoc($result);
     
     // Check if profile is active - show 404 if inactive
-    $is_profile_active = (int)($user_data['is_active'] ?? 0);
+    $is_profile_active = (int)($profile_data['is_active'] ?? 0);
     if ($is_profile_active !== 1) {
 ?>
         <!DOCTYPE html>
@@ -82,6 +86,20 @@
 <?php
         exit;
     }
+    
+    // Now load full data from v_public_profiles view (which has WHERE is_active = 1)
+    // But we already checked is_active above, so we need to bypass the view filter
+    // Let's load theme data separately
+    $theme_query = "SELECT t.*, tb.enabled AS boxed_enabled, tb.outer_bg_type, tb.outer_bg_value, 
+                    tb.container_bg_color, tb.container_max_width, tb.container_radius, tb.container_shadow
+                    FROM themes t
+                    LEFT JOIN theme_boxed tb ON tb.theme_id = t.id
+                    WHERE t.profile_id = ?";
+    $theme_result = execute_query($theme_query, [$profile_data['id']], 'i');
+    $theme_data = $theme_result ? mysqli_fetch_assoc($theme_result) : [];
+    
+    // Merge profile and theme data
+    $user_data = array_merge($profile_data, $theme_data);
     
     // v3 schema mapping: view returns id, slug, name, title, bio, avatar, username, is_verified, bg_type, bg_value, etc.
     $profile_id = $user_data['id']; // v3: profiles.id
