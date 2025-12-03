@@ -647,10 +647,7 @@ if (isset($_GET['debug'])) {
                                 <?php foreach ($user_profiles as $p): ?>
                                     <li>
                                         <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($p['slug']) ?></code>
-                                        <small class="text-muted ms-2">
-                                            (<?= intval($p['link_count'] ?? 0) ?> link, <?= intval($p['total_clicks'] ?? 0) ?> klik, 
-                                            dibuat: <?= !empty($p['created_at']) && $p['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($p['created_at'])) : date('d M Y') ?>)
-                                        </small>
+                                        
                                     </li>
                                 <?php endforeach; ?>
                             </ul>

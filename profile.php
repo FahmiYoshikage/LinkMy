@@ -294,9 +294,9 @@
     $button_bg = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.2)' : '#ffffff');
     $button_hover = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.3)' : '#667eea');
     
-    // Link text color (NEW v2.1)
-    $link_text_color = $custom_link_text_color ?? ($is_gradient ? '#ffffff' : '#333333');
-    $link_hover_text_color = '#ffffff'; // Always white on hover for contrast
+    // Link text color follows main text_color for consistency
+    $link_text_color = $text_color; // Use same color as profile title/bio
+    $link_hover_text_color = $text_color; // Maintain consistency on hover too
     
     // Shadow intensity mapping (NEW v2.1)
     $shadow_values = [
