@@ -1,8 +1,13 @@
 <?php
 // Prevent caching to always show fresh data
-header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+
+// Add unique page load identifier for debugging
+$page_load_id = uniqid('page_', true);
+error_log("=== PAGE LOAD START: {$page_load_id} ===");
 
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
@@ -83,10 +88,27 @@ while ($row = mysqli_fetch_assoc($p_result)) {
     // Debug: Log ALL fields from the row
     error_log("Row {$row_count}: " . json_encode($row));
     
+    // CRITICAL: Verify data integrity
+    if (!isset($row['link_count']) || !isset($row['total_clicks'])) {
+        error_log("WARNING: Missing stats fields in row {$row_count}!");
+        // Add default values if missing
+        $row['link_count'] = $row['link_count'] ?? 0;
+        $row['total_clicks'] = $row['total_clicks'] ?? 0;
+        $row['created_at'] = $row['created_at'] ?? date('Y-m-d H:i:s');
+        $row['is_active'] = $row['is_active'] ?? 1;
+    } else {
+        error_log("Row {$row_count} has all required fields: link_count={$row['link_count']}, total_clicks={$row['total_clicks']}");
+    }
+    
     $all_profiles[] = $row;
     $user_profiles[] = $row; // Populate both arrays
 }
 error_log("Total profiles loaded: " . count($user_profiles));
+
+// Final verification
+foreach ($user_profiles as $idx => $prof) {
+    error_log("Final array check #{$idx}: slug={$prof['slug']}, link_count=" . ($prof['link_count'] ?? 'MISSING') . ", total_clicks=" . ($prof['total_clicks'] ?? 'MISSING'));
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
@@ -779,11 +801,13 @@ if (isset($_GET['debug'])) {
                             
                             <!-- Debug Panel -->
                             <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                                <strong><i class="bi bi-info-circle"></i> Debug Info (RAW DATA):</strong>
+                                <strong><i class="bi bi-info-circle"></i> Debug Info (RAW DATA) - Page Load: <?= $page_load_id ?? 'unknown' ?></strong>
                                 <div class="mt-2" style="font-family: monospace; font-size: 0.75rem; background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto;">
                                     <pre style="margin: 0;"><?php 
+                                    echo "Page loaded at: " . date('Y-m-d H:i:s') . "\n";
                                     echo "Current User ID: {$current_user_id}\n";
-                                    echo "Total Profiles: " . count($user_profiles) . "\n\n";
+                                    echo "Total Profiles: " . count($user_profiles) . "\n";
+                                    echo "Array keys in \$user_profiles[0]: " . (isset($user_profiles[0]) ? implode(', ', array_keys($user_profiles[0])) : 'N/A') . "\n\n";
                                     foreach ($user_profiles as $idx => $p) {
                                         echo "Profile #{$idx}:\n";
                                         print_r($p);
