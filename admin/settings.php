@@ -1,27 +1,8 @@
 <?php
-// Clear all caches aggressively - FORCE RELOAD
-if (function_exists('opcache_invalidate')) {
-    opcache_invalidate(__FILE__, true);
-}
-if (function_exists('opcache_reset')) {
-    @opcache_reset();
-}
-// Clear APC cache if available
-if (function_exists('apc_clear_cache')) {
-    @apc_clear_cache();
-}
-
 // Prevent caching to always show fresh data
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0, post-check=0, pre-check=0');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
-header('Expires: Mon, 01 Jan 1990 00:00:00 GMT');
-header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-header('X-Accel-Expires: 0');
-
-// Add unique page load identifier for debugging
-$page_load_id = uniqid('page_', true);
-$cache_buster = time() . rand(1000, 9999);
-error_log("=== PAGE LOAD START: {$page_load_id} ===");
+header('Expires: 0');
 
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
@@ -63,12 +44,8 @@ if (!$user) {
 
 // Get all user profiles for slug management with stats (always fresh from DB)
 $all_profiles = [];
-$user_profiles = []; // Alias for compatibility
+$user_profiles = [];
 
-// Debug: Log current user ID
-error_log("Loading profiles for user_id: {$current_user_id}");
-
-// Use direct mysqli_query for debugging (without prepared statements)
 $p_query = "SELECT 
             p.id, 
             p.user_id, 
@@ -85,60 +62,20 @@ $p_query = "SELECT
             GROUP BY p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at
             ORDER BY p.display_order ASC";
 
-error_log("Executing query: {$p_query}");
-
 $p_result = mysqli_query($conn, $p_query);
 
 if (!$p_result) {
-    error_log("ERROR: Query failed - " . mysqli_error($conn));
     die("Query error: " . mysqli_error($conn));
 }
 
-error_log("Query executed successfully. Fetching rows...");
-
-$row_count = 0;
 while ($row = mysqli_fetch_assoc($p_result)) {
-    $row_count++;
-    // Debug: Log ALL fields from the row
-    error_log("Row {$row_count}: " . json_encode($row));
-    
-    // CRITICAL: Verify data integrity
-    if (!isset($row['link_count']) || !isset($row['total_clicks'])) {
-        error_log("WARNING: Missing stats fields in row {$row_count}!");
-        // Add default values if missing
-        $row['link_count'] = $row['link_count'] ?? 0;
-        $row['total_clicks'] = $row['total_clicks'] ?? 0;
-        $row['created_at'] = $row['created_at'] ?? date('Y-m-d H:i:s');
-        $row['is_active'] = $row['is_active'] ?? 1;
-    } else {
-        error_log("Row {$row_count} has all required fields: link_count={$row['link_count']}, total_clicks={$row['total_clicks']}");
-    }
-    
     $all_profiles[] = $row;
-    $user_profiles[] = $row; // Populate both arrays
-}
-error_log("Total profiles loaded: " . count($user_profiles));
-
-// Final verification
-foreach ($user_profiles as $idx => $prof) {
-    error_log("Final array check #{$idx}: slug={$prof['slug']}, link_count=" . ($prof['link_count'] ?? 'MISSING') . ", total_clicks=" . ($prof['total_clicks'] ?? 'MISSING'));
+    $user_profiles[] = $row;
 }
 
-// CRITICAL: Make a backup copy of the data RIGHT NOW before anything else touches it
+// Backup data to prevent corruption during render
 $BACKUP_user_profiles = $user_profiles;
 $BACKUP_all_profiles = $all_profiles;
-
-error_log("BACKUP CREATED: " . json_encode($BACKUP_user_profiles));
-
-// EMERGENCY DEBUG: Output data before any processing
-if (isset($_GET['debug_raw'])) {
-    echo "<h1>RAW DEBUG OUTPUT</h1>";
-    echo "<pre>";
-    echo "user_profiles count: " . count($user_profiles) . "\n\n";
-    var_dump($user_profiles);
-    echo "</pre>";
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
@@ -452,7 +389,6 @@ if (isset($_GET['delete_slug'])) {
 // Toggle profile active/inactive status
 if (isset($_GET['toggle_active'])) {
     $id = intval($_GET['toggle_active']);
-    error_log("Toggle active requested for profile ID: $id by user: $current_user_id");
     
     // Check if profile belongs to user
     $profile_data = get_single_row(
@@ -463,22 +399,15 @@ if (isset($_GET['toggle_active'])) {
     
     if (!$profile_data) {
         $error = 'Profile tidak ditemukan!';
-        error_log("Toggle failed: Profile not found or doesn't belong to user");
     } else {
-        error_log("Current is_active value: " . ($profile_data['is_active'] ?? 'NULL'));
-        
         // Toggle is_active status (1 -> 0 or 0 -> 1)
         $new_status = $profile_data['is_active'] ? 0 : 1;
-        error_log("New is_active value will be: $new_status");
         
         $query = "UPDATE profiles SET is_active = ? WHERE id = ? AND user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'iii', $new_status, $id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            $affected = mysqli_stmt_affected_rows($stmt);
-            error_log("Toggle executed successfully. Affected rows: $affected");
-            
             $status_text = $new_status ? 'diaktifkan' : 'dinonaktifkan';
             $_SESSION['success_message'] = "Profile '{$profile_data['slug']}' berhasil {$status_text}!";
             
@@ -486,8 +415,7 @@ if (isset($_GET['toggle_active'])) {
             header("Location: settings.php");
             exit();
         } else {
-            $error = 'Gagal mengubah status profile! ' . mysqli_error($conn);
-            error_log("Toggle failed: " . mysqli_error($conn));
+            $error = 'Gagal mengubah status profile!';
         }
     }
 }
@@ -512,38 +440,6 @@ $user_slugs = $user_profiles;
 $total_links = get_single_row("SELECT COUNT(*) as count FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['count'];
 $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM links WHERE profile_id IN (SELECT id FROM profiles WHERE user_id = ?)", [$current_user_id], 'i')['total'] ?? 0;
 
-// DEBUG: Check what's in $user_profiles (remove after verifying)
-if (isset($_GET['debug'])) {
-    echo "<pre style='background:#f0f0f0;padding:20px;border:2px solid #333;'>";
-    echo "DEBUG INFO:\n";
-    echo "current_user_id: {$current_user_id}\n\n";
-    echo "user_profiles array count: " . count($user_profiles) . "\n\n";
-    echo "user_profiles data:\n";
-    print_r($user_profiles);
-    echo "\nuser_slugs data:\n";
-    print_r($user_slugs);
-    echo "\ntotal_links: {$total_links}\n";
-    echo "total_clicks: {$total_clicks}\n";
-    echo "</pre>";
-    exit;
-}
-
-// CRITICAL CHECK: Compare backup with current data RIGHT BEFORE HTML RENDER
-error_log("PRE-RENDER CHECK:");
-error_log("BACKUP keys: " . (isset($BACKUP_user_profiles[0]) ? implode(',', array_keys($BACKUP_user_profiles[0])) : 'NONE'));
-error_log("CURRENT keys: " . (isset($user_profiles[0]) ? implode(',', array_keys($user_profiles[0])) : 'NONE'));
-
-if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
-    $backup_keys = array_keys($BACKUP_user_profiles[0]);
-    $current_keys = array_keys($user_profiles[0]);
-    $missing_keys = array_diff($backup_keys, $current_keys);
-    if (!empty($missing_keys)) {
-        error_log("!!! DATA CORRUPTION DETECTED !!! Missing keys: " . implode(',', $missing_keys));
-        // RESTORE FROM BACKUP
-        $user_profiles = $BACKUP_user_profiles;
-        error_log("DATA RESTORED FROM BACKUP");
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -819,10 +715,9 @@ if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
                                                 <?php endif; ?>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <i class="bi bi-link-45deg"></i> <strong><?= isset($profile['link_count']) ? intval($profile['link_count']) : 'MISSING' ?></strong> Links
-                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= isset($profile['total_clicks']) ? intval($profile['total_clicks']) : 'MISSING' ?></strong> Klik
+                                                    <i class="bi bi-link-45deg"></i> <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
+                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
                                                     | Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
-                                                    <!-- DEBUG: link_count=<?= $profile['link_count'] ?? 'UNDEFINED' ?>, total_clicks=<?= $profile['total_clicks'] ?? 'UNDEFINED' ?> -->
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
@@ -855,45 +750,6 @@ if (isset($BACKUP_user_profiles[0]) && isset($user_profiles[0])) {
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
-                            
-                            <!-- Debug Panel -->
-                            <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                                <strong><i class="bi bi-info-circle"></i> Debug Info (RAW DATA) - Page Load: <?= $page_load_id ?? 'unknown' ?></strong>
-                                <div class="mt-2" style="font-family: monospace; font-size: 0.75rem; background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto;">
-                                    <pre style="margin: 0;"><?php 
-                                    echo "Page loaded at: " . date('Y-m-d H:i:s') . "\n";
-                                    echo "Current User ID: {$current_user_id}\n";
-                                    echo "Total Profiles: " . count($user_profiles) . "\n";
-                                    echo "Array keys in \$user_profiles[0]: " . (isset($user_profiles[0]) ? implode(', ', array_keys($user_profiles[0])) : 'N/A') . "\n\n";
-                                    foreach ($user_profiles as $idx => $p) {
-                                        echo "Profile #{$idx}:\n";
-                                        print_r($p);
-                                        echo "\n---\n";
-                                    }
-                                    ?></pre>
-                                </div>
-                                <ul class="mb-0 mt-2" style="font-family: monospace; font-size: 0.8rem;">
-                                    <?php foreach ($user_profiles as $p): ?>
-                                    <li>
-                                        <strong><?= htmlspecialchars($p['slug']) ?></strong> 
-                                        (ID: <?= $p['id'] ?>)
-                                        - Links: <?= isset($p['link_count']) ? $p['link_count'] : 'UNDEFINED' ?> 
-                                        - Clicks: <?= isset($p['total_clicks']) ? $p['total_clicks'] : 'UNDEFINED' ?>
-                                        - Created: <?= $p['created_at'] ?? 'N/A' ?>
-                                        - is_active: <?= $p['is_active'] ?? 'NULL' ?>
-                                    </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                                <hr class="my-2">
-                                <small class="text-muted">
-                                    Jika link_count dan total_clicks menunjukkan 0, coba:
-                                    <ol class="mb-0 mt-1">
-                                        <li>Periksa apakah ada data di tabel <code>links</code> dengan <code>profile_id</code> yang sesuai</li>
-                                        <li>Pastikan foreign key <code>profile_id</code> pada tabel <code>links</code> match dengan <code>id</code> pada tabel <code>profiles</code></li>
-                                        <li><strong><a href="../diagnostics/check_profile_links.php" target="_blank" class="alert-link">🔍 Jalankan Diagnostic Tool</a></strong> untuk analisis lengkap</li>
-                                    </ol>
-                                </small>
-                            </div>
                         </div>
                         
                         <?php if (count($user_profiles) < 2): ?>
