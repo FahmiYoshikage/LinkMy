@@ -96,13 +96,24 @@
                 if (isset($matches[0][1])) {
                     $appearance['outer_bg_gradient_end'] = $matches[0][1];
                 }
-            } elseif ($boxed['outer_bg_type'] === 'solid' && !empty($boxed['outer_bg_value'])) {
-                // Extract solid color
+            } elseif ($boxed['outer_bg_type'] === 'color' && !empty($boxed['outer_bg_value'])) {
+                // Extract solid color (note: database uses 'color' not 'solid')
                 if (preg_match('/#[0-9a-fA-F]{6}/', $boxed['outer_bg_value'], $matches)) {
                     $appearance['outer_bg_color'] = $matches[0];
                 } else {
                     $appearance['outer_bg_color'] = $boxed['outer_bg_value'];
                 }
+            }
+            
+            // Ensure defaults are set if parsing failed
+            if (!isset($appearance['outer_bg_gradient_start'])) {
+                $appearance['outer_bg_gradient_start'] = '#667eea';
+            }
+            if (!isset($appearance['outer_bg_gradient_end'])) {
+                $appearance['outer_bg_gradient_end'] = '#764ba2';
+            }
+            if (!isset($appearance['outer_bg_color'])) {
+                $appearance['outer_bg_color'] = '#667eea';
             }
         } else {
             // Defaults if no boxed row
@@ -337,31 +348,32 @@
         $custom_gradient_start = !empty($_POST['custom_gradient_start']) ? $_POST['custom_gradient_start'] : null;
         $custom_gradient_end = !empty($_POST['custom_gradient_end']) ? $_POST['custom_gradient_end'] : null;
         
-        // Determine if user made color/gradient changes
-        $bg_changed = false;
+        // Determine which background option was selected
+        // Priority: custom gradient > gradient preset > solid color > keep existing
         
         if ($custom_gradient_start && $custom_gradient_end) {
             // User created custom gradient
             $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
             $bg_type = 'gradient';
-            $bg_changed = true;
             // Store gradient colors for editing
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
-        } elseif ($gradient_preset && !empty($gradient_preset)) {
-            // User selected a gradient preset - always apply it
+            error_log("Applied custom gradient: {$bg_value}");
+        } elseif (!empty($gradient_preset)) {
+            // User selected a gradient preset - ALWAYS apply it
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
-            $bg_changed = ($bg_value !== $current_bg_value); // Check if different from current
-        } elseif ($custom_bg_color && !empty($custom_bg_color)) {
-            // User entered custom solid color - always apply if provided
+            error_log("Applied gradient preset '{$gradient_preset}': {$bg_value}");
+        } elseif (!empty($custom_bg_color)) {
+            // User entered custom solid color - ALWAYS apply if provided (allow any color)
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
-            $bg_changed = ($bg_value !== $current_bg_value || $bg_type !== $current_bg_type);
+            error_log("Applied solid color: {$bg_value}");
         } else {
             // No new gradient/color selected - keep existing
             $bg_value = $current_bg_value;
             $bg_type = $current_bg_type;
+            error_log("Keeping existing background: type={$bg_type}, value={$bg_value}");
         }
         
         $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
@@ -391,7 +403,32 @@
                 // Reload data from database to ensure we have latest - Multi-profile
                 $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
                 
-                error_log("After save - gradient: " . ($appearance['gradient_preset'] ?? 'NULL'));
+                // CRITICAL: Reload boxed layout state after theme save to keep checkbox checked
+                $theme_id_check = get_single_row("SELECT id FROM themes WHERE profile_id = ? LIMIT 1", [$active_profile_id], 'i');
+                if ($theme_id_check) {
+                    $boxed_check = get_single_row("SELECT enabled, outer_bg_type, outer_bg_value, container_max_width, container_radius, container_shadow FROM theme_boxed WHERE theme_id = ? LIMIT 1", [$theme_id_check['id']], 'i');
+                    if ($boxed_check) {
+                        $appearance['boxed_layout'] = (int)$boxed_check['enabled'];
+                        $appearance['outer_bg_type'] = $boxed_check['outer_bg_type'];
+                        $appearance['outer_bg_value'] = $boxed_check['outer_bg_value'];
+                        $appearance['container_max_width'] = (int)$boxed_check['container_max_width'];
+                        $appearance['container_border_radius'] = (int)$boxed_check['container_radius'];
+                        $appearance['container_shadow'] = (int)$boxed_check['container_shadow'];
+                        
+                        // Parse colors for form display
+                        if ($boxed_check['outer_bg_type'] === 'gradient' && !empty($boxed_check['outer_bg_value'])) {
+                            preg_match_all('/#[0-9a-fA-F]{6}/', $boxed_check['outer_bg_value'], $color_matches);
+                            if (isset($color_matches[0][0])) $appearance['outer_bg_gradient_start'] = $color_matches[0][0];
+                            if (isset($color_matches[0][1])) $appearance['outer_bg_gradient_end'] = $color_matches[0][1];
+                        } elseif ($boxed_check['outer_bg_type'] === 'color' && !empty($boxed_check['outer_bg_value'])) {
+                            if (preg_match('/#[0-9a-fA-F]{6}/', $boxed_check['outer_bg_value'], $color_match)) {
+                                $appearance['outer_bg_color'] = $color_match[0];
+                            }
+                        }
+                    }
+                }
+                
+                error_log("After save - boxed_layout state: " . ($appearance['boxed_layout'] ?? 0));
                 
                 // Set flag to switch to Advanced tab after reload
                 $_SESSION['show_advanced_tab'] = true;

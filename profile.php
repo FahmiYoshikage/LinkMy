@@ -393,13 +393,13 @@
         
         .profile-container {
             <?php if ($boxed_layout): ?>
-            /* Boxed Layout: Inner container dengan background dari theme */
-            max-width: <?= $container_max_width ?>px;
-            background: <?= $background_css ?>;
-            border-radius: <?= $container_border_radius ?>px;
-            padding: 2.5rem 2rem;
-            box-shadow: <?= $container_shadow ? '0 15px 50px rgba(0,0,0,0.2)' : 'none' ?>;
-            margin: 2rem auto;
+            /* Boxed Layout: Transparent container, styling applied to boxed-wrapper */
+            max-width: 100%;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+            margin: 0;
             <?php else: ?>
             /* Non-Boxed / Wide Layout: Background transparan, gradient di body */
             max-width: <?= $profile_layout === 'minimal' ? '480px' : '680px' ?>;
@@ -551,6 +551,9 @@
         .profile-container {
             max-width: 100% !important;
             padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
         /* Adjust buttons for boxed layout */
         .boxed-wrapper .btn-top-action {

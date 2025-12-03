@@ -27,10 +27,15 @@ if (!$user) {
     die('User not found!');
 }
 
-// Get all user profiles for slug management
+// Get all user profiles for slug management with stats
 $all_profiles = [];
 $user_profiles = []; // Alias for compatibility
-$p_query = "SELECT * FROM profiles WHERE user_id = ? ORDER BY display_order ASC";
+$p_query = "SELECT p.*, 
+            (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
+            (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
+            FROM profiles p 
+            WHERE p.user_id = ? 
+            ORDER BY p.display_order ASC";
 $p_stmt = mysqli_prepare($conn, $p_query);
 mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($p_stmt);
