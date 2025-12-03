@@ -349,7 +349,7 @@
         $custom_gradient_end = !empty($_POST['custom_gradient_end']) ? $_POST['custom_gradient_end'] : null;
         
         // Determine which background option was selected
-        // Priority: solid color > gradient preset > custom gradient > keep existing
+        // Priority: gradient preset > custom gradient > explicit solid color > keep existing
         
         // Log all POST values for debugging
         error_log("POST custom_gradient_start: " . ($custom_gradient_start ?? 'NULL'));
@@ -363,12 +363,7 @@
                                    (!in_array($custom_gradient_start, $custom_gradient_defaults) || 
                                     !in_array($custom_gradient_end, $custom_gradient_defaults));
         
-        if (!empty($custom_bg_color)) {
-            // User entered custom solid color - ALWAYS apply (allow any color including white)
-            $bg_value = $custom_bg_color;
-            $bg_type = 'color';
-            error_log("✅ Applied solid color: {$bg_value}");
-        } elseif (!empty($gradient_preset) && $gradient_preset !== 'none') {
+        if (!empty($gradient_preset) && $gradient_preset !== 'none') {
             // User selected a gradient preset - apply if solid not provided
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
@@ -380,6 +375,11 @@
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
             error_log("✅ Applied custom gradient: {$bg_value}");
+        } elseif ($current_bg_type === 'color' && !empty($custom_bg_color)) {
+            // Only apply solid color if current theme already uses solid
+            $bg_value = $custom_bg_color;
+            $bg_type = 'color';
+            error_log("✅ Applied solid color (explicit): {$bg_value}");
         } else {
             // No new gradient/color selected - keep existing
             $bg_value = $current_bg_value;
