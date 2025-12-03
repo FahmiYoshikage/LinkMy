@@ -56,8 +56,8 @@ mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($p_stmt);
 $p_result = mysqli_stmt_get_result($p_stmt);
 while ($row = mysqli_fetch_assoc($p_result)) {
-    // Debug: Log the is_active value
-    error_log("Profile '{$row['slug']}' loaded with is_active = " . ($row['is_active'] ?? 'NULL'));
+    // Debug: Log the profile data
+    error_log("Profile '{$row['slug']}' (ID: {$row['id']}) - is_active: {$row['is_active']}, links: {$row['link_count']}, clicks: {$row['total_clicks']}, created: {$row['created_at']}");
     $all_profiles[] = $row;
     $user_profiles[] = $row; // Populate both arrays
 }
@@ -751,6 +751,32 @@ if (isset($_GET['debug'])) {
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
+                            
+                            <!-- Debug Panel -->
+                            <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
+                                <strong><i class="bi bi-info-circle"></i> Debug Info:</strong>
+                                <ul class="mb-0 mt-2" style="font-family: monospace; font-size: 0.8rem;">
+                                    <?php foreach ($user_profiles as $p): ?>
+                                    <li>
+                                        <strong><?= htmlspecialchars($p['slug']) ?></strong> 
+                                        (ID: <?= $p['id'] ?>)
+                                        - Links: <?= $p['link_count'] ?? 0 ?> 
+                                        - Clicks: <?= $p['total_clicks'] ?? 0 ?>
+                                        - Created: <?= $p['created_at'] ?? 'N/A' ?>
+                                        - is_active: <?= $p['is_active'] ?? 'NULL' ?>
+                                    </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                                <hr class="my-2">
+                                <small class="text-muted">
+                                    Jika link_count dan total_clicks menunjukkan 0, coba:
+                                    <ol class="mb-0 mt-1">
+                                        <li>Periksa apakah ada data di tabel <code>links</code> dengan <code>profile_id</code> yang sesuai</li>
+                                        <li>Pastikan foreign key <code>profile_id</code> pada tabel <code>links</code> match dengan <code>id</code> pada tabel <code>profiles</code></li>
+                                        <li><strong><a href="../diagnostics/check_profile_links.php" target="_blank" class="alert-link">🔍 Jalankan Diagnostic Tool</a></strong> untuk analisis lengkap</li>
+                                    </ol>
+                                </small>
+                            </div>
                         </div>
                         
                         <?php if (count($user_profiles) < 2): ?>
