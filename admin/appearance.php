@@ -351,29 +351,40 @@
         // Determine which background option was selected
         // Priority: custom gradient > gradient preset > solid color > keep existing
         
-        if ($custom_gradient_start && $custom_gradient_end) {
-            // User created custom gradient
+        // Log all POST values for debugging
+        error_log("POST custom_gradient_start: " . ($custom_gradient_start ?? 'NULL'));
+        error_log("POST custom_gradient_end: " . ($custom_gradient_end ?? 'NULL'));
+        error_log("POST gradient_preset: " . ($gradient_preset ?? 'NULL'));
+        error_log("POST custom_bg_color: " . ($custom_bg_color ?? 'NULL'));
+        
+        // Check if custom gradient was modified (either field changed from defaults)
+        $custom_gradient_defaults = ['#667eea', '#764ba2'];
+        $custom_gradient_modified = ($custom_gradient_start && $custom_gradient_end) && 
+                                   (!in_array($custom_gradient_start, $custom_gradient_defaults) || 
+                                    !in_array($custom_gradient_end, $custom_gradient_defaults));
+        
+        if ($custom_gradient_modified) {
+            // User created custom gradient (colors changed from defaults)
             $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
             $bg_type = 'gradient';
-            // Store gradient colors for editing
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
-            error_log("Applied custom gradient: {$bg_value}");
-        } elseif (!empty($gradient_preset)) {
-            // User selected a gradient preset - ALWAYS apply it
+            error_log("✅ Applied custom gradient: {$bg_value}");
+        } elseif (!empty($gradient_preset) && $gradient_preset !== 'none') {
+            // User selected a gradient preset - ALWAYS apply it when present
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
-            error_log("Applied gradient preset '{$gradient_preset}': {$bg_value}");
+            error_log("✅ Applied gradient preset '{$gradient_preset}': {$bg_value}");
         } elseif (!empty($custom_bg_color)) {
-            // User entered custom solid color - ALWAYS apply if provided (allow any color)
+            // User entered custom solid color - ALWAYS apply (allow any color including white)
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
-            error_log("Applied solid color: {$bg_value}");
+            error_log("✅ Applied solid color: {$bg_value}");
         } else {
             // No new gradient/color selected - keep existing
             $bg_value = $current_bg_value;
             $bg_type = $current_bg_type;
-            error_log("Keeping existing background: type={$bg_type}, value={$bg_value}");
+            error_log("⚠️ Keeping existing background: type={$bg_type}, value={$bg_value}");
         }
         
         $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";

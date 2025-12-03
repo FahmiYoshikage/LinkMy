@@ -27,10 +27,10 @@ if (!$user) {
     die('User not found!');
 }
 
-// Get all user profiles for slug management with stats
+// Get all user profiles for slug management with stats (always fresh from DB)
 $all_profiles = [];
 $user_profiles = []; // Alias for compatibility
-$p_query = "SELECT p.*, 
+$p_query = "SELECT p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
             (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
             (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
             FROM profiles p 
@@ -41,9 +41,12 @@ mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
 mysqli_stmt_execute($p_stmt);
 $p_result = mysqli_stmt_get_result($p_stmt);
 while ($row = mysqli_fetch_assoc($p_result)) {
+    // Debug: Log the is_active value
+    error_log("Profile '{$row['slug']}' loaded with is_active = " . ($row['is_active'] ?? 'NULL'));
     $all_profiles[] = $row;
     $user_profiles[] = $row; // Populate both arrays
 }
+error_log("Total profiles loaded: " . count($user_profiles));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'];
@@ -721,7 +724,11 @@ if (isset($_GET['debug'])) {
                                         <div class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
                                                 <code class="fs-5"><?= htmlspecialchars($profile['slug']) ?></code>
-                                                <?php if ($profile['is_active']): ?>
+                                                <?php 
+                                                // Explicit cast to int to ensure correct comparison
+                                                $is_active = (int)($profile['is_active'] ?? 0);
+                                                ?>
+                                                <?php if ($is_active === 1): ?>
                                                     <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Aktif</span>
                                                 <?php else: ?>
                                                     <span class="badge bg-secondary ms-2"><i class="bi bi-x-circle-fill"></i> Nonaktif</span>
@@ -738,7 +745,7 @@ if (isset($_GET['debug'])) {
                                                 </small>
                                             </div>
                                             <div class="d-flex gap-2">
-                                                <?php if ($profile['is_active']): ?>
+                                                <?php if ($is_active === 1): ?>
                                                 <a href="?toggle_active=<?= $profile['id'] ?>" 
                                                    class="btn btn-sm btn-outline-warning"
                                                    onclick="return confirm('Nonaktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
