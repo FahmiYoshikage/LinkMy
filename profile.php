@@ -132,9 +132,32 @@
     $boxed_layout = $user_data['boxed_enabled'] ?? 0;
     $outer_bg_type = $user_data['outer_bg_type'] ?? 'gradient';
     $outer_bg_value = $user_data['outer_bg_value'] ?? '';
+    
+    // Parse outer_bg_value to extract gradient colors or solid color
     $outer_bg_gradient_start = '#667eea';
     $outer_bg_gradient_end = '#764ba2';
     $outer_bg_color = '#f0f0f0';
+    
+    if ($outer_bg_type === 'gradient' && !empty($outer_bg_value)) {
+        // Extract colors from gradient string like "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+        if (preg_match('/#[0-9a-fA-F]{6}/', $outer_bg_value, $matches, PREG_OFFSET_CAPTURE, 0)) {
+            $outer_bg_gradient_start = $matches[0][0];
+        }
+        if (preg_match('/#[0-9a-fA-F]{6}/', $outer_bg_value, $matches, PREG_OFFSET_CAPTURE, strlen($matches[0][0]))) {
+            $outer_bg_gradient_end = $matches[0][0];
+        }
+        // Fallback: try to match all hex colors
+        preg_match_all('/#[0-9a-fA-F]{6}/', $outer_bg_value, $all_colors);
+        if (isset($all_colors[0][0])) $outer_bg_gradient_start = $all_colors[0][0];
+        if (isset($all_colors[0][1])) $outer_bg_gradient_end = $all_colors[0][1];
+    } elseif ($outer_bg_type === 'solid' && !empty($outer_bg_value)) {
+        // Extract solid color
+        if (preg_match('/#[0-9a-fA-F]{6}/', $outer_bg_value, $matches)) {
+            $outer_bg_color = $matches[0];
+        } else {
+            $outer_bg_color = $outer_bg_value;
+        }
+    }
     $container_bg_color = $user_data['container_bg_color'] ?? '#ffffff';
     $container_max_width = $user_data['container_max_width'] ?? 480;
     $container_border_radius = $user_data['container_radius'] ?? 30;
@@ -370,9 +393,9 @@
         
         .profile-container {
             <?php if ($boxed_layout): ?>
-            /* Boxed Layout: Inner container dengan background putih */
+            /* Boxed Layout: Inner container dengan background dari theme */
             max-width: <?= $container_max_width ?>px;
-            background: #ffffff;
+            background: <?= $background_css ?>;
             border-radius: <?= $container_border_radius ?>px;
             padding: 2.5rem 2rem;
             box-shadow: <?= $container_shadow ? '0 15px 50px rgba(0,0,0,0.2)' : 'none' ?>;
@@ -501,7 +524,7 @@
         <?php if ($boxed_layout): ?>
         body {
             <?php if ($outer_bg_type == 'gradient'): ?>
-            background: linear-gradient(135deg, <?= $outer_bg_gradient_start ?>, <?= $outer_bg_gradient_end ?>) !important;
+            background: linear-gradient(135deg, <?= $outer_bg_gradient_start ?> 0%, <?= $outer_bg_gradient_end ?> 100%) !important;
             <?php else: ?>
             background: <?= $outer_bg_color ?> !important;
             <?php endif; ?>
@@ -513,7 +536,8 @@
             padding: 2rem 0.5rem;
         }
         .boxed-wrapper {
-            background: <?= $background_css ?>;
+            /* Inner box background - use theme background */
+            background: <?= $background_css ?> !important;
             max-width: <?= $container_max_width ?>px;
             width: 100%;
             border-radius: <?= $container_border_radius ?>px;

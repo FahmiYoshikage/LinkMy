@@ -85,11 +85,32 @@
             $appearance['container_max_width'] = (int)$boxed['container_max_width'];
             $appearance['container_border_radius'] = (int)$boxed['container_radius'];
             $appearance['container_shadow'] = (int)$boxed['container_shadow'];
+            
+            // Parse outer_bg_value to extract gradient colors or solid color
+            if ($boxed['outer_bg_type'] === 'gradient' && !empty($boxed['outer_bg_value'])) {
+                // Extract hex colors from gradient string
+                preg_match_all('/#[0-9a-fA-F]{6}/', $boxed['outer_bg_value'], $matches);
+                if (isset($matches[0][0])) {
+                    $appearance['outer_bg_gradient_start'] = $matches[0][0];
+                }
+                if (isset($matches[0][1])) {
+                    $appearance['outer_bg_gradient_end'] = $matches[0][1];
+                }
+            } elseif ($boxed['outer_bg_type'] === 'solid' && !empty($boxed['outer_bg_value'])) {
+                // Extract solid color
+                if (preg_match('/#[0-9a-fA-F]{6}/', $boxed['outer_bg_value'], $matches)) {
+                    $appearance['outer_bg_color'] = $matches[0];
+                } else {
+                    $appearance['outer_bg_color'] = $boxed['outer_bg_value'];
+                }
+            }
         } else {
             // Defaults if no boxed row
             $appearance['boxed_layout'] = 0;
             $appearance['outer_bg_type'] = 'gradient';
             $appearance['outer_bg_value'] = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $appearance['outer_bg_gradient_start'] = '#667eea';
+            $appearance['outer_bg_gradient_end'] = '#764ba2';
             $appearance['container_max_width'] = 480;
             $appearance['container_border_radius'] = 30;
             $appearance['container_shadow'] = 0;
@@ -316,21 +337,27 @@
         $custom_gradient_start = !empty($_POST['custom_gradient_start']) ? $_POST['custom_gradient_start'] : null;
         $custom_gradient_end = !empty($_POST['custom_gradient_end']) ? $_POST['custom_gradient_end'] : null;
         
+        // Determine if user made color/gradient changes
+        $bg_changed = false;
+        
         if ($custom_gradient_start && $custom_gradient_end) {
             // User created custom gradient
             $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
             $bg_type = 'gradient';
+            $bg_changed = true;
             // Store gradient colors for editing
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
-        } elseif ($gradient_preset) {
-            // User selected a gradient preset - update bg
+        } elseif ($gradient_preset && !empty($gradient_preset)) {
+            // User selected a gradient preset - always apply it
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             $bg_type = 'gradient';
-        } elseif ($custom_bg_color && $custom_bg_color !== '#ffffff') {
-            // User entered custom solid color
+            $bg_changed = ($bg_value !== $current_bg_value); // Check if different from current
+        } elseif ($custom_bg_color && !empty($custom_bg_color)) {
+            // User entered custom solid color - always apply if provided
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
+            $bg_changed = ($bg_value !== $current_bg_value || $bg_type !== $current_bg_type);
         } else {
             // No new gradient/color selected - keep existing
             $bg_value = $current_bg_value;
@@ -472,13 +499,11 @@
     }
 
     // Determine preview background (use v3 schema: bg_type and bg_value)
+    // ALWAYS show inner box background in preview (bg_value from themes table)
     $preview_bg = '#ffffff'; // default
     $preview_bg_image = null;
     
-    if (!empty($appearance['boxed_layout']) && !empty($appearance['outer_bg_value'])) {
-        // Boxed mode: use outer background
-        $preview_bg = $appearance['outer_bg_value'];
-    } elseif (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
+    if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
         // Image background: set both bg and image URL
         $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // fallback gradient
         $preview_bg_image = '../uploads/backgrounds/' . $appearance['bg_value'];
@@ -2030,8 +2055,28 @@
                     </p>
                     
                     <div class="preview-phone">
+                        <?php
+                        // Determine if boxed layout is enabled for preview
+                        $is_boxed = ($appearance['boxed_layout'] ?? 0);
+                        $outer_preview_bg = '';
+                        if ($is_boxed) {
+                            if (($appearance['outer_bg_type'] ?? 'gradient') == 'gradient') {
+                                $outer_preview_bg = 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#667eea') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#764ba2') . ')';
+                            } else {
+                                $outer_preview_bg = $appearance['outer_bg_color'] ?? '#667eea';
+                            }
+                        }
+                        ?>
+                        <?php if ($is_boxed): ?>
+                        <!-- Boxed Layout Preview: Outer container with inner box -->
+                        <div id="previewOuterBox" style="background: <?= $outer_preview_bg ?>; padding: 20px; min-height: 450px; border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                            <div class="preview-content" id="previewContent" 
+                                 style="background: <?= $preview_bg ?>; <?= $preview_bg_image ? 'background-image: url(' . $preview_bg_image . '); background-size: cover; background-position: center;' : '' ?>; width: 100%; max-width: 260px; border-radius: 15px; padding: 20px;">
+                        <?php else: ?>
+                        <!-- Regular Layout Preview: Full background -->
                         <div class="preview-content" id="previewContent" 
                              style="background: <?= $preview_bg ?>; <?= $preview_bg_image ? 'background-image: url(' . $preview_bg_image . '); background-size: cover; background-position: center;' : '' ?>">
+                        <?php endif; ?>
                             
                             <?php
                             $profile_pic_url = '../uploads/profile_pics/' . (($appearance['avatar'] ?? '') ?: 'default-avatar.png');
@@ -2101,6 +2146,9 @@
                                 <span>Sample Link 3</span>
                             </a>
                         </div>
+                        <?php if ($is_boxed): ?>
+                        </div> <!-- Close previewOuterBox -->
+                        <?php endif; ?>
                     </div>
                     
                     <div class="text-center mt-3">
@@ -2807,6 +2855,42 @@
         // Toggle boxed layout settings visibility
         document.getElementById('boxedLayoutEnable')?.addEventListener('change', function() {
             document.getElementById('boxedLayoutSettings').style.display = this.checked ? 'block' : 'none';
+            
+            // Toggle main live preview between boxed and regular mode
+            const previewPhone = document.querySelector('.preview-phone');
+            const previewContent = document.getElementById('previewContent');
+            
+            if (this.checked) {
+                // Enable boxed layout preview
+                const outerBg = 'linear-gradient(135deg, #667eea, #764ba2)';
+                const outerBox = document.createElement('div');
+                outerBox.id = 'previewOuterBox';
+                outerBox.style.cssText = `background: ${outerBg}; padding: 20px; min-height: 450px; border-radius: 20px; display: flex; align-items: center; justify-content: center;`;
+                
+                // Wrap preview content
+                previewContent.parentNode.insertBefore(outerBox, previewContent);
+                outerBox.appendChild(previewContent);
+                
+                // Adjust inner box styling
+                previewContent.style.width = '100%';
+                previewContent.style.maxWidth = '260px';
+                previewContent.style.borderRadius = '15px';
+                previewContent.style.padding = '20px';
+            } else {
+                // Disable boxed layout preview - unwrap
+                const outerBox = document.getElementById('previewOuterBox');
+                if (outerBox) {
+                    const parent = outerBox.parentNode;
+                    parent.insertBefore(previewContent, outerBox);
+                    parent.removeChild(outerBox);
+                    
+                    // Reset inner box styling
+                    previewContent.style.width = '';
+                    previewContent.style.maxWidth = '';
+                    previewContent.style.borderRadius = '20px';
+                    previewContent.style.padding = '25px 20px';
+                }
+            }
         });
         
         // Toggle background type options
@@ -2827,13 +2911,26 @@
             const preview = document.getElementById('boxedPreview');
             const bgType = document.getElementById('outerBgType').value;
             
+            // Update the boxed layout dedicated preview
             if (bgType === 'gradient') {
                 const start = document.getElementById('gradientStart').value;
                 const end = document.getElementById('gradientEnd').value;
                 preview.style.background = `linear-gradient(135deg, ${start}, ${end})`;
+                
+                // Also update main live preview outer box if it exists
+                const outerBox = document.getElementById('previewOuterBox');
+                if (outerBox) {
+                    outerBox.style.background = `linear-gradient(135deg, ${start}, ${end})`;
+                }
             } else {
                 const color = document.getElementById('outerBgColor').value;
                 preview.style.background = color;
+                
+                // Also update main live preview outer box if it exists
+                const outerBox = document.getElementById('previewOuterBox');
+                if (outerBox) {
+                    outerBox.style.background = color;
+                }
             }
             
             const containerWidth = document.getElementById('containerWidth').value;
@@ -2845,6 +2942,12 @@
             container.style.width = containerWidth + 'px';
             container.style.borderRadius = containerRadius + 'px';
             container.style.boxShadow = containerShadow ? '0 10px 40px rgba(0,0,0,0.2)' : 'none';
+            
+            // Update main live preview inner box styling if it exists
+            const previewContent = document.getElementById('previewContent');
+            if (previewContent && document.getElementById('previewOuterBox')) {
+                previewContent.style.borderRadius = (containerRadius * 0.5) + 'px'; // Scale down for preview
+            }
         }
         
         // Color pickers with hex display for boxed layout

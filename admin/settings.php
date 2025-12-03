@@ -733,12 +733,21 @@ if (isset($_GET['debug'])) {
                                                 </small>
                                             </div>
                                             <div class="d-flex gap-2">
+                                                <?php if ($profile['is_active']): ?>
                                                 <a href="?toggle_active=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm <?= $profile['is_active'] ? 'btn-outline-warning' : 'btn-outline-success' ?>"
-                                                   onclick="return confirm('<?= $profile['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?> profile <?= htmlspecialchars($profile['slug']) ?>?')">
-                                                    <i class="bi bi-<?= $profile['is_active'] ? 'pause-circle' : 'play-circle' ?>"></i> 
-                                                    <?= $profile['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>
+                                                   class="btn btn-sm btn-outline-warning"
+                                                   onclick="return confirm('Nonaktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
+                                                    <i class="bi bi-pause-circle"></i> 
+                                                    Nonaktifkan
                                                 </a>
+                                                <?php else: ?>
+                                                <a href="?toggle_active=<?= $profile['id'] ?>" 
+                                                   class="btn btn-sm btn-outline-success"
+                                                   onclick="return confirm('Aktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
+                                                    <i class="bi bi-play-circle"></i> 
+                                                    Aktifkan
+                                                </a>
+                                                <?php endif; ?>
                                                 <a href="?delete_slug=<?= $profile['id'] ?>" 
                                                    class="btn btn-sm btn-outline-danger"
                                                    onclick="return confirm('Hapus profile <?= htmlspecialchars($profile['slug']) ?>?')">
