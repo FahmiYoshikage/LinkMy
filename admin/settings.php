@@ -49,11 +49,21 @@ $user_profiles = []; // Alias for compatibility
 // Debug: Log current user ID
 error_log("Loading profiles for user_id: {$current_user_id}");
 
-$p_query = "SELECT p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
-            (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
-            (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
+// Use LEFT JOIN with GROUP BY for better compatibility
+$p_query = "SELECT 
+            p.id, 
+            p.user_id, 
+            p.slug, 
+            p.name, 
+            p.display_order, 
+            p.is_active, 
+            p.created_at,
+            COUNT(l.id) as link_count,
+            COALESCE(SUM(l.clicks), 0) as total_clicks
             FROM profiles p 
+            LEFT JOIN links l ON l.profile_id = p.id
             WHERE p.user_id = ? 
+            GROUP BY p.id, p.user_id, p.slug, p.name, p.display_order, p.is_active, p.created_at
             ORDER BY p.display_order ASC";
 $p_stmt = mysqli_prepare($conn, $p_query);
 mysqli_stmt_bind_param($p_stmt, 'i', $current_user_id);
