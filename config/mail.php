@@ -11,15 +11,39 @@ require_once __DIR__ . '/../libs/PHPMailer-7.0.0/PHPMailer-7.0.0/src/Exception.p
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+// ==================== ENV LOADER ====================
+// Lightweight .env support: reads KEY=VALUE pairs from project .env
+function load_env($path) {
+    if (!file_exists($path)) return;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $trim = trim($line);
+        if ($trim === '' || str_starts_with($trim, '#')) continue;
+        $pos = strpos($trim, '=');
+        if ($pos === false) continue;
+        $key = trim(substr($trim, 0, $pos));
+        $val = trim(substr($trim, $pos + 1));
+        if ((str_starts_with($val, '"') && str_ends_with($val, '"')) || (str_starts_with($val, "'") && str_ends_with($val, "'"))) {
+            $val = substr($val, 1, -1);
+        }
+        putenv("$key=$val");
+        $_ENV[$key] = $val;
+    }
+}
+
+// Try load .env from project root
+load_env(__DIR__ . '/../.env');
+load_env(__DIR__ . '/../../.env');
+
 // ==================== CONFIGURATION ====================
 // IMPORTANT: Ganti dengan credentials Gmail Anda!
-define('MAIL_HOST', 'smtp.gmail.com');
-define('MAIL_PORT', 587); // TLS
-define('MAIL_USERNAME', 'faildegaskar870@gmail.com'); // ⚠️ GANTI INI!
-define('MAIL_PASSWORD', 'amyawuwmqpqawtmr'); // ⚠️ GANTI INI (no spaces)!
-define('MAIL_FROM_EMAIL', 'noreply@linkmy.fahmi.app');
-define('MAIL_FROM_NAME', 'LinkMy');
-define('MAIL_DEBUG', 0); // 0=off, 1=client, 2=client+server (SET TO 0 FOR PRODUCTION!)
+define('MAIL_HOST', getenv('MAIL_HOST') ?: 'smtp.gmail.com');
+define('MAIL_PORT', (int)(getenv('MAIL_PORT') ?: 587)); // TLS
+define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: '');
+define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: '');
+define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: 'noreply@linkmy.fahmi.app');
+define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'LinkMy');
+define('MAIL_DEBUG', (int)(getenv('MAIL_DEBUG') ?: 0)); // 0=off, 1=client, 2=client+server
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -294,8 +318,8 @@ function save_otp_to_database($email, $otp) {
     
     $stmt = $conn->prepare("
         INSERT INTO email_verifications 
-        (email, otp_code, expires_at, ip_address) 
-        VALUES (?, ?, ?, ?)
+        (email, otp, type, ip, is_used, created_at, expires_at) 
+        VALUES (?, ?, 'registration', ?, 0, NOW(), ?)
     ");
     
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
@@ -316,8 +340,8 @@ function verify_otp($email, $otp) {
     $stmt = $conn->prepare("
         SELECT id, expires_at, is_used 
         FROM email_verifications 
-        WHERE email = ? AND otp_code = ? 
-        ORDER BY created_at DESC 
+        WHERE email = ? AND otp = ? AND type = 'registration' 
+        ORDER BY id DESC 
         LIMIT 1
     ");
     
