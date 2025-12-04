@@ -56,8 +56,9 @@
 
     $profile_data = mysqli_fetch_assoc($result);
     
-    // DEBUG: Log profile data
+    // DEBUG: Log profile data WITH FULL DUMP
     error_log("DEBUG profile.php - Profile data loaded: ID = " . ($profile_data['id'] ?? 'NULL') . ", slug = " . ($profile_data['slug'] ?? 'NULL') . ", user_id = " . ($profile_data['user_id'] ?? 'NULL'));
+    error_log("DEBUG profile.php - FULL profile_data: " . print_r($profile_data, true));
     
     // Check if profile is active - show 404 if inactive
     $is_profile_active = (int)($profile_data['is_active'] ?? 0);
@@ -726,13 +727,25 @@
                     <p class="mt-3">Belum ada link yang ditambahkan</p>
                     <!-- DEBUG INFO -->
                     <?php if (isset($_GET['debug'])): ?>
+                    <?php
+                        // Direct query to verify data
+                        $debug_query = "SELECT COUNT(*) as link_count FROM links WHERE profile_id = ? AND is_active = 1";
+                        $debug_result = execute_query($debug_query, [$profile_id], 'i');
+                        $debug_data = $debug_result ? mysqli_fetch_assoc($debug_result) : null;
+                        
+                        $debug_profile_query = "SELECT id, slug FROM profiles WHERE slug = 'triforce'";
+                        $debug_profile_result = execute_query($debug_profile_query, [], '');
+                        $debug_profile = $debug_profile_result ? mysqli_fetch_assoc($debug_profile_result) : null;
+                    ?>
                     <div class="alert alert-info mt-3" style="text-align: left; font-size: 0.85rem;">
                         <strong>Debug Info:</strong><br>
-                        - Profile ID: <?= $profile_id ?><br>
-                        - Links count: <?= count($links) ?><br>
-                        - Links result: <?= $links_result ? 'Valid' : 'False/Null' ?><br>
-                        - Query executed: Yes<br>
-                        - Check Apache error log for detailed query debug
+                        - Profile ID loaded: <?= $profile_id ?><br>
+                        - Profile slug from DB: <?= $debug_profile['slug'] ?? 'N/A' ?><br>
+                        - Profile ID from DB: <?= $debug_profile['id'] ?? 'N/A' ?><br>
+                        - Links count in array: <?= count($links) ?><br>
+                        - Links count in DB (for this profile_id): <?= $debug_data['link_count'] ?? 'N/A' ?><br>
+                        - Links result object: <?= $links_result ? 'Valid' : 'False/Null' ?><br>
+                        - URL slug parameter: <?= htmlspecialchars($slug) ?><br>
                     </div>
                     <?php endif; ?>
                 </div>
