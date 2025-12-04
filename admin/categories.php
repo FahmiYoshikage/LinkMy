@@ -91,7 +91,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Load categories for active profile
-$categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categories_v3 c LEFT JOIN links l ON c.id = l.category_id WHERE c.profile_id = ? GROUP BY c.id ORDER BY c.position ASC", [$active_profile_id], 'i');
+$categories = get_all_rows("SELECT c.id as category_id, c.name as category_name, c.icon as category_icon, c.color as category_color, c.position, c.is_expanded, COUNT(l.id) as link_count FROM categories_v3 c LEFT JOIN links l ON c.id = l.category_id WHERE c.profile_id = ? GROUP BY c.id ORDER BY c.position ASC", [$active_profile_id], 'i');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -245,19 +245,19 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                     </div>
                 <?php else: ?>
                     <?php foreach ($categories as $cat): ?>
-                        <div class="category-card" data-id="<?= $cat['id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['color'] ?? '#667eea') ?>;">
+                        <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color'] ?? '#667eea') ?>;">
                             <div class="d-flex align-items-center flex-wrap gap-3">
-                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['color'] ?? '#667eea') ?>;">
-                                    <i class="<?= htmlspecialchars($cat['icon'] ?? 'bi-folder') ?>"></i>
+                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color'] ?? '#667eea') ?>;">
+                                    <i class="<?= htmlspecialchars($cat['category_icon'] ?? 'bi-folder') ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h5 class="mb-1 fw-bold"><?= htmlspecialchars($cat['name']) ?></h5>
+                                    <h5 class="mb-1 fw-bold"><?= htmlspecialchars($cat['category_name']) ?></h5>
                                     <div class="d-flex align-items-center gap-3 flex-wrap">
                                         <span class="badge bg-light text-dark">
                                             <i class="bi bi-link-45deg"></i> <?= $cat['link_count'] ?> links
                                         </span>
                                         <small class="text-muted">
-                                            <code><?= htmlspecialchars($cat['icon'] ?? 'bi-folder') ?></code>
+                                            <code><?= htmlspecialchars($cat['category_icon'] ?? 'bi-folder') ?></code>
                                         </small>
                                     </div>
                                 </div>
@@ -313,7 +313,12 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Icon</label>
-                            <input type="text" class="form-control" name="category_icon" id="add_category_icon" value="bi-folder" required readonly>
+                            <input type="text" class="form-control" name="category_icon" id="add_category_icon" value="bi-folder" required placeholder="e.g., bi-folder, bi-star-fill">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Ketik Bootstrap Icon class (e.g., <code>bi-heart-fill</code>) atau pilih dari preset di bawah. 
+                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons ↗</a>
+                            </small>
                             <div class="icon-picker mt-2">
                                 <div class="icon-option selected" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
                                 <div class="icon-option" data-icon="bi-heart-fill"><i class="bi bi-heart-fill"></i></div>
@@ -400,7 +405,12 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Icon</label>
-                            <input type="text" class="form-control" name="category_icon" id="edit_category_icon" required readonly>
+                            <input type="text" class="form-control" name="category_icon" id="edit_category_icon" required placeholder="e.g., bi-folder, bi-star-fill">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Ketik Bootstrap Icon class (e.g., <code>bi-heart-fill</code>) atau pilih dari preset di bawah. 
+                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons ↗</a>
+                            </small>
                             <div class="icon-picker mt-2" id="edit_icon_picker">
                                 <div class="icon-option" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
                                 <div class="icon-option" data-icon="bi-heart-fill"><i class="bi bi-heart-fill"></i></div>
@@ -488,6 +498,26 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.id) as link_count FROM categorie
                 }
             });
         });
+        
+        // Live preview for custom icon input (Edit Modal)
+        document.getElementById('edit_category_icon').addEventListener('input', function() {
+            const iconClass = this.value.trim();
+            const previewIcon = document.getElementById('edit_preview_icon');
+            if (iconClass) {
+                previewIcon.className = iconClass;
+            }
+        });
+        
+        // Live preview for custom icon input (Add Modal)
+        if (document.getElementById('add_category_icon')) {
+            document.getElementById('add_category_icon').addEventListener('input', function() {
+                const iconClass = this.value.trim();
+                const previewIcon = document.getElementById('add_preview_icon');
+                if (iconClass) {
+                    previewIcon.className = iconClass;
+                }
+            });
+        }
         
         // Color presets
         document.querySelectorAll('.color-preset').forEach(btn => {
