@@ -103,6 +103,10 @@
     
     // v3 schema mapping: view returns id, slug, name, title, bio, avatar, username, is_verified, bg_type, bg_value, etc.
     $profile_id = $user_data['id']; // v3: profiles.id
+    
+    // DEBUG: Verify profile_id
+    error_log("DEBUG profile.php - Profile loaded: ID = {$profile_id}, slug = " . ($user_data['slug'] ?? 'N/A'));
+    
     $profile_title = $user_data['title'] ?? $user_data['username'];
     $bio = $user_data['bio'] ?? '';
     $profile_pic = $user_data['avatar'] ?? 'default-avatar.png';
@@ -238,16 +242,14 @@
     if ($categories_exists && $enable_categories) {
         // Query with categories JOIN using v3 schema (categories_v3)
         // Multi-profile: Filter by profile_id instead of user_id
-        // INNER JOIN with profiles to prevent orphaned links from appearing
         // LEFT JOIN categories with profile_id filter to prevent cross-profile category pollution
         $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
                         l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id,
                         c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
-                        INNER JOIN profiles p ON l.profile_id = p.id
                         LEFT JOIN categories_v3 c ON l.category_id = c.id AND c.profile_id = l.profile_id
-                        WHERE l.profile_id = ? AND l.is_active = 1 AND p.id = ?
+                        WHERE l.profile_id = ? AND l.is_active = 1
                         ORDER BY l.position ASC, l.id ASC";
     } else {
         // Simple query without categories (v3 schema)
@@ -260,24 +262,44 @@
                         ORDER BY l.position ASC, l.id ASC";
     }
     
+    // DEBUG: Log query and profile_id
+    error_log("DEBUG: Executing links query for profile_id = {$profile_id}");
+    error_log("DEBUG: Query = " . $links_query);
+    
     $stmt_links = mysqli_prepare($conn, $links_query);
     if (!$stmt_links) {
         // If query fails, show error and continue without links
-        error_log("Error preparing links query: " . mysqli_error($conn));
+        error_log("ERROR: Failed to prepare links query: " . mysqli_error($conn));
         $links_result = false;
     } else {
-        // Bind profile_id twice for double validation (l.profile_id = ? AND p.id = ?)
-        mysqli_stmt_bind_param($stmt_links, 'ii', $profile_id, $profile_id);
-        mysqli_stmt_execute($stmt_links);
+        // Bind profile_id once (only l.profile_id = ? without INNER JOIN)
+        $bind_result = mysqli_stmt_bind_param($stmt_links, 'i', $profile_id);
+        error_log("DEBUG: Bind result = " . ($bind_result ? 'success' : 'failed'));
+        
+        $exec_result = mysqli_stmt_execute($stmt_links);
+        error_log("DEBUG: Execute result = " . ($exec_result ? 'success' : 'failed'));
+        
+        if (!$exec_result) {
+            error_log("ERROR: Failed to execute links query: " . mysqli_stmt_error($stmt_links));
+        }
+        
         $links_result = mysqli_stmt_get_result($stmt_links);
+        error_log("DEBUG: Get result = " . ($links_result !== false ? 'success' : 'failed'));
     }
     
     $links = [];
     $links_by_category = [];
     $categories = [];
     
+    // DEBUG: Log query execution
+    error_log("DEBUG: Links query executed for profile_id = {$profile_id}");
+    error_log("DEBUG: Links result rows = " . ($links_result ? mysqli_num_rows($links_result) : 0));
+    
     if ($links_result) {
         while ($row = mysqli_fetch_assoc($links_result)){
+            // DEBUG: Log each link
+            error_log("DEBUG: Link found - ID: {$row['link_id']}, Title: {$row['title']}, category_id: " . ($row['category_id'] ?? 'NULL'));
+            
             // Add alias for compatibility with profile rendering code
             // Database v3 uses: link_id, title, icon
             // Code expects: link_id, link_title, icon_class
