@@ -3,9 +3,10 @@
 ## Informasi Project
 
 **Nama Project:** LinkMy - Bio Link Manager  
-**Teknologi:** PHP 8.1, MySQL 8.0, Bootstrap 5.3.8, Highcharts  
-**Deployment:** Docker + VPS Ubuntu  
-**Tanggal:** November 2024
+**Teknologi:** PHP 8.3, MySQL 8.4, Bootstrap 5.3.8, Highcharts, jQuery UI  
+**Deployment:** Docker + VPS Ubuntu (linkmy.iet.ovh)  
+**Tanggal:** December 2024  
+**Status:** Production Ready ✅
 
 ---
 
@@ -282,7 +283,71 @@ $click_by_location = get_all_rows(
 
 **Cara Kerja Teknikal:**
 
-**Relasi 1: users ↔ appearance (One-to-One)**
+**Database Schema V3 (Multi-Profile Architecture):**
+
+**Relasi 1: users ↔ profiles (One-to-Many)**
+
+```sql
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active TINYINT(1) DEFAULT 1,
+    is_verified TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE profiles (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(100),
+    title VARCHAR(150),
+    bio TEXT,
+    avatar VARCHAR(255),
+    is_active TINYINT(1) DEFAULT 1,
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+**Relasi 2: profiles ↔ themes (One-to-One)**
+
+```sql
+CREATE TABLE themes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    profile_id INT NOT NULL UNIQUE,
+    bg_type VARCHAR(50) DEFAULT 'gradient',
+    bg_value TEXT,
+    button_style VARCHAR(50) DEFAULT 'rounded',
+    button_color VARCHAR(7) DEFAULT '#667eea',
+    text_color VARCHAR(7) DEFAULT '#333333',
+    font VARCHAR(50) DEFAULT 'Inter',
+    layout VARCHAR(50) DEFAULT 'centered',
+    container_style VARCHAR(50) DEFAULT 'wide',
+    enable_animations TINYINT(1) DEFAULT 1,
+    enable_glass_effect TINYINT(1) DEFAULT 0,
+    shadow_intensity VARCHAR(20) DEFAULT 'medium',
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+);
+
+CREATE TABLE theme_boxed (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    theme_id INT NOT NULL UNIQUE,
+    enabled TINYINT(1) DEFAULT 0,
+    outer_bg_type VARCHAR(50) DEFAULT 'gradient',
+    outer_bg_value TEXT,
+    container_bg_color VARCHAR(7) DEFAULT '#ffffff',
+    container_max_width INT DEFAULT 600,
+    container_radius INT DEFAULT 20,
+    container_shadow VARCHAR(50) DEFAULT '0 10px 40px rgba(0,0,0,0.1)',
+    FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE
+);
+```
+
+**Relasi 3: users ↔ appearance (One-to-One) - Legacy Support**
 
 ```sql
 CREATE TABLE users (
@@ -310,73 +375,99 @@ CREATE TABLE appearance (
 );
 ```
 
-**Relasi 2: users ↔ links (One-to-Many)**
+**Relasi 4: profiles ↔ links (One-to-Many)**
 
 ```sql
 CREATE TABLE links (
-    link_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    profile_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     url VARCHAR(500) NOT NULL,
-    icon_class VARCHAR(50),
+    icon VARCHAR(50) DEFAULT 'bi-link-45deg',
     category_id INT,
-    order_index INT DEFAULT 0,
+    position INT DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1,
-    click_count INT DEFAULT 0,
+    clicks INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES link_categories(category_id) ON DELETE SET NULL
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories_v3(id) ON DELETE SET NULL,
+    INDEX idx_profile_active (profile_id, is_active),
+    INDEX idx_position (position)
 );
 ```
 
-**Relasi 3: links ↔ link_analytics (One-to-Many)**
+**Relasi 5: profiles ↔ categories_v3 ↔ links (Hierarchical)**
 
 ```sql
-CREATE TABLE link_analytics (
-    analytics_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE categories_v3 (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    profile_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(50) DEFAULT 'bi-folder',
+    color VARCHAR(7) DEFAULT '#667eea',
+    position INT DEFAULT 0,
+    is_expanded TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE,
+    INDEX idx_profile_position (profile_id, position)
+);
+
+-- Query dengan JOIN untuk categorized links
+SELECT
+    l.id as link_id,
+    l.title,
+    l.url,
+    l.icon,
+    c.id as category_id,
+    c.name as category_name,
+    c.icon as category_icon,
+    c.color as category_color,
+    c.is_expanded as category_expanded
+FROM links l
+LEFT JOIN categories_v3 c ON l.category_id = c.id AND c.profile_id = l.profile_id
+WHERE l.profile_id = ? AND l.is_active = 1
+ORDER BY c.position ASC, l.position ASC;
+```
+
+**Relasi 6: links ↔ link_clicks (One-to-Many) - Analytics**
+
+```sql
+CREATE TABLE link_clicks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
     link_id INT NOT NULL,
     clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    referrer VARCHAR(255),
+    referrer VARCHAR(500),
     user_agent TEXT,
     ip_address VARCHAR(45),
-    country VARCHAR(50),
+    country VARCHAR(100),
     city VARCHAR(100),
-    FOREIGN KEY (link_id) REFERENCES links(link_id) ON DELETE CASCADE
+    device_type VARCHAR(50),
+    browser VARCHAR(50),
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE,
+    INDEX idx_link_date (link_id, clicked_at)
 );
 ```
 
-**Relasi 4: users ↔ link_categories ↔ links (Many-to-Many via category)**
-
-```sql
-CREATE TABLE link_categories (
-    category_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    category_name VARCHAR(50) NOT NULL,
-    color_code VARCHAR(7) DEFAULT '#6c757d',
-    order_index INT DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-
--- Query dengan JOIN
-SELECT l.*, lc.category_name, lc.color_code
-FROM links l
-LEFT JOIN link_categories lc ON l.category_id = lc.category_id
-WHERE l.user_id = ? AND l.is_active = 1
-ORDER BY lc.order_index, l.order_index;
-```
-
-**Diagram Relasi:**
+**Diagram Relasi Database V3:**
 
 ```
-users (1) ↔ (1) appearance
-  ↓
-  (1) ↔ (*) links
-              ↓
-              (1) ↔ (*) link_analytics
-  ↓
-  (1) ↔ (*) link_categories
-                ↓
-                (1) ↔ (*) links
+users (1) ──┬──> (*) profiles
+            │       ↓
+            │       (1) ──> (1) themes ──> (1) theme_boxed
+            │       ↓
+            │       (1) ──┬──> (*) links ──> (*) link_clicks
+            │       ↓     │
+            │       (1) ──┴──> (*) categories_v3
+            │
+            └──> (1) appearance (legacy support)
+
+Multi-Profile Features:
+- 1 user dapat memiliki multiple profiles
+- Setiap profile memiliki theme sendiri
+- Links dan categories terisolasi per profile
+- Glass effect, boxed layout, animations per profile
+- Analytics tracking per link dengan geolocation
 ```
 
 ---
@@ -385,74 +476,121 @@ users (1) ↔ (1) appearance
 
 **Lokasi Implementasi:**
 
--   database_update_view_verified.sql
--   Digunakan di: profile.php line 14
+-   sql/create_views.sql
+-   Digunakan di: profile.php, admin/dashboard.php
 
 **Cara Kerja Teknikal:**
 
-**View 1: v_public_page_data**
+**View 1: v_public_profiles (Multi-Profile Support)**
 
 ```sql
--- Menggabungkan data users + appearance untuk public profile
-DROP VIEW IF EXISTS v_public_page_data;
+-- Menggabungkan data profiles + users + themes untuk public view
+DROP VIEW IF EXISTS v_public_profiles;
 
-CREATE VIEW v_public_page_data AS
+CREATE VIEW v_public_profiles AS
 SELECT
-    u.user_id,
+    p.id,
+    p.user_id,
+    p.slug,
+    p.name,
+    p.title,
+    p.bio,
+    p.avatar,
+    p.is_active,
+    p.display_order,
+    p.created_at,
     u.username,
-    u.page_slug,
     u.is_verified,
-    u.created_at,
-    a.appearance_id,
-    a.profile_picture,
-    a.display_name,
-    a.bio,
-    a.background_type,
-    a.background_color,
-    a.background_image,
-    a.theme_style,
-    a.button_style,
-    a.font_style,
-    a.outer_background_type,
-    a.outer_background_color,
-    a.outer_background_image,
-    a.social_instagram,
-    a.social_twitter,
-    a.social_facebook
-FROM users u
-INNER JOIN appearance a ON u.user_id = a.user_id
-WHERE u.email_verified = 1;
+    t.bg_type,
+    t.bg_value,
+    t.button_style,
+    t.button_color,
+    t.text_color,
+    t.font,
+    t.layout,
+    t.container_style,
+    t.enable_animations,
+    t.enable_glass_effect,
+    t.shadow_intensity,
+    tb.enabled as boxed_enabled,
+    tb.outer_bg_type,
+    tb.outer_bg_value,
+    tb.container_bg_color,
+    tb.container_max_width,
+    tb.container_radius,
+    tb.container_shadow
+FROM profiles p
+INNER JOIN users u ON p.user_id = u.id
+LEFT JOIN themes t ON p.id = t.profile_id
+LEFT JOIN theme_boxed tb ON t.id = tb.theme_id
+WHERE p.is_active = 1;
+```
+
+**View 2: v_profile_stats (Dashboard Statistics)**
+
+```sql
+-- Aggregate data untuk dashboard stats
+CREATE VIEW v_profile_stats AS
+SELECT
+    p.id as profile_id,
+    p.slug,
+    p.name,
+    COUNT(DISTINCT l.id) as total_links,
+    SUM(l.clicks) as total_clicks,
+    COUNT(DISTINCT c.id) as total_categories,
+    MAX(l.updated_at) as last_link_update
+FROM profiles p
+LEFT JOIN links l ON p.id = l.profile_id AND l.is_active = 1
+LEFT JOIN categories_v3 c ON p.id = c.profile_id
+GROUP BY p.id, p.slug, p.name;
 ```
 
 **Penggunaan View di PHP:**
 
 ```php
-// profile.php
-$page_slug = $_GET['username'] ?? '';
+// profile.php - Load profile dengan theme dan styling
+$slug = $_GET['slug'] ?? '';
 
-// Query menggunakan VIEW (tidak perlu JOIN manual)
-$user_data = get_single_row(
-    "SELECT * FROM v_public_page_data WHERE page_slug = ?",
-    [$page_slug],
-    's'
+// Query menggunakan VIEW (JOIN otomatis 4 tabel)
+$profile_data = get_single_row(
+    "SELECT * FROM v_public_profiles WHERE slug = ?",
+    [$slug], 's'
 );
 
-if (!$user_data) {
+if (!$profile_data) {
     die('Profile not found');
 }
 
-// Langsung akses semua kolom dari 2 tabel
-echo $user_data['display_name']; // dari appearance
-echo $user_data['username']; // dari users
-echo $user_data['is_verified']; // dari users
+// Langsung akses semua kolom dari profiles, users, themes, theme_boxed
+echo $profile_data['title']; // dari profiles
+echo $profile_data['username']; // dari users
+echo $profile_data['is_verified']; // dari users
+echo $profile_data['bg_type']; // dari themes
+echo $profile_data['button_style']; // dari themes
+echo $profile_data['enable_glass_effect']; // dari themes
+echo $profile_data['boxed_enabled']; // dari theme_boxed
+echo $profile_data['container_max_width']; // dari theme_boxed
+```
+
+```php
+// admin/dashboard.php - Get profile statistics
+$stats = get_single_row(
+    "SELECT * FROM v_profile_stats WHERE profile_id = ?",
+    [$active_profile_id], 'i'
+);
+
+echo "Total Links: " . $stats['total_links'];
+echo "Total Clicks: " . $stats['total_clicks'];
+echo "Total Categories: " . $stats['total_categories'];
 ```
 
 **Keuntungan View:**
 
-1. **Query lebih simple** - Tidak perlu JOIN berulang kali
-2. **Konsistensi** - Logic JOIN terpusat di VIEW
-3. **Security** - Bisa filter data yang boleh diakses (WHERE email_verified = 1)
-4. **Performance** - MySQL optimize query VIEW
+1. **Query lebih simple** - Tidak perlu JOIN 4-5 tabel setiap kali
+2. **Konsistensi** - Logic JOIN terpusat di VIEW, mudah maintain
+3. **Security** - Filter data (WHERE is_active = 1) di level database
+4. **Performance** - MySQL optimize query VIEW secara otomatis
+5. **Reusability** - 1 VIEW dipakai di multiple pages
 
 ---
 
@@ -460,16 +598,17 @@ echo $user_data['is_verified']; // dari users
 
 **Lokasi Implementasi:**
 
--   register.php - Insert user baru
+-   register.php - Insert user baru + default profile
 -   admin/dashboard.php - Insert link baru (AJAX)
--   redirect.php - Insert analytics tracking
+-   admin/categories.php - Insert category (AJAX)
+-   redirect.php - Insert click analytics tracking
 
 **Cara Kerja Teknikal:**
 
 **Insert 1: User Registration**
 
 ```php
-// register.php
+// register.php - Multi-Profile Registration
 if ($_POST['action'] === 'register') {
     $username = sanitize_input($_POST['username']);
     $email = sanitize_input($_POST['email']);
@@ -478,24 +617,40 @@ if ($_POST['action'] === 'register') {
     // Hash password dengan bcrypt
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Generate unique page slug
-    $page_slug = strtolower($username) . rand(100, 999);
-
-    // Insert user (dengan prepared statement)
-    $query = "INSERT INTO users (username, email, password, page_slug, email_verified)
-                VALUES (?, ?, ?, ?, 0)";
+    // 1. Insert user
+    $query = "INSERT INTO users (username, email, password_hash, is_active)
+                VALUES (?, ?, ?, 1)";
     $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, 'ssss', $username, $email, $hashed_password, $page_slug);
+    mysqli_stmt_bind_param($stmt, 'sss', $username, $email, $hashed_password);
 
     if (mysqli_stmt_execute($stmt)) {
         $user_id = mysqli_insert_id($conn);
 
-        // Insert default appearance
-        $query2 = "INSERT INTO appearance (user_id, display_name, background_color)
+        // 2. Generate unique slug
+        $slug = strtolower($username);
+        $slug_check = get_single_row("SELECT id FROM profiles WHERE slug = ?", [$slug], 's');
+        if ($slug_check) {
+            $slug = $slug . rand(100, 999);
+        }
+
+        // 3. Create default profile
+        $query2 = "INSERT INTO profiles (user_id, slug, name, title, bio, is_active, display_order)
+                     VALUES (?, ?, ?, ?, 'Welcome to my LinkMy page!', 1, 0)";
+        execute_query($query2, [$user_id, $slug, $username, "$username - Main Profile"], 'isss');
+        $profile_id = mysqli_insert_id($conn);
+
+        // 4. Create default theme
+        $query3 = "INSERT INTO themes (profile_id, bg_type, bg_value, button_style, button_color)
+                     VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'rounded', '#667eea')";
+        execute_query($query3, [$profile_id], 'i');
+
+        // 5. Create default appearance (legacy support)
+        $query4 = "INSERT INTO appearance (user_id, display_name, background_color)
                      VALUES (?, ?, '#ffffff')";
-        $stmt2 = mysqli_prepare($conn, $query2);
-        mysqli_stmt_bind_param($stmt2, 'is', $user_id, $username);
-        mysqli_stmt_execute($stmt2);
+        execute_query($query4, [$user_id, $username], 'is');
+
+        // Set active profile in session
+        $_SESSION['active_profile_id'] = $profile_id;
 
         // Redirect to verify email
         header('Location: verify-otp.php');
@@ -503,38 +658,65 @@ if ($_POST['action'] === 'register') {
 }
 ```
 
-**Insert 2: Add Link (AJAX)**
+**Insert 2: Add Link (AJAX) - Multi-Profile**
 
 ```php
 // admin/dashboard.php
 if ($_POST['action'] === 'add_link') {
     $title = sanitize_input($_POST['title']);
     $url = sanitize_input($_POST['url']);
-    $icon_class = sanitize_input($_POST['icon_class']);
-    $category_id = intval($_POST['category_id']);
+    $icon = sanitize_input($_POST['icon']);
+    $category_id = intval($_POST['category_id']) ?: null;
+    $active_profile_id = $_SESSION['active_profile_id'];
 
     // Auto-add https
     if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
         $url = "https://" . $url;
     }
 
-    // Get next order index
-    $max_order = get_single_row(
-        "SELECT MAX(order_index) as max FROM links WHERE user_id = ?",
-        [$current_user_id], 'i'
+    // Get next position
+    $max_position = get_single_row(
+        "SELECT MAX(position) as max FROM links WHERE profile_id = ?",
+        [$active_profile_id], 'i'
     );
-    $order_index = ($max_order['max'] ?? 0) + 1;
+    $position = ($max_position['max'] ?? 0) + 1;
 
-    // Insert link
-    $query = "INSERT INTO links (user_id, title, url, icon_class, category_id, order_index, is_active, click_count)
+    // Insert link dengan profile_id
+    $query = "INSERT INTO links (profile_id, title, url, icon, category_id, position, is_active, clicks)
                 VALUES (?, ?, ?, ?, ?, ?, 1, 0)";
-    execute_query($query, [$current_user_id, $title, $url, $icon_class, $category_id, $order_index], 'isssii');
+    execute_query($query, [$active_profile_id, $title, $url, $icon, $category_id, $position], 'isssii');
 
     echo json_encode(['success' => true, 'link_id' => mysqli_insert_id($conn)]);
 }
 ```
 
-**Insert 3: Analytics Tracking (Realtime)**
+**Insert 3: Add Category (AJAX)**
+
+```php
+// admin/categories.php
+if ($_POST['action'] === 'add_category') {
+    $name = sanitize_input($_POST['name']);
+    $icon = sanitize_input($_POST['icon']);
+    $color = sanitize_input($_POST['color']);
+    $active_profile_id = $_SESSION['active_profile_id'];
+
+    // Get next position
+    $max_pos = get_single_row(
+        "SELECT MAX(position) as max FROM categories_v3 WHERE profile_id = ?",
+        [$active_profile_id], 'i'
+    );
+    $position = ($max_pos['max'] ?? 0) + 1;
+
+    // Insert category
+    $query = "INSERT INTO categories_v3 (profile_id, name, icon, color, position, is_expanded)
+                VALUES (?, ?, ?, ?, ?, 1)";
+    execute_query($query, [$active_profile_id, $name, $icon, $color, $position], 'isssi');
+
+    echo json_encode(['success' => true, 'category_id' => mysqli_insert_id($conn)]);
+}
+```
+
+**Insert 4: Click Analytics Tracking (Realtime dengan Geolocation)**
 
 ```php
 // redirect.php
@@ -543,18 +725,41 @@ $referrer = $_SERVER['HTTP_REFERER'] ?? '';
 $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 $ip_address = $_SERVER['REMOTE_ADDR'];
 
-// Get geolocation from IP
+// 1. Update click counter (atomic increment)
+$query = "UPDATE links SET clicks = clicks + 1 WHERE id = ?";
+execute_query($query, [$link_id], 'i');
+
+// 2. Get geolocation from IP (with rate limiting)
 $geo_data = @file_get_contents("http://ip-api.com/json/{$ip_address}?fields=status,country,city");
 $geo = json_decode($geo_data, true);
 $country = $geo['country'] ?? 'Unknown';
 $city = $geo['city'] ?? '';
 
-// Insert analytics
-$query = "INSERT INTO link_analytics (link_id, referrer, user_agent, ip_address, country, city, clicked_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW())";
+// 3. Detect device type and browser
+$device_type = 'Desktop';
+if (preg_match('/mobile|android|iphone|ipad/i', $user_agent)) {
+    $device_type = 'Mobile';
+}
+
+$browser = 'Unknown';
+if (preg_match('/Chrome/i', $user_agent)) $browser = 'Chrome';
+elseif (preg_match('/Firefox/i', $user_agent)) $browser = 'Firefox';
+elseif (preg_match('/Safari/i', $user_agent)) $browser = 'Safari';
+elseif (preg_match('/Edge/i', $user_agent)) $browser = 'Edge';
+
+// 4. Insert analytics record
+$query = "INSERT INTO link_clicks (link_id, referrer, user_agent, ip_address, country, city, device_type, browser, clicked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 $stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, 'isssss', $link_id, $referrer, $user_agent, $ip_address, $country, $city);
+mysqli_stmt_bind_param($stmt, 'isssssss', $link_id, $referrer, $user_agent, $ip_address, $country, $city, $device_type, $browser);
 mysqli_stmt_execute($stmt);
+
+// 5. Get link URL and redirect
+$link = get_single_row("SELECT url FROM links WHERE id = ?", [$link_id], 'i');
+if ($link) {
+    header("Location: " . $link['url']);
+    exit;
+}
 ```
 
 ---
@@ -563,36 +768,86 @@ mysqli_stmt_execute($stmt);
 
 **Lokasi Implementasi:**
 
--   admin/appearance.php - Update profile/background
+-   admin/appearance.php - Update profile info & theme styling
 -   admin/dashboard.php - Update link (AJAX)
--   admin/settings.php - Update account info
+-   admin/categories.php - Update category (AJAX)
+-   admin/settings.php - Update account info & password
 
 **Cara Kerja Teknikal:**
 
-**Update 1: Profile Appearance**
+**Update 1: Profile Information & Theme**
 
 ```php
-// admin/appearance.php
-if ($_POST['action'] === 'update_appearance') {
-    $display_name = sanitize_input($_POST['display_name']);
+// admin/appearance.php - Update Profile Info
+if ($_POST['action'] === 'update_profile') {
+    $title = sanitize_input($_POST['title']);
     $bio = sanitize_input($_POST['bio']);
-    $background_type = $_POST['background_type'];
-    $background_color = sanitize_input($_POST['background_color']);
+    $active_profile_id = $_SESSION['active_profile_id'];
 
-    $query = "UPDATE appearance
-                SET display_name = ?,
-                    bio = ?,
-                    background_type = ?,
-                    background_color = ?
-                WHERE user_id = ?";
+    $query = "UPDATE profiles
+                SET title = ?, bio = ?
+                WHERE id = ?";
+
+    execute_query($query, [$title, $bio, $active_profile_id], 'ssi');
+
+    $_SESSION['success'] = 'Profile updated successfully!';
+    header('Location: appearance.php');
+}
+
+// Update Theme & Colors
+if ($_POST['action'] === 'update_theme') {
+    $bg_type = $_POST['bg_type'];
+    $bg_value = $_POST['bg_value'];
+    $button_style = $_POST['button_style'];
+    $button_color = $_POST['button_color'];
+    $text_color = $_POST['text_color'];
+    $enable_glass_effect = isset($_POST['enable_glass_effect']) ? 1 : 0;
+    $shadow_intensity = $_POST['shadow_intensity'];
+    $active_profile_id = $_SESSION['active_profile_id'];
+
+    $query = "UPDATE themes
+                SET bg_type = ?,
+                    bg_value = ?,
+                    button_style = ?,
+                    button_color = ?,
+                    text_color = ?,
+                    enable_glass_effect = ?,
+                    shadow_intensity = ?
+                WHERE profile_id = ?";
 
     execute_query($query,
-        [$display_name, $bio, $background_type, $background_color, $current_user_id],
-        'ssssi'
+        [$bg_type, $bg_value, $button_style, $button_color, $text_color, $enable_glass_effect, $shadow_intensity, $active_profile_id],
+        'sssssisi'
     );
 
-    $_SESSION['success'] = 'Appearance updated successfully!';
-    header('Location: appearance.php');
+    $_SESSION['success'] = 'Theme updated successfully!';
+}
+
+// Update Boxed Layout Settings
+if ($_POST['action'] === 'update_boxed_layout') {
+    $enabled = isset($_POST['boxed_enabled']) ? 1 : 0;
+    $outer_bg_value = $_POST['outer_bg_value'];
+    $container_max_width = intval($_POST['container_max_width']);
+    $container_radius = intval($_POST['container_radius']);
+    $active_profile_id = $_SESSION['active_profile_id'];
+
+    // Get theme_id for this profile
+    $theme = get_single_row("SELECT id FROM themes WHERE profile_id = ?", [$active_profile_id], 'i');
+    $theme_id = $theme['id'];
+
+    // Update or insert boxed settings
+    $check = get_single_row("SELECT id FROM theme_boxed WHERE theme_id = ?", [$theme_id], 'i');
+
+    if ($check) {
+        $query = "UPDATE theme_boxed
+                    SET enabled = ?, outer_bg_value = ?, container_max_width = ?, container_radius = ?
+                    WHERE theme_id = ?";
+        execute_query($query, [$enabled, $outer_bg_value, $container_max_width, $container_radius, $theme_id], 'isiii');
+    } else {
+        $query = "INSERT INTO theme_boxed (theme_id, enabled, outer_bg_value, container_max_width, container_radius)
+                    VALUES (?, ?, ?, ?, ?)";
+        execute_query($query, [$theme_id, $enabled, $outer_bg_value, $container_max_width, $container_radius], 'isiii');
+    }
 }
 ```
 
@@ -642,12 +897,43 @@ if ($_POST['action'] === 'toggle_link_status') {
 }
 ```
 
-**Update 4: Click Counter (Auto Increment)**
+**Update 4: Update Category**
+
+```php
+// admin/categories.php (AJAX)
+if ($_POST['action'] === 'update_category') {
+    $category_id = intval($_POST['category_id']);
+    $name = sanitize_input($_POST['name']);
+    $icon = sanitize_input($_POST['icon']);
+    $color = sanitize_input($_POST['color']);
+    $active_profile_id = $_SESSION['active_profile_id'];
+
+    // Validate ownership
+    $check = get_single_row(
+        "SELECT profile_id FROM categories_v3 WHERE id = ?",
+        [$category_id], 'i'
+    );
+
+    if ($check['profile_id'] !== $active_profile_id) {
+        die('Unauthorized');
+    }
+
+    $query = "UPDATE categories_v3
+                SET name = ?, icon = ?, color = ?
+                WHERE id = ? AND profile_id = ?";
+
+    execute_query($query, [$name, $icon, $color, $category_id, $active_profile_id], 'sssii');
+
+    echo json_encode(['success' => true]);
+}
+```
+
+**Update 5: Click Counter (Atomic Increment)**
 
 ```php
 // redirect.php
-// Update click count setiap link diklik
-$update_query = "UPDATE links SET click_count = click_count + 1 WHERE link_id = ?";
+// Update click count setiap link diklik (atomic operation)
+$update_query = "UPDATE links SET clicks = clicks + 1 WHERE id = ?";
 $stmt = mysqli_prepare($conn, $update_query);
 mysqli_stmt_bind_param($stmt, 'i', $link_id);
 mysqli_stmt_execute($stmt);
@@ -1693,24 +1979,143 @@ function addLink() {
 11. ✅ Session Login - login.php, config/auth_check.php
 12. ✅ Session Logout - logout.php
 
-### Fitur Tambahan (10+):
+### Fitur Tambahan (15+):
 
-1. ✅ Email OTP Verification (PHPMailer)
-2. ✅ Password Reset Token System
-3. ✅ Verified Badge (Instagram-style)
-4. ✅ Boxed Layout (Linktree-style)
-5. ✅ Real-time Geolocation Analytics
-6. ✅ Category System with Colors
-7. ✅ Performance Caching
-8. ✅ Drag & Drop Reordering
-9. ✅ SEO Optimization (Meta, Sitemap, Schema)
-10. ✅ AJAX Real-time Updates
+1. ✅ **Multi-Profile System** - 1 user dapat memiliki banyak profile
+2. ✅ **Email OTP Verification** - PHPMailer dengan 6-digit code
+3. ✅ **Password Reset Token** - Secure token-based reset
+4. ✅ **Verified Badge** - Instagram-style checkmark untuk founder
+5. ✅ **Boxed Layout** - Linktree-style dengan outer background
+6. ✅ **Glass Effect** - Modern glassmorphism dengan blur & shadow
+7. ✅ **Real-time Geolocation Analytics** - IP-API integration dengan country/city tracking
+8. ✅ **Category System** - Hierarchical categories dengan custom icons & colors
+9. ✅ **Custom Category Icons** - Bootstrap Icons dengan live preview
+10. ✅ **Performance Caching** - Session-based cache untuk dashboard stats
+11. ✅ **Drag & Drop Reordering** - jQuery UI Sortable untuk links & categories
+12. ✅ **SEO Optimization** - Meta tags, Open Graph, Twitter Card, Schema.org
+13. ✅ **AJAX Real-time Updates** - No page reload untuk CRUD operations
+14. ✅ **Responsive Design** - Mobile-first dengan Bootstrap 5.3.8
+15. ✅ **Dynamic Theme System** - 9 gradient presets + custom colors + glass effect
+16. ✅ **Profile Switching** - Multi-profile dengan dropdown selector
+17. ✅ **Click Analytics Dashboard** - Highcharts dengan trends & geolocation
+18. ✅ **Device & Browser Tracking** - Analytics dengan device_type & browser detection
 
-**Total: 22 Fitur Implementasi Lengkap**
+**Total: 30 Fitur Implementasi Lengkap**
+
+---
+
+## D. PERBANDINGAN DATABASE V2 vs V3
+
+### Database V2 (Legacy):
+
+```
+users → appearance (1:1)
+users → links (1:*)
+users → link_categories (1:*)
+links → link_analytics (1:*)
+```
+
+### Database V3 (Current - Multi-Profile):
+
+```
+users (1) → profiles (*) → themes (1)
+                        → theme_boxed (1)
+                        → links (*)
+                        → categories_v3 (*)
+links (1) → link_clicks (*)
+```
+
+### Keuntungan V3:
+
+1. **Multi-Profile Support** - 1 user banyak profile (personal, bisnis, dll)
+2. **Isolated Data** - Links & categories terisolasi per profile
+3. **Theme Customization** - Setiap profile punya theme sendiri
+4. **Boxed Layout** - Support untuk Linktree-style layout per profile
+5. **Glass Effect** - Modern styling dengan glassmorphism per profile
+6. **Better Analytics** - Click tracking dengan device & browser info
+7. **Scalability** - Lebih mudah untuk add features per profile
+
+---
+
+## E. TEKNOLOGI & TOOLS YANG DIGUNAKAN
+
+### Backend:
+
+-   **PHP 8.3** - Latest stable version dengan improved performance
+-   **MySQL 8.4** - Database dengan JSON support & window functions
+-   **MySQLi** - Prepared statements untuk security
+-   **PHPMailer 7.0** - Email verification & password reset
+
+### Frontend:
+
+-   **Bootstrap 5.3.8** - Responsive framework
+-   **Bootstrap Icons 1.11.3** - Icon library untuk UI & custom category icons
+-   **Highcharts** - Interactive charts untuk analytics dashboard
+-   **jQuery 3.7** - DOM manipulation & AJAX
+-   **jQuery UI** - Drag & drop sortable
+
+### Deployment:
+
+-   **Docker Compose** - Containerization
+-   **Apache 2.4** - Web server dengan mod_rewrite
+-   **VPS Ubuntu** - Cloud hosting (linkmy.iet.ovh)
+-   **Git** - Version control dengan GitHub repository
+
+### Security:
+
+-   **bcrypt** - Password hashing dengan cost factor 10
+-   **Prepared Statements** - SQL injection prevention
+-   **CSRF Protection** - Session-based tokens
+-   **XSS Prevention** - htmlspecialchars() untuk output
+-   **Input Sanitization** - mysqli_real_escape_string()
+-   **Foreign Key Constraints** - Data integrity dengan CASCADE
+
+### Performance:
+
+-   **Session Caching** - Cache stats untuk 5 minutes
+-   **Database Indexing** - INDEX pada foreign keys & WHERE conditions
+-   **View Optimization** - Pre-joined data untuk complex queries
+-   **Atomic Operations** - UPDATE clicks = clicks + 1 untuk concurrency
+
+---
+
+**Total: 30 Fitur Implementasi Lengkap**
+
+---
+
+## F. CHANGELOG & BUG FIXES (December 2024)
+
+### Bug Fixes:
+
+1. ✅ **Password Update Error** - Fixed column detection (password vs password_hash)
+2. ✅ **Email Update Security** - Added password confirmation & duplicate check
+3. ✅ **Category Undefined Bug** - Fixed with column aliases in SELECT query
+4. ✅ **Public Link View Empty** - Fixed themes.id overriding profiles.id in array_merge
+5. ✅ **Glass Effect Not Showing** - Added enable_glass_effect to theme query
+6. ✅ **Profile ID Mismatch** - Fixed by using $profile_data['id'] instead of $user_data['id']
+
+### New Features (December 2024):
+
+1. ✅ Custom Category Icons dengan Bootstrap Icons
+2. ✅ Live Icon Preview di Add/Edit Category Modal
+3. ✅ Enhanced Email Update dengan Password Verification
+4. ✅ Dynamic Column Detection untuk Backward Compatibility
+5. ✅ Comprehensive Debug Logging untuk Troubleshooting
+
+### Performance Improvements:
+
+1. ✅ Removed INNER JOIN profiles untuk simplify links query
+2. ✅ Added profile_id filter di LEFT JOIN categories untuk prevent cross-profile pollution
+3. ✅ Optimized theme query dengan specific columns instead of SELECT \*
+4. ✅ Added database indexes untuk profile_id, is_active, position columns
 
 ---
 
 **Dibuat:** November 2024  
+**Updated:** December 4, 2024  
 **Mahasiswa:** Fahmi Yoshikage  
 **Project:** LinkMy - Bio Link Manager  
-**Status:** Production Ready ✅
+**Repository:** https://github.com/FahmiYoshikage/LinkMy  
+**Live Demo:** https://linkmy.iet.ovh  
+**Status:** Production Ready ✅  
+**Version:** 3.0 (Multi-Profile Architecture)
