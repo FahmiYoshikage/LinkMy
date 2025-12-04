@@ -53,6 +53,9 @@
 
     $profile_data = mysqli_fetch_assoc($result);
     
+    // DEBUG: Log profile data
+    error_log("DEBUG profile.php - Profile data loaded: ID = " . ($profile_data['id'] ?? 'NULL') . ", slug = " . ($profile_data['slug'] ?? 'NULL') . ", user_id = " . ($profile_data['user_id'] ?? 'NULL'));
+    
     // Check if profile is active - show 404 if inactive
     $is_profile_active = (int)($profile_data['is_active'] ?? 0);
     if ($is_profile_active !== 1) {
@@ -718,6 +721,17 @@
                 <div class="text-center" style="opacity: 0.6;">
                     <i class="bi bi-inbox display-4"></i>
                     <p class="mt-3">Belum ada link yang ditambahkan</p>
+                    <!-- DEBUG INFO -->
+                    <?php if (isset($_GET['debug'])): ?>
+                    <div class="alert alert-info mt-3" style="text-align: left; font-size: 0.85rem;">
+                        <strong>Debug Info:</strong><br>
+                        - Profile ID: <?= $profile_id ?><br>
+                        - Links count: <?= count($links) ?><br>
+                        - Links result: <?= $links_result ? 'Valid' : 'False/Null' ?><br>
+                        - Query executed: Yes<br>
+                        - Check Apache error log for detailed query debug
+                    </div>
+                    <?php endif; ?>
                 </div>
             <?php elseif ($enable_categories && !empty($categories)): ?>
                 <!-- CATEGORIZED VIEW -->
