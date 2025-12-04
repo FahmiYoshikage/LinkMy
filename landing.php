@@ -139,9 +139,16 @@
     <link href="/assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/assets/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css">
     <style>
+        /* ===== DARK THEME LANDING PAGE ===== */
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            --secondary-gradient: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            --dark-bg: #0f1419;
+            --dark-card: #1a1f2e;
+            --dark-card-hover: #252d3d;
+            --dark-border: #2d3748;
+            --dark-text: #e2e8f0;
+            --dark-text-secondary: #94a3b8;
         }
         
         html {
@@ -153,10 +160,12 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            background-color: var(--dark-bg) !important;
+            color: var(--dark-text) !important;
         }
         
         .hero-section {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -254,22 +263,23 @@
         
         .feature-section {
             padding: 6rem 0;
-            background: linear-gradient(to bottom, #f8f9fa, white);
+            background: linear-gradient(to bottom, var(--dark-bg), var(--dark-card));
         }
         
         .feature-card {
-            background: white;
+            background: var(--dark-card);
             border-radius: 20px;
             padding: 2.5rem;
             height: 100%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
             transition: all 0.3s ease;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid var(--dark-border);
         }
         
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(14, 165, 233, 0.3);
+            background: var(--dark-card-hover);
         }
         
         .feature-icon {
@@ -292,18 +302,20 @@
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
-            color: #2d3748;
+            color: var(--dark-text);
         }
         
         .feature-text {
-            color: #718096;
+            color: var(--dark-text-secondary);
             line-height: 1.7;
         }
         
         .stats-section {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
             padding: 4rem 0;
             color: white;
+            border-top: 1px solid var(--dark-border);
+            border-bottom: 1px solid var(--dark-border);
         }
         
         .stat-number {
@@ -328,26 +340,28 @@
         }
         
         .mockup-phone {
-            background: white;
+            background: var(--dark-card);
             border-radius: 40px;
             padding: 15px;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
-            border: 8px solid #1a1a1a;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+            border: 8px solid #0f1419;
         }
         
         .mockup-screen {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
             border-radius: 30px;
             padding: 2rem;
             min-height: 500px;
+            border: 1px solid var(--dark-border);
         }
         
         .cta-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
             padding: 6rem 0;
             color: white;
             position: relative;
             overflow: hidden;
+            border-top: 1px solid var(--dark-border);
         }
         
         .cta-section::before {
@@ -362,9 +376,10 @@
         }
         
         .footer {
-            background: #1a202c;
+            background: #0a0e12;
             color: white;
             padding: 3rem 0 1.5rem;
+            border-top: 1px solid var(--dark-border);
         }
         
         .footer a {
@@ -374,18 +389,19 @@
         }
         
         .footer a:hover {
-            color: white;
+            color: var(--primary-color);
         }
         
         /* Navbar collapse background untuk mobile */
         @media (max-width: 991.98px) {
             .navbar-collapse {
-                background: rgba(102, 126, 234, 0.95);
+                background: rgba(26, 31, 46, 0.95);
                 backdrop-filter: blur(10px);
                 padding: 1rem;
                 border-radius: 10px;
                 margin-top: 1rem;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                border: 1px solid var(--dark-border);
             }
             
             .navbar-nav {

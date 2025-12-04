@@ -172,20 +172,16 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
         .register-card {
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: var(--dark-card);
             padding: 2.5rem;
             max-width: 600px;
             margin: 0 auto;
+            border: 1px solid var(--dark-border);
         }
         .brand-header {
             text-align: center;
@@ -193,28 +189,28 @@ if (isset($_GET['back']) && $_GET['back'] == '1') {
         }
         .brand-logo {
             font-size: 3rem;
-            color: #667eea;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .btn-register {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             border: none;
             padding: 12px;
             font-weight: 600;
         }
         .btn-register:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-        .form-label {
-            font-weight: 600;
-            color: #333;
+            box-shadow: 0 5px 20px rgba(14, 165, 233, 0.4);
         }
         .slug-preview {
-            background: #f8f9fa;
+            background: var(--dark-bg);
             padding: 10px 15px;
             border-radius: 8px;
             font-size: 0.9rem;
-            color: #666;
+            color: var(--dark-text-secondary);
+            border: 1px solid var(--dark-border);
         }
         .step-indicator {
             display: flex;

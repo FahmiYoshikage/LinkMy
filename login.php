@@ -63,21 +63,17 @@ if (isset($_GET['error'])) {
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
         .login-card {
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             overflow: hidden;
+            background-color: var(--dark-card);
+            border: 1px solid var(--dark-border);
         }
         .brand-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             padding: 3rem 2rem;
         }
@@ -85,20 +81,25 @@ if (isset($_GET['error'])) {
             font-size: 3rem;
             font-weight: bold;
             margin-bottom: 1rem;
+            color: white;
+        }
+        .brand-section h2, .brand-section p {
+            color: white !important;
         }
         .form-section {
             padding: 3rem 2rem;
-            background: white;
+            background: var(--dark-card);
+            color: var(--dark-text);
         }
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             border: none;
             padding: 12px;
             font-weight: 600;
         }
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(14, 165, 233, 0.4);
         }
     </style>
 </head>

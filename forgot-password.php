@@ -71,30 +71,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            font-family: 'Inter', sans-serif;
-        }
         .forgot-container {
             max-width: 450px;
             margin: 0 auto;
         }
-        .card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .card-body {
-            padding: 40px;
-        }
         .icon-circle {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -117,15 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-        .back-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .back-link:hover {
-            color: #764ba2;
+            box-shadow: 0 5px 20px rgba(14, 165, 233, 0.4);
         }
     </style>
 </head>

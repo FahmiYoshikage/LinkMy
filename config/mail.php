@@ -206,15 +206,15 @@ function get_otp_email_template($otp) {
     <head>
         <meta charset="UTF-8">
         <style>
-            body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; }
+            body { font-family: Arial, sans-serif; background: #0f1419; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #1a1f2e; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #2d3748; }
+            .header { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); padding: 30px; text-align: center; }
             .header h1 { color: white; margin: 0; font-size: 28px; }
-            .content { padding: 40px 30px; text-align: center; }
-            .otp-box { background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .otp-code { font-size: 48px; font-weight: bold; color: #667eea; letter-spacing: 8px; margin: 10px 0; }
-            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; text-align: left; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+            .content { padding: 40px 30px; text-align: center; color: #e2e8f0; }
+            .otp-box { background: #0f1419; border: 2px dashed #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .otp-code { font-size: 48px; font-weight: bold; color: #0ea5e9; letter-spacing: 8px; margin: 10px 0; }
+            .warning { background: rgba(245, 158, 11, 0.15); border-left: 4px solid #fbbf24; padding: 12px; margin: 20px 0; text-align: left; color: #fbbf24; }
+            .footer { background: #0f1419; padding: 20px; text-align: center; color: #94a3b8; font-size: 14px; border-top: 1px solid #2d3748; }
         </style>
     </head>
     <body>
@@ -223,13 +223,13 @@ function get_otp_email_template($otp) {
                 <h1>🔐 Verifikasi Email</h1>
             </div>
             <div class="content">
-                <p style="font-size: 16px; color: #333;">Halo!</p>
-                <p style="font-size: 16px; color: #666;">Gunakan kode OTP berikut untuk menyelesaikan registrasi Anda di <strong>LinkMy</strong>:</p>
+                <p style="font-size: 16px; color: #e2e8f0;">Halo!</p>
+                <p style="font-size: 16px; color: #94a3b8;">Gunakan kode OTP berikut untuk menyelesaikan registrasi Anda di <strong style="color: #0ea5e9;">LinkMy</strong>:</p>
                 
                 <div class="otp-box">
-                    <p style="margin: 0; color: #666; font-size: 14px;">KODE VERIFIKASI</p>
+                    <p style="margin: 0; color: #94a3b8; font-size: 14px;">KODE VERIFIKASI</p>
                     <div class="otp-code">' . $otp . '</div>
-                    <p style="margin: 0; color: #999; font-size: 12px;">Berlaku selama 10 menit</p>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Berlaku selama 10 menit</p>
                 </div>
                 
                 <div class="warning">
@@ -261,14 +261,14 @@ function get_password_reset_email_template($resetLink) {
     <head>
         <meta charset="UTF-8">
         <style>
-            body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; }
-            .header { background: #667eea; padding: 25px; text-align: center; }
+            body { font-family: Arial, sans-serif; background: #0f1419; margin: 0; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #1a1f2e; border-radius: 8px; overflow: hidden; border: 1px solid #2d3748; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+            .header { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); padding: 25px; text-align: center; }
             .header h1 { color: #fff; margin: 0; font-size: 24px; }
-            .content { padding: 30px; }
-            .button { display: inline-block; background: #667eea; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-            .warning { background: #fff3cd; padding: 12px; margin: 15px 0; border-left: 3px solid #ffc107; }
-            .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; font-size: 13px; }
+            .content { padding: 30px; color: #e2e8f0; }
+            .button { display: inline-block; background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+            .warning { background: rgba(245, 158, 11, 0.15); padding: 12px; margin: 15px 0; border-left: 3px solid #fbbf24; color: #fbbf24; }
+            .footer { background: #0f1419; padding: 15px; text-align: center; color: #94a3b8; font-size: 13px; border-top: 1px solid #2d3748; }
         </style>
     </head>
     <body>
@@ -277,16 +277,16 @@ function get_password_reset_email_template($resetLink) {
                 <h1>🔑 Reset Password</h1>
             </div>
             <div class="content">
-                <p>Halo!</p>
-                <p>Kami menerima permintaan untuk reset password akun LinkMy Anda.</p>
-                <p>Klik tombol di bawah untuk membuat password baru:</p>
+                <p style="color: #e2e8f0;">Halo!</p>
+                <p style="color: #94a3b8;">Kami menerima permintaan untuk reset password akun <strong style="color: #0ea5e9;">LinkMy</strong> Anda.</p>
+                <p style="color: #94a3b8;">Klik tombol di bawah untuk membuat password baru:</p>
                 
-                <div style="text-align: center;">
+                <div style="text-align: center; margin: 25px 0;">
                     <a href="' . $resetLink . '" class="button">Reset Password</a>
                 </div>
                 
-                <p style="font-size: 14px; color: #999; margin-top: 20px;">Atau copy link berikut ke browser Anda:</p>
-                <p style="font-size: 12px; color: #667eea; word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 5px;">' . $resetLink . '</p>
+                <p style="font-size: 14px; color: #64748b; margin-top: 20px;">Atau copy link berikut ke browser Anda:</p>
+                <p style="font-size: 12px; color: #0ea5e9; word-break: break-all; background: #0f1419; padding: 10px; border-radius: 5px; border: 1px solid #2d3748;">' . $resetLink . '</p>
                 
                 <div class="warning">
                     <strong>⚠️ Penting:</strong>
