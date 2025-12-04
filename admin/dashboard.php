@@ -272,6 +272,8 @@
             margin-bottom: 10px;
             cursor: move;
             transition: all 0.3s;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .link-item:hover {
             border-color: #0ea5e9;
@@ -332,6 +334,8 @@
                 border: 2px solid #e9ecef;
                 border-radius: 12px;
                 margin-bottom: 0.75rem;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
             .link-item .d-flex {
                 flex-direction: column;
@@ -418,6 +422,8 @@
             }
             .link-item {
                 padding: 10px;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
             .card {
                 border-radius: 10px;
