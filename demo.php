@@ -12,7 +12,7 @@
     <?php require_once __DIR__ . '/partials/favicons.php'; ?>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0f1419;
             min-height: 100vh;
             padding: 2rem 0;
         }
@@ -24,10 +24,11 @@
         .profile-header {
             text-align: center;
             padding: 2rem;
-            background: rgba(255, 255, 255, 0.95);
+            background: #1a1f2e;
             border-radius: 20px;
             margin-bottom: 2rem;
             backdrop-filter: blur(10px);
+            border: 1px solid #2d3748;
         }
         .profile-avatar {
             width: 120px;
@@ -40,31 +41,33 @@
         .profile-title {
             font-size: 28px;
             font-weight: 700;
-            color: #2d3748;
+            color: #e2e8f0;
             margin-bottom: 0.5rem;
         }
         .profile-bio {
-            color: #718096;
+            color: #94a3b8;
             font-size: 16px;
             margin-bottom: 0;
         }
         .demo-link {
             display: block;
-            background: white;
+            background: #1a1f2e;
             padding: 1.25rem;
             border-radius: 15px;
             margin-bottom: 1rem;
             text-decoration: none;
-            color: #2d3748;
+            color: #e2e8f0;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #2d3748;
         }
         .demo-link:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
+            border-color: #0ea5e9;
         }
         .demo-link i {
             font-size: 24px;
@@ -72,7 +75,7 @@
         }
         .demo-badge {
             display: inline-block;
-            background: #667eea;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 20px;
@@ -84,38 +87,41 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            background: white;
-            color: #667eea;
+            background: #1a1f2e;
+            color: #0ea5e9;
             padding: 0.75rem 1.5rem;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             transition: all 0.3s;
             z-index: 1000;
+            border: 1px solid #2d3748;
         }
         .back-btn:hover {
-            background: #667eea;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.3);
+            border-color: #0ea5e9;
         }
         .demo-footer {
             text-align: center;
             padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: #1a1f2e;
             border-radius: 15px;
             margin-top: 2rem;
             backdrop-filter: blur(10px);
+            border: 1px solid #2d3748;
         }
         .demo-footer h5 {
-            color: white;
+            color: #e2e8f0;
             font-weight: 700;
             margin-bottom: 1rem;
         }
         .demo-footer .btn {
-            background: white;
-            color: #667eea;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: white;
             font-weight: 600;
             padding: 0.75rem 2rem;
             border-radius: 50px;
@@ -124,7 +130,8 @@
         }
         .demo-footer .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+            filter: brightness(1.1);
         }
         
         @media (max-width: 768px) {
@@ -160,7 +167,7 @@
             <div class="demo-badge">
                 <i class="bi bi-stars me-1"></i>DEMO ACCOUNT
             </div>
-            <img src="https://ui-avatars.com/api/?name=LinkMy+Demo&size=120&background=667eea&color=fff&bold=true" alt="Demo Avatar" class="profile-avatar">
+            <img src="https://ui-avatars.com/api/?name=LinkMy+Demo&size=120&background=0ea5e9&color=fff&bold=true" alt="Demo Avatar" class="profile-avatar">
             <h1 class="profile-title">LinkMy Demo</h1>
             <p class="profile-bio">Contoh halaman profil LinkMy dengan berbagai fitur menarik 🚀</p>
         </div>
