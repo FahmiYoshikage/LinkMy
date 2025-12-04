@@ -103,26 +103,34 @@ if (isset($_SESSION['user_id'])) {
 </nav>
 
 <script>
-// Theme toggle functionality
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-const html = document.documentElement;
+// Theme toggle functionality - wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
 
-// Load saved theme or default to light
-const savedTheme = localStorage.getItem('theme') || 'light';
-html.setAttribute('data-theme', savedTheme);
-updateIcon(savedTheme);
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+    updateIcon(savedTheme);
 
-themeToggle.addEventListener('click', () => {
-    const currentTheme = html.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    html.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateIcon(newTheme);
+    // Add click event listener
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        });
+    }
+
+    function updateIcon(theme) {
+        if (themeIcon) {
+            themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        }
+    }
 });
-
-function updateIcon(theme) {
-    themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
-}
 </script>

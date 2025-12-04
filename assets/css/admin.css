@@ -5,7 +5,7 @@
     --primary-dark: #2563eb;
     --primary-light: #60a5fa;
     --hover-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
-    
+
     /* Light Mode (Default) */
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
@@ -19,7 +19,7 @@
 }
 
 /* Dark Mode */
-[data-theme="dark"] {
+[data-theme='dark'] {
     --bg-color: #0f172a;
     --card-bg: #1e293b;
     --card-hover: #334155;
@@ -29,7 +29,7 @@
     --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     --navbar-bg: #1e293b;
     --navbar-text: #f1f5f9;
-}/* Body Background - Dark Mode */
+} /* Body Background - Dark Mode */
 body {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
@@ -636,11 +636,25 @@ div {
     font-size: 1.2rem;
     padding: 0.6rem 1rem !important;
     transition: all 0.3s ease;
+    border: none !important;
+    background: none !important;
+    color: var(--navbar-text) !important;
 }
 
 #themeToggle:hover {
     background: rgba(59, 130, 246, 0.1) !important;
     transform: scale(1.1);
+    color: var(--primary-color) !important;
+}
+
+#themeToggle:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+#themeIcon {
+    display: inline-block;
+    font-size: 1.1rem;
 }
 
 /* Smooth transitions for theme switch */
@@ -650,5 +664,6 @@ body,
 .modal-content,
 .form-control,
 .btn {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease,
+        border-color 0.3s ease;
 }
