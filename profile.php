@@ -13,10 +13,13 @@
 
     // Multi-profile support: Load profile by slug - check is_active first
     // Query directly from profiles to get is_active status
+    // Order by id DESC to get latest profile if duplicate slugs exist
     $profile_check = "SELECT p.*, u.username, u.is_verified 
                       FROM profiles p 
                       JOIN users u ON p.user_id = u.id 
-                      WHERE p.slug = ?";
+                      WHERE p.slug = ?
+                      ORDER BY p.id DESC
+                      LIMIT 1";
     $result = execute_query($profile_check, [$slug], 's');
 
     if (!$result || mysqli_num_rows($result) === 0){
