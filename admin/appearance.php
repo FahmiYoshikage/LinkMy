@@ -460,9 +460,9 @@
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_boxed_layout'])) {
         $boxed_enabled = isset($_POST['boxed_layout']) ? 1 : 0;
         $outer_bg_type = $_POST['outer_bg_type'] ?? 'gradient';
-        $outer_bg_color = $_POST['outer_bg_color'] ?? '#667eea';
-        $outer_bg_gradient_start = $_POST['outer_bg_gradient_start'] ?? '#667eea';
-        $outer_bg_gradient_end = $_POST['outer_bg_gradient_end'] ?? '#764ba2';
+        $outer_bg_color = $_POST['outer_bg_color'] ?? '#0ea5e9';
+        $outer_bg_gradient_start = $_POST['outer_bg_gradient_start'] ?? '#0ea5e9';
+        $outer_bg_gradient_end = $_POST['outer_bg_gradient_end'] ?? '#06b6d4';
         $container_max_width = intval($_POST['container_max_width'] ?? 480);
         $container_border_radius = intval($_POST['container_border_radius'] ?? 30);
         $container_shadow = isset($_POST['container_shadow']) ? 1 : 0;
@@ -471,7 +471,7 @@
         $theme_row = get_single_row("SELECT id FROM themes WHERE profile_id = ? LIMIT 1", [$active_profile_id], 'i');
         if (!$theme_row) {
             // Create default theme if missing
-            $create = mysqli_prepare($conn, "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', '#667eea', '#333333')");
+            $create = mysqli_prepare($conn, "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) VALUES (?, 'gradient', 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', '#0ea5e9', '#333333')");
             mysqli_stmt_bind_param($create, 'i', $active_profile_id);
             mysqli_stmt_execute($create);
             mysqli_stmt_close($create);
@@ -482,7 +482,7 @@
         // Ensure theme_boxed row exists
         $boxed_row = get_single_row("SELECT id FROM theme_boxed WHERE theme_id = ? LIMIT 1", [$theme_id], 'i');
         if (!$boxed_row) {
-            $ins = mysqli_prepare($conn, "INSERT INTO theme_boxed (theme_id, enabled, outer_bg_type, outer_bg_value, container_max_width, container_radius, container_shadow) VALUES (?, 0, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 480, 30, 0)");
+            $ins = mysqli_prepare($conn, "INSERT INTO theme_boxed (theme_id, enabled, outer_bg_type, outer_bg_value, container_max_width, container_radius, container_shadow) VALUES (?, 0, 'gradient', 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', 480, 30, 0)");
             mysqli_stmt_bind_param($ins, 'i', $theme_id);
             mysqli_stmt_execute($ins);
             mysqli_stmt_close($ins);
@@ -540,8 +540,8 @@
             // Try to extract two colors from the CSS string for preview dots
             $matches = [];
             preg_match_all('/#([0-9a-fA-F]{3,6})/', $css, $matches);
-            $c1 = isset($matches[0][0]) ? $matches[0][0] : '#667eea';
-            $c2 = isset($matches[0][1]) ? $matches[0][1] : '#764ba2';
+            $c1 = isset($matches[0][0]) ? $matches[0][0] : '#0ea5e9';
+            $c2 = isset($matches[0][1]) ? $matches[0][1] : '#06b6d4';
             $gradient_presets[] = [
                 'preset_name' => $name,
                 'gradient_css' => $css,
@@ -558,29 +558,29 @@
     
     if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) {
         // Image background: set both bg and image URL
-        $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // fallback gradient
+        $preview_bg = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'; // fallback gradient
         $preview_bg_image = '../uploads/backgrounds/' . $appearance['bg_value'];
     } elseif (!empty($appearance['bg_value'])) {
         // Use stored bg_value directly from themes table (gradient or color)
         $preview_bg = $appearance['bg_value'];
     } else {
         // Fallback to defaults
-        $preview_bg = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        $preview_bg = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
     }
     
     // Extract custom gradient colors from bg_value if it's a gradient
     if (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'gradient' && !empty($appearance['bg_value'])) {
-        // Parse gradient to extract colors: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+        // Parse gradient to extract colors: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)
         preg_match_all('/(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})/', $appearance['bg_value'], $gradient_colors);
         if (!empty($gradient_colors[0])) {
-            $appearance['custom_gradient_start'] = $gradient_colors[0][0] ?? '#667eea';
-            $appearance['custom_gradient_end'] = $gradient_colors[0][1] ?? '#764ba2';
+            $appearance['custom_gradient_start'] = $gradient_colors[0][0] ?? '#0ea5e9';
+            $appearance['custom_gradient_end'] = $gradient_colors[0][1] ?? '#06b6d4';
         }
     }
     
     // Set defaults if not set
-    if (empty($appearance['custom_gradient_start'])) $appearance['custom_gradient_start'] = '#667eea';
-    if (empty($appearance['custom_gradient_end'])) $appearance['custom_gradient_end'] = '#764ba2';
+    if (empty($appearance['custom_gradient_start'])) $appearance['custom_gradient_start'] = '#0ea5e9';
+    if (empty($appearance['custom_gradient_end'])) $appearance['custom_gradient_end'] = '#06b6d4';
     if (empty($appearance['custom_bg_color'])) $appearance['custom_bg_color'] = '#ffffff';
     
     // Reverse-map bg_value to gradient_preset name for active state detection
@@ -699,7 +699,7 @@
         /* Button Preview Styles */
         .button-preview {
             padding: 14px 28px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             border: none;
             text-align: center;
@@ -797,11 +797,11 @@
             margin-bottom: 10px;
         }
         .font-option:hover {
-            border-color: #667eea;
+            border-color: #0ea5e9;
             background: #f8f9ff;
         }
         .font-option.active {
-            border-color: #667eea;
+            border-color: #0ea5e9;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
         }
         
@@ -813,9 +813,9 @@
             padding: 12px 20px;
         }
         .nav-tabs .nav-link.active {
-            color: #667eea;
+            color: #0ea5e9;
             background: white;
-            border-bottom: 3px solid #667eea !important;
+            border-bottom: 3px solid #0ea5e9 !important;
         }
         
         /* Color Picker */
@@ -833,7 +833,7 @@
         }
         .color-preview:hover {
             transform: scale(1.1);
-            border-color: #667eea;
+            border-color: #0ea5e9;
         }
         
         /* Loading Overlay */
@@ -942,12 +942,12 @@
             background: white;
         }
         .layout-card:hover {
-            border-color: #667eea;
+            border-color: #0ea5e9;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
         }
         .layout-card.active {
-            border-color: #667eea;
+            border-color: #0ea5e9;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
         }
         .layout-card .check-badge {
@@ -977,7 +977,7 @@
         .layout-icon {
             width: 40px;
             height: 40px;
-            background: #667eea;
+            background: #0ea5e9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1034,7 +1034,7 @@
             cursor: pointer;
         }
         .social-icon-item:hover {
-            border-color: #667eea;
+            border-color: #0ea5e9;
             background: #f8f9ff;
             transform: translateY(-2px);
         }
@@ -1235,9 +1235,9 @@
                                                     <div class="color-picker-wrapper">
                                                         <input type="color" class="form-control form-control-color" 
                                                                name="custom_gradient_start" id="customGradientStart"
-                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?>">
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#0ea5e9') ?>">
                                                         <input type="text" class="form-control form-control-sm mt-1" 
-                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?>"
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#0ea5e9') ?>"
                                                                id="customGradientStartHex" readonly>
                                                     </div>
                                                 </div>
@@ -1246,15 +1246,15 @@
                                                     <div class="color-picker-wrapper">
                                                         <input type="color" class="form-control form-control-color" 
                                                                name="custom_gradient_end" id="customGradientEnd"
-                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?>">
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#06b6d4') ?>">
                                                         <input type="text" class="form-control form-control-sm mt-1" 
-                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?>"
+                                                               value="<?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#06b6d4') ?>"
                                                                id="customGradientEndHex" readonly>
                                                     </div>
                                                 </div>
                                                 <div class="col-12">
                                                     <div class="gradient-preview" id="customGradientPreview" 
-                                                         style="height: 80px; border-radius: 12px; background: linear-gradient(135deg, <?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#667eea') ?> 0%, <?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#764ba2') ?> 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                                         style="height: 80px; border-radius: 12px; background: linear-gradient(135deg, <?= htmlspecialchars($appearance['custom_gradient_start'] ?? '#0ea5e9') ?> 0%, <?= htmlspecialchars($appearance['custom_gradient_end'] ?? '#06b6d4') ?> 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
                                                         <i class="bi bi-eye me-2"></i>Preview Custom Gradient
                                                     </div>
                                                 </div>
@@ -1279,9 +1279,9 @@
                                             <div class="color-picker-wrapper">
                                                 <input type="color" class="form-control form-control-color" 
                                                        name="custom_button_color" id="customButtonColor"
-                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>">
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#0ea5e9') ?>">
                                                 <input type="text" class="form-control form-control-sm mt-1" 
-                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#667eea') ?>"
+                                                       value="<?= htmlspecialchars($appearance['button_color'] ?? '#0ea5e9') ?>"
                                                        id="customButtonColorHex" readonly>
                                             </div>
                                         </div>
@@ -1492,7 +1492,7 @@
                                                 <div>
                                                     <h6 class="fw-semibold mb-2"><i class="bi bi-eye"></i> Preview</h6>
                                                     <div class="text-center">
-                                                        <div id="cropPreview" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 3px solid #667eea; background: #f8f9fa;"></div>
+                                                        <div id="cropPreview" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 3px solid #0ea5e9; background: #f8f9fa;"></div>
                                                     </div>
                                                 </div>
                                                 <div>
@@ -1663,9 +1663,9 @@
                                             <div class="color-picker-wrapper">
                                                 <input type="color" class="form-control form-control-color" 
                                                        name="custom_button_color" id="customButtonColor"
-                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#667eea') ?>">
+                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#0ea5e9') ?>">
                                                 <input type="text" class="form-control form-control-sm mt-1" 
-                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#667eea') ?>"
+                                                       value="<?= htmlspecialchars($appearance['custom_button_color'] ?? '#0ea5e9') ?>"
                                                        id="customButtonColorHex" readonly>
                                             </div>
                                         </div>
@@ -1796,7 +1796,7 @@
                                                 <div class="layout-card <?= ($appearance['container_style'] ?? 'wide') == 'wide' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
                                                     <div class="layout-preview">
-                                                        <div style="width: 100%; height: 60px; background: linear-gradient(135deg, #667eea 20%, #764ba2 80%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
+                                                        <div style="width: 100%; height: 60px; background: linear-gradient(135deg, #0ea5e9 20%, #06b6d4 80%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
                                                             <div style="text-align: center;">
                                                                 <div style="font-weight: bold;">Wide Layout</div>
                                                                 <div style="font-size: 8px; opacity: 0.8;">Full width container</div>
@@ -1818,7 +1818,7 @@
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
                                                     <div class="layout-preview">
                                                         <div style="width: 100%; height: 60px; background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 8px;">
-                                                            <div style="width: 70%; height: 100%; background: linear-gradient(135deg, #667eea 20%, #764ba2 80%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                                                            <div style="width: 70%; height: 100%; background: linear-gradient(135deg, #0ea5e9 20%, #06b6d4 80%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
                                                                 <div style="text-align: center;">
                                                                     <div>Boxed</div>
                                                                     <div style="font-size: 7px; opacity: 0.9;">Linktree Style</div>
@@ -1916,7 +1916,7 @@
                                     <?php foreach ($social_icons as $icon): ?>
                                     <div class="social-icon-item" title="<?= htmlspecialchars($icon['platform_name']) ?>">
                                         <i class="<?= htmlspecialchars($icon['icon_class']) ?>" 
-                                           style="color: <?= htmlspecialchars($icon['icon_color'] ?? '#667eea') ?>;"></i>
+                                           style="color: <?= htmlspecialchars($icon['icon_color'] ?? '#0ea5e9') ?>;"></i>
                                         <span><?= htmlspecialchars($icon['platform_name']) ?></span>
                                     </div>
                                     <?php endforeach; ?>
@@ -1980,9 +1980,9 @@
                                                         <div class="input-group">
                                                             <input type="color" class="form-control form-control-color" 
                                                                    name="outer_bg_color" id="outerBgColor"
-                                                                   value="<?= $appearance['outer_bg_color'] ?? '#667eea' ?>">
+                                                                   value="<?= $appearance['outer_bg_color'] ?? '#0ea5e9' ?>">
                                                             <input type="text" class="form-control" 
-                                                                   value="<?= $appearance['outer_bg_color'] ?? '#667eea' ?>"
+                                                                   value="<?= $appearance['outer_bg_color'] ?? '#0ea5e9' ?>"
                                                                    id="outerBgColorHex" readonly>
                                                         </div>
                                                     </div>
@@ -1996,9 +1996,9 @@
                                                             <div class="input-group">
                                                                 <input type="color" class="form-control form-control-color" 
                                                                        name="outer_bg_gradient_start" id="gradientStart"
-                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#667eea' ?>">
+                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#0ea5e9' ?>">
                                                                 <input type="text" class="form-control" 
-                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#667eea' ?>"
+                                                                       value="<?= $appearance['outer_bg_gradient_start'] ?? '#0ea5e9' ?>"
                                                                        id="gradientStartHex" readonly>
                                                             </div>
                                                         </div>
@@ -2007,9 +2007,9 @@
                                                             <div class="input-group">
                                                                 <input type="color" class="form-control form-control-color" 
                                                                        name="outer_bg_gradient_end" id="gradientEnd"
-                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#764ba2' ?>">
+                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#06b6d4' ?>">
                                                                 <input type="text" class="form-control" 
-                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#764ba2' ?>"
+                                                                       value="<?= $appearance['outer_bg_gradient_end'] ?? '#06b6d4' ?>"
                                                                        id="gradientEndHex" readonly>
                                                             </div>
                                                         </div>
@@ -2072,7 +2072,7 @@
                                                 <h6 class="fw-bold mb-3 text-center">
                                                     <i class="bi bi-eye"></i> Preview
                                                 </h6>
-                                                <div id="boxedPreview" class="mx-auto" style="height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#667eea') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#764ba2') . ')' : ($appearance['outer_bg_color'] ?? '#667eea') ?>;">
+                                                <div id="boxedPreview" class="mx-auto" style="height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: <?= ($appearance['outer_bg_type'] ?? 'gradient') == 'gradient' ? 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#0ea5e9') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#06b6d4') . ')' : ($appearance['outer_bg_color'] ?? '#0ea5e9') ?>;">
                                                     <div id="boxedPreviewInner" style="width: <?= $appearance['container_max_width'] ?? 480 ?>px; max-width: 90%; background: <?= $preview_bg ?>; padding: 30px; border-radius: <?= $appearance['container_border_radius'] ?? 30 ?>px; <?= ($appearance['container_shadow'] ?? 1) ? 'box-shadow: 0 10px 40px rgba(0,0,0,0.2);' : '' ?>">
                                                         <div class="text-center">
                                                             <div class="bg-secondary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px;"></div>
@@ -2117,9 +2117,9 @@
                         $outer_preview_bg = '';
                         if ($is_boxed) {
                             if (($appearance['outer_bg_type'] ?? 'gradient') == 'gradient') {
-                                $outer_preview_bg = 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#667eea') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#764ba2') . ')';
+                                $outer_preview_bg = 'linear-gradient(135deg, ' . ($appearance['outer_bg_gradient_start'] ?? '#0ea5e9') . ', ' . ($appearance['outer_bg_gradient_end'] ?? '#06b6d4') . ')';
                             } else {
-                                $outer_preview_bg = $appearance['outer_bg_color'] ?? '#667eea';
+                                $outer_preview_bg = $appearance['outer_bg_color'] ?? '#0ea5e9';
                             }
                         }
                         ?>
@@ -2492,7 +2492,7 @@
                     link.style.color = '#fff';
                 });
             } else {
-                previewContent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                previewContent.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
                 previewTitle.style.color = '#fff';
                 previewBio.style.color = 'rgba(255,255,255,0.9)';
                 previewLinks.forEach(link => {
@@ -2703,8 +2703,8 @@
         });
         
         function updateCustomGradientPreview() {
-            const start = document.getElementById('customGradientStart')?.value || '#667eea';
-            const end = document.getElementById('customGradientEnd')?.value || '#764ba2';
+            const start = document.getElementById('customGradientStart')?.value || '#0ea5e9';
+            const end = document.getElementById('customGradientEnd')?.value || '#06b6d4';
             const gradient = `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
             document.getElementById('customGradientPreview').style.background = gradient;
             document.getElementById('previewContent').style.background = gradient;
@@ -2946,7 +2946,7 @@
             
             if (this.checked) {
                 // Enable boxed layout preview
-                const outerBg = 'linear-gradient(135deg, #667eea, #764ba2)';
+                const outerBg = 'linear-gradient(135deg, #0ea5e9, #06b6d4)';
                 const outerBox = document.createElement('div');
                 outerBox.id = 'previewOuterBox';
                 outerBox.style.cssText = `background: ${outerBg}; padding: 20px; min-height: 450px; border-radius: 20px; display: flex; align-items: center; justify-content: center;`;
@@ -3146,5 +3146,6 @@
 // Close the connection
 mysqli_close($conn);
 ?>
+
 
 

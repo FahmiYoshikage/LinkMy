@@ -33,7 +33,7 @@
             <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
             <style>
                 body {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
                     min-height: 100vh;
                     display: flex;
                     align-items: center;
@@ -73,7 +73,7 @@
             <link href="assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
             <style>
                 body {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
                     min-height: 100vh;
                     display: flex;
                     align-items: center;
@@ -125,7 +125,7 @@
     // Gradient presets mapping (v2.0 + v2.1)
     $gradient_presets = [
         // V2.0 Original
-        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Purple Dream' => 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
         'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
         'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
         'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
@@ -174,13 +174,13 @@
         } elseif ($theme_name === 'gradient') {
             $bg_type = 'gradient';
             $preset_name = $user_data['gradient_preset'] ?? 'Purple Dream';
-            $bg_value = $gradient_presets[$preset_name] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $bg_value = $gradient_presets[$preset_name] ?? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
         } elseif ($theme_name === 'image') {
             $bg_type = 'image';
             $bg_value = $user_data['bg_image_filename'] ?? '';
         } else {
             $bg_type = 'gradient';
-            $bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $bg_value = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
         }
     }
 
@@ -188,7 +188,7 @@
     $button_style = $user_data['button_style'] ?? 'rounded';
     
     // V3 schema: themes table fields
-    $custom_button_color = $user_data['button_color'] ?? '#667eea';
+    $custom_button_color = $user_data['button_color'] ?? '#0ea5e9';
     $custom_text_color = $user_data['text_color'] ?? '#333333';
     $font_family = $user_data['font'] ?? 'Inter';
     $profile_layout = $user_data['layout'] ?? 'centered';
@@ -203,12 +203,12 @@
     $outer_bg_value = $user_data['outer_bg_value'] ?? '';
     
     // Parse outer_bg_value to extract gradient colors or solid color
-    $outer_bg_gradient_start = '#667eea';
-    $outer_bg_gradient_end = '#764ba2';
+    $outer_bg_gradient_start = '#0ea5e9';
+    $outer_bg_gradient_end = '#06b6d4';
     $outer_bg_color = '#f0f0f0';
     
     if ($outer_bg_type === 'gradient' && !empty($outer_bg_value)) {
-        // Extract colors from gradient string like "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+        // Extract colors from gradient string like "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)"
         if (preg_match('/#[0-9a-fA-F]{6}/', $outer_bg_value, $matches, PREG_OFFSET_CAPTURE, 0)) {
             $outer_bg_gradient_start = $matches[0][0];
         }
@@ -330,7 +330,7 @@
                         'category_id' => $cat_id,
                         'category_name' => $row['category_name'],
                         'category_icon' => $row['category_icon'] ?? 'bi-folder',
-                        'category_color' => $row['category_color'] ?? '#667eea',
+                        'category_color' => $row['category_color'] ?? '#0ea5e9',
                         'category_expanded' => $row['category_expanded'] ?? 1
                     ];
                 }
@@ -381,14 +381,14 @@
         $text_color = $custom_text_color ?? '#333333';
     } else {
         // Fallback: default gradient
-        $background_css = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        $background_css = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
         $text_color = $custom_text_color ?? '#ffffff';
         $is_gradient = true;
     }
     
     // Button/link colors
     $button_bg = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.2)' : '#ffffff');
-    $button_hover = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.3)' : '#667eea');
+    $button_hover = $custom_button_color ?? ($is_gradient ? 'rgba(255,255,255,0.3)' : '#0ea5e9');
     
     // Link text color follows main text_color for consistency
     $link_text_color = $text_color; // Use same color as profile title/bio
@@ -461,7 +461,7 @@
             background-attachment: fixed;
             <?php elseif ($boxed_layout): ?>
             /* Boxed mode: Fallback gradient (only if no image) */
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             background-attachment: fixed;
             <?php elseif (!empty($background_css)): ?>
             /* Non-boxed mode: Use theme background (gradient/color) */
@@ -471,7 +471,7 @@
             <?php endif; ?>
             <?php else: ?>
             /* Fallback */
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             background-attachment: fixed;
             <?php endif; ?>
         }
@@ -673,26 +673,26 @@
         <!-- Top Action Buttons Inside Boxed Wrapper -->
         <div class="btn-top-action left" style="z-index: 1050; position: relative;">
             <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); position: relative; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
-                <i class="bi bi-link-45deg" style="font-size: 1.3rem; color: #667eea;"></i>
+                <i class="bi bi-link-45deg" style="font-size: 1.3rem; color: #0ea5e9;"></i>
             </button>
         </div>
         
         <div class="btn-top-action right" style="z-index: 1050; position: relative;">
             <button class="btn btn-light rounded-circle shadow" style="width: 45px; height: 45px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); position: relative; z-index: 1050;" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
-                <i class="bi bi-share-fill" style="font-size: 1.1rem; color: #667eea;"></i>
+                <i class="bi bi-share-fill" style="font-size: 1.1rem; color: #0ea5e9;"></i>
             </button>
         </div>
     <?php else: ?>
         <!-- Top Action Buttons Fixed Position -->
         <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
             <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#linkmyModal" title="Create your LinkMy">
-                <i class="bi bi-link-45deg" style="font-size: 1.5rem; color: #667eea;"></i>
+                <i class="bi bi-link-45deg" style="font-size: 1.5rem; color: #0ea5e9;"></i>
             </button>
         </div>
         
         <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
             <button class="btn btn-light rounded-circle shadow" style="width: 50px; height: 50px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);" data-bs-toggle="modal" data-bs-target="#shareModal" title="Share Profile">
-                <i class="bi bi-share-fill" style="font-size: 1.2rem; color: #667eea;"></i>
+                <i class="bi bi-share-fill" style="font-size: 1.2rem; color: #0ea5e9;"></i>
             </button>
         </div>
     <?php endif; ?>
@@ -828,7 +828,7 @@
                 </div>
                 <div class="modal-body text-center py-4">
                     <!-- Profile Preview Card -->
-                    <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+                    <div class="card mb-4" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); border: none; border-radius: 15px;">
                         <div class="card-body py-4">
                             <?php
                             $profile_pic_path = 'uploads/profile_pics/' . $profile_pic;
@@ -888,7 +888,7 @@
             <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
                 <div class="modal-body text-center py-5">
                     <div class="mb-4">
-                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);">
                             <i class="bi bi-link-45deg text-white" style="font-size: 3rem;"></i>
                         </div>
                         <h3 class="fw-bold mb-2">Create Your LinkMy</h3>
@@ -931,7 +931,7 @@
                         </div>
                     </div>
                     
-                    <a href="register.php" class="btn btn-lg w-100 text-white fw-semibold mb-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; padding: 15px;">
+                    <a href="register.php" class="btn btn-lg w-100 text-white fw-semibold mb-2" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); border: none; border-radius: 12px; padding: 15px;">
                         <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
                     </a>
                     <p class="text-muted small mb-0">Already have an account? <a href="landing.php" class="fw-semibold">Login</a></p>
