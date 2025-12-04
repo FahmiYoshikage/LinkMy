@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Prevent caching to always show fresh data
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');

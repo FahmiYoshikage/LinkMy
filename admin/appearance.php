@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
    require_once '../config/auth_check.php';
    require_once '../config/db.php';
    error_reporting(E_ALL);
