@@ -100,6 +100,7 @@
     // IMPORTANT: Don't use t.* to avoid themes.id overriding profiles.id in array_merge
     $theme_query = "SELECT t.profile_id, t.bg_type, t.bg_value, t.button_style, t.button_color, 
                     t.text_color, t.font, t.layout, t.container_style,
+                    t.enable_animations, t.enable_glass_effect, t.shadow_intensity,
                     tb.enabled AS boxed_enabled, tb.outer_bg_type, tb.outer_bg_value, 
                     tb.container_bg_color, tb.container_max_width, tb.container_radius, tb.container_shadow
                     FROM themes t
