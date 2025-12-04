@@ -274,8 +274,8 @@
             transition: all 0.3s;
         }
         .link-item:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            border-color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
         }
         .link-item.dragging {
             opacity: 0.5;
@@ -288,7 +288,7 @@
             cursor: grabbing;
         }
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             border-radius: 15px;
             padding: 1.5rem;
@@ -839,7 +839,7 @@
         
         // Highcharts Global Options
         Highcharts.setOptions({
-            colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'],
+            colors: ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'],
             chart: {
                 style: {
                     fontFamily: 'Inter, sans-serif'
@@ -908,13 +908,13 @@
                             y2: 1
                         },
                         stops: [
-                            [0, 'rgba(102, 126, 234, 0.3)'],
-                            [1, 'rgba(102, 126, 234, 0.05)']
+                            [0, 'rgba(14, 165, 233, 0.3)'],
+                            [1, 'rgba(14, 165, 233, 0.05)']
                         ]
                     },
                     marker: {
                         radius: 4,
-                        fillColor: '#667eea',
+                        fillColor: '#0ea5e9',
                         lineWidth: 2,
                         lineColor: '#fff'
                     },
@@ -930,7 +930,7 @@
             series: [{
                 name: 'Daily Clicks',
                 data: <?= json_encode(array_values($dates_range)) ?>,
-                color: '#667eea'
+                color: '#0ea5e9'
             }],
             exporting: {
                 enabled: true,

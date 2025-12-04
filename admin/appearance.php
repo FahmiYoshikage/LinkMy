@@ -61,7 +61,7 @@
     if (!$appearance) {
         // Create default theme if not exists
         $query = "INSERT INTO themes (profile_id, bg_type, bg_value, button_color, text_color) 
-                  VALUES (?, 'gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', '#667eea', '#333333')";
+                  VALUES (?, 'gradient', 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', '#0ea5e9', '#333333')";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'i', $active_profile_id);
         mysqli_stmt_execute($stmt);
@@ -107,10 +107,10 @@
             
             // Ensure defaults are set if parsing failed
             if (!isset($appearance['outer_bg_gradient_start'])) {
-                $appearance['outer_bg_gradient_start'] = '#667eea';
+                $appearance['outer_bg_gradient_start'] = '#0ea5e9';
             }
             if (!isset($appearance['outer_bg_gradient_end'])) {
-                $appearance['outer_bg_gradient_end'] = '#764ba2';
+                $appearance['outer_bg_gradient_end'] = '#06b6d4';
             }
             if (!isset($appearance['outer_bg_color'])) {
                 $appearance['outer_bg_color'] = '#667eea';

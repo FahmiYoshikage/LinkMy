@@ -27,7 +27,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     $category_name = trim($_POST['category_name']);
     $category_icon = trim($_POST['category_icon']) ?: 'bi-folder';
-    $category_color = trim($_POST['category_color']) ?: '#667eea';
+    $category_color = trim($_POST['category_color']) ?: '#0ea5e9';
     
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
     $category_id = intval($_POST['category_id']);
     $category_name = trim($_POST['category_name']);
     $category_icon = trim($_POST['category_icon']) ?: 'bi-folder';
-    $category_color = trim($_POST['category_color']) ?: '#667eea';
+    $category_color = trim($_POST['category_color']) ?: '#0ea5e9';
     
     if (empty($category_name)) {
         $error = 'Nama kategori harus diisi!';
@@ -105,7 +105,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); 
             min-height: 100vh;
             padding-top: 76px;
         }
@@ -181,13 +181,13 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
         }
         .icon-option:hover {
             background: white;
-            border-color: #667eea;
+            border-color: #0ea5e9;
             transform: scale(1.1);
         }
         .icon-option.selected {
-            background: #667eea;
+            background: #0ea5e9;
             color: white;
-            border-color: #667eea;
+            border-color: #0ea5e9;
         }
         .header-card {
             background: rgba(255,255,255,0.95);
@@ -206,11 +206,11 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h2 class="fw-bold mb-2">
-                        <i class="bi bi-folder-fill" style="color: #667eea;"></i> Link Categories
+                        <i class="bi bi-folder-fill" style="color: #0ea5e9;"></i> Link Categories
                     </h2>
                     <p class="text-muted mb-0">Organize your links • <?= count($categories) ?> categories</p>
                 </div>
-                <button class="btn btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
+                <button class="btn btn-lg" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
                     <i class="bi bi-plus-circle me-2"></i> New Category
                 </button>
             </div>
@@ -349,10 +349,10 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Color</label>
                             <div class="d-flex gap-2 align-items-center flex-wrap">
-                                <input type="color" class="form-control form-control-color" name="category_color" id="add_category_color" value="#667eea">
+                                <input type="color" class="form-control form-control-color" name="category_color" id="add_category_color" value="#0ea5e9">
                                 <div class="flex-grow-1">
                                     <div class="btn-group w-100" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#667eea">Purple</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#0ea5e9">Sky Blue</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#f093fb">Pink</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#4facfe">Blue</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#43e97b">Green</button>
@@ -364,7 +364,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="add_preview_box" style="background: #667eea; width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="add_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="bi-folder" id="add_preview_icon"></i>
                                 </div>
                                 <div>
@@ -444,7 +444,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                                 <input type="color" class="form-control form-control-color" name="category_color" id="edit_category_color">
                                 <div class="flex-grow-1">
                                     <div class="btn-group w-100" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#667eea" data-target="edit">Purple</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#0ea5e9" data-target="edit">Sky Blue</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#f093fb" data-target="edit">Pink</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#4facfe" data-target="edit">Blue</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary color-preset" data-color="#43e97b" data-target="edit">Green</button>
@@ -456,7 +456,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="edit_preview_box" style="background: #667eea; width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="edit_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="bi-folder" id="edit_preview_icon"></i>
                                 </div>
                                 <div>

@@ -230,11 +230,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_slug_change']
                             $mail->Subject = "Konfirmasi Perubahan Slug - LinkMy";
                             $mail->Body = "
                                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-                                    <h2 style='color: #667eea;'>Konfirmasi Perubahan Slug</h2>
+                                    <h2 style='color: #0ea5e9;'>Konfirmasi Perubahan Slug</h2>
                                     <p>Halo <strong>{$display_name}</strong>,</p>
                                     <p>Anda meminta untuk mengganti slug profil menjadi <strong>{$new_slug}</strong>.</p>
                                     <p>Kode OTP Anda adalah:</p>
-                                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;'>
+                                    <div style='background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;'>
                                         {$otp}
                                     </div>
                                     <p><strong>⏰ Kode ini berlaku selama 15 menit.</strong></p>
@@ -492,7 +492,7 @@ $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM li
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
         .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             padding: 1.5rem;
             border-radius: 15px;
