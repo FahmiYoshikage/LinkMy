@@ -97,7 +97,10 @@
     // Now load full data from v_public_profiles view (which has WHERE is_active = 1)
     // But we already checked is_active above, so we need to bypass the view filter
     // Let's load theme data separately
-    $theme_query = "SELECT t.*, tb.enabled AS boxed_enabled, tb.outer_bg_type, tb.outer_bg_value, 
+    // IMPORTANT: Don't use t.* to avoid themes.id overriding profiles.id in array_merge
+    $theme_query = "SELECT t.profile_id, t.bg_type, t.bg_value, t.button_style, t.button_color, 
+                    t.text_color, t.font, t.layout, t.container_style, t.enable_categories,
+                    tb.enabled AS boxed_enabled, tb.outer_bg_type, tb.outer_bg_value, 
                     tb.container_bg_color, tb.container_max_width, tb.container_radius, tb.container_shadow
                     FROM themes t
                     LEFT JOIN theme_boxed tb ON tb.theme_id = t.id
@@ -109,7 +112,7 @@
     $user_data = array_merge($profile_data, $theme_data);
     
     // v3 schema mapping: view returns id, slug, name, title, bio, avatar, username, is_verified, bg_type, bg_value, etc.
-    $profile_id = $user_data['id']; // v3: profiles.id
+    $profile_id = $profile_data['id']; // FIXED: Use $profile_data['id'] directly, not $user_data['id']
     
     // DEBUG: Verify profile_id
     error_log("DEBUG profile.php - Profile loaded: ID = {$profile_id}, slug = " . ($user_data['slug'] ?? 'N/A'));
