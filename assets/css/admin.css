@@ -498,10 +498,19 @@ body {
     color: white !important;
 }
 
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
 .btn-outline-danger {
     border-color: #dc3545 !important;
     color: #dc3545 !important;
     background-color: transparent !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
 .btn-outline-danger:hover {
