@@ -498,6 +498,36 @@ body {
     color: white !important;
 }
 
+.btn-outline-danger {
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+
+.btn-outline-secondary {
+    border-color: var(--dark-border) !important;
+    color: var(--dark-text-secondary) !important;
+    background-color: transparent !important;
+    opacity: 0.6;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--dark-card-hover) !important;
+    border-color: var(--dark-border) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+.btn-outline-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* Dark Text Colors */
 h1,
 h2,
