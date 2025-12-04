@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Prevent caching to always show fresh data
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
@@ -396,8 +396,8 @@ if (isset($_GET['debug'])) {
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
         .profile-card.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
         }
         .profile-card.primary {
             border-color: #28a745;
@@ -675,3 +675,7 @@ if (isset($_GET['debug'])) {
     </script>
 </body>
 </html>
+
+
+
+

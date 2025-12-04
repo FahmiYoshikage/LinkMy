@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
 
@@ -114,13 +114,13 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
             margin-bottom: 2rem;
         }
         .settings-card .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             border-radius: 15px 15px 0 0 !important;
             padding: 1.25rem;
         }
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             border-radius: 15px;
             padding: 1.5rem;
@@ -247,7 +247,7 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Account Status</label>
-                                <input type="text" class="form-control" value="<?= $user['email_verified'] ? '✓ Verified' : '✗ Not Verified' ?>" disabled>
+                                <input type="text" class="form-control" value="<?= $user['email_verified'] ? 'âœ“ Verified' : 'âœ— Not Verified' ?>" disabled>
                             </div>
                         </div>
                     </div>
@@ -366,4 +366,6 @@ $total_clicks = get_single_row("SELECT SUM(click_count) as total FROM links WHER
     </script>
 </body>
 </html>
+
+
 

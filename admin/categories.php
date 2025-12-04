@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
 
@@ -208,7 +208,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                     <h2 class="fw-bold mb-2">
                         <i class="bi bi-folder-fill" style="color: #0ea5e9;"></i> Link Categories
                     </h2>
-                    <p class="text-muted mb-0">Organize your links • <?= count($categories) ?> categories</p>
+                    <p class="text-muted mb-0">Organize your links â€¢ <?= count($categories) ?> categories</p>
                 </div>
                 <button class="btn btn-lg" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
                     <i class="bi bi-plus-circle me-2"></i> New Category
@@ -245,9 +245,9 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                     </div>
                 <?php else: ?>
                     <?php foreach ($categories as $cat): ?>
-                        <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color'] ?? '#667eea') ?>;">
+                        <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color'] ?? '#0ea5e9') ?>;">
                             <div class="d-flex align-items-center flex-wrap gap-3">
-                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color'] ?? '#667eea') ?>;">
+                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color'] ?? '#0ea5e9') ?>;">
                                     <i class="<?= htmlspecialchars($cat['category_icon'] ?? 'bi-folder') ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
@@ -288,7 +288,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                 <li>Create categories (e.g., "Social Media", "Work", "Portfolio")</li>
                 <li>Go to Dashboard and edit your links</li>
                 <li>Assign each link to a category</li>
-                <li>Enable "Link Categories" in Appearance → Advanced tab</li>
+                <li>Enable "Link Categories" in Appearance â†’ Advanced tab</li>
                 <li>Your links will be grouped by category on your profile page!</li>
             </ol>
         </div>
@@ -317,7 +317,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i> 
                                 Ketik Bootstrap Icon class (e.g., <code>bi-heart-fill</code>) atau pilih dari preset di bawah. 
-                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons ↗</a>
+                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons â†—</a>
                             </small>
                             <div class="icon-picker mt-2">
                                 <div class="icon-option selected" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
@@ -409,7 +409,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i> 
                                 Ketik Bootstrap Icon class (e.g., <code>bi-heart-fill</code>) atau pilih dari preset di bawah. 
-                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons ↗</a>
+                                <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Browse Icons â†—</a>
                             </small>
                             <div class="icon-picker mt-2" id="edit_icon_picker">
                                 <div class="icon-option" data-icon="bi-folder"><i class="bi bi-folder"></i></div>
@@ -565,3 +565,5 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
     </script>
 </body>
 </html>
+
+

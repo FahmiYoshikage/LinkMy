@@ -1,4 +1,4 @@
-<?php 
+﻿<?php 
    require_once '../config/auth_check.php';
    require_once '../config/db.php';
    error_reporting(E_ALL);
@@ -372,24 +372,24 @@
             // User selected a gradient preset
             $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
             $bg_type = 'gradient';
-            error_log("✅ Applied gradient preset '{$gradient_preset}': {$bg_value}");
+            error_log("âœ… Applied gradient preset '{$gradient_preset}': {$bg_value}");
         } elseif ($bg_choice === 'custom' && $custom_gradient_modified) {
             // User created custom gradient
             $bg_value = "linear-gradient(135deg, {$custom_gradient_start} 0%, {$custom_gradient_end} 100%)";
             $bg_type = 'gradient';
             $appearance['custom_gradient_start'] = $custom_gradient_start;
             $appearance['custom_gradient_end'] = $custom_gradient_end;
-            error_log("✅ Applied custom gradient: {$bg_value}");
+            error_log("âœ… Applied custom gradient: {$bg_value}");
         } elseif ($bg_choice === 'solid' && !empty($custom_bg_color)) {
             // User entered solid color
             $bg_value = $custom_bg_color;
             $bg_type = 'color';
-            error_log("✅ Applied solid color: {$bg_value}");
+            error_log("âœ… Applied solid color: {$bg_value}");
         } else {
             // No explicit choice or fallback - keep existing
             $bg_value = $current_bg_value;
             $bg_type = $current_bg_type;
-            error_log("⚠️ Keeping existing background: type={$bg_type}, value={$bg_value}");
+            error_log("âš ï¸ Keeping existing background: type={$bg_type}, value={$bg_value}");
         }
         
         $query = "UPDATE themes SET bg_type = ?, bg_value = ?, button_style = ?, button_color = ?, text_color = ?, layout = ?, container_style = ?, enable_animations = ?, enable_glass_effect = ?, shadow_intensity = ? WHERE profile_id = ?";
@@ -410,9 +410,9 @@
             } elseif (mysqli_stmt_execute($stmt)) {
                 $affected = mysqli_stmt_affected_rows($stmt);
                 if ($affected > 0) {
-                    $success = '✅ Kustomisasi lanjutan berhasil disimpan dan diupdate! (' . $affected . ' baris diubah)';
+                    $success = 'âœ… Kustomisasi lanjutan berhasil disimpan dan diupdate! (' . $affected . ' baris diubah)';
                 } else {
-                    $success = '✅ Kustomisasi tersimpan! (Data sama dengan sebelumnya, tidak ada perubahan)';
+                    $success = 'âœ… Kustomisasi tersimpan! (Data sama dengan sebelumnya, tidak ada perubahan)';
                 }
                 error_log("SUCCESS! Affected rows: $affected");
                 
@@ -499,7 +499,7 @@
         mysqli_stmt_bind_param($upd, 'issiiii', $boxed_enabled, $outer_bg_type, $outer_bg_value, $container_max_width, $container_border_radius, $container_shadow, $theme_id);
 
         if (mysqli_stmt_execute($upd)) {
-            $success = '✅ Boxed Layout berhasil disimpan!';
+            $success = 'âœ… Boxed Layout berhasil disimpan!';
             
             // Reload full appearance data including boxed settings
             $appearance = get_single_row("SELECT t.*, p.avatar, p.title as profile_title, p.bio FROM themes t LEFT JOIN profiles p ON t.profile_id = p.id WHERE t.profile_id = ?", [$active_profile_id], 'i');
@@ -710,7 +710,7 @@
         }
         .button-preview:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
         }
         
         /* Live Preview Container */
@@ -802,7 +802,7 @@
         }
         .font-option.active {
             border-color: #0ea5e9;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
         }
         
         /* Tab Styling */
@@ -944,11 +944,11 @@
         .layout-card:hover {
             border-color: #0ea5e9;
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.2);
         }
         .layout-card.active {
             border-color: #0ea5e9;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(6, 182, 212, 0.05));
         }
         .layout-card .check-badge {
             opacity: 0;
@@ -1096,7 +1096,7 @@
         <!-- DEBUG: Show saved data -->
         <?php if (isset($_GET['debug'])): ?>
             <div class="alert alert-info">
-                <h5>🔍 Debug - Saved Data in Database:</h5>
+                <h5>ðŸ” Debug - Saved Data in Database:</h5>
                 <ul style="font-family: monospace; font-size: 12px;">
                     <li>gradient_preset: <strong><?= $appearance['gradient_preset'] ?? 'NULL' ?></strong></li>
                     <li>custom_bg_color: <strong><?= $appearance['custom_bg_color'] ?? 'NULL' ?></strong></li>
@@ -1107,7 +1107,7 @@
                     <li>enable_animations: <strong><?= $appearance['enable_animations'] ?? 'NULL' ?></strong></li>
                 </ul>
                 <?php if ($success): ?>
-                    <p class="text-success mb-0">✅ Last action: <?= htmlspecialchars($success) ?></p>
+                    <p class="text-success mb-0">âœ… Last action: <?= htmlspecialchars($success) ?></p>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
@@ -1418,7 +1418,7 @@
                                         <?php else: ?>
                                             <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
                                             <p class="mb-2 fw-semibold"><i class="bi bi-cloud-upload me-2"></i>Click to Upload Profile Photo</p>
-                                            <small class="text-muted">Max 2MB • JPG, PNG, GIF, WebP</small>
+                                            <small class="text-muted">Max 2MB â€¢ JPG, PNG, GIF, WebP</small>
                                         <?php endif; ?>
                                     </div>
                                     <input type="file" id="profilePicInput" name="profile_pic" accept="image/*" style="display: none;" onchange="openCropModal(this)">
@@ -1441,7 +1441,7 @@
                                 
                                 <div class="alert alert-info mb-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
-                                    <strong>Rekomendasi:</strong> 1080x1920px (portrait) atau 1920x1080px (landscape) • Max 5MB
+                                    <strong>Rekomendasi:</strong> 1080x1920px (portrait) atau 1920x1080px (landscape) â€¢ Max 5MB
                                 </div>
                                 
                                 <div class="upload-area mb-3 <?= (!empty($appearance['bg_type']) && $appearance['bg_type'] === 'image' && !empty($appearance['bg_value'])) ? 'has-image' : '' ?>" onclick="document.getElementById('bgImageInput').click()">
@@ -1729,7 +1729,7 @@
                                                 <div class="layout-card <?= ($appearance['profile_layout'] ?? 'centered') == 'centered' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
                                                     <div class="layout-preview">
-                                                        <div class="layout-icon">⬤</div>
+                                                        <div class="layout-icon">â¬¤</div>
                                                         <div class="layout-lines">
                                                             <div class="line"></div>
                                                             <div class="line short"></div>
@@ -1748,7 +1748,7 @@
                                                 <div class="layout-card <?= ($appearance['profile_layout'] ?? '') == 'left' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
                                                     <div class="layout-preview left">
-                                                        <div class="layout-icon">⬤</div>
+                                                        <div class="layout-icon">â¬¤</div>
                                                         <div class="layout-lines">
                                                             <div class="line"></div>
                                                             <div class="line short"></div>
@@ -1767,7 +1767,7 @@
                                                 <div class="layout-card <?= ($appearance['profile_layout'] ?? '') == 'minimal' ? 'active' : '' ?>">
                                                     <div class="check-badge"><i class="bi bi-check-lg"></i></div>
                                                     <div class="layout-preview minimal">
-                                                        <div class="layout-icon small">⬤</div>
+                                                        <div class="layout-icon small">â¬¤</div>
                                                         <div class="layout-lines">
                                                             <div class="line thin"></div>
                                                         </div>
@@ -1826,7 +1826,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <p class="mb-0 fw-semibold mt-2">Boxed - Linktree Style 🔥</p>
+                                                    <p class="mb-0 fw-semibold mt-2">Boxed - Linktree Style ðŸ”¥</p>
                                                     <small class="text-muted">Kotak kecil di tengah background</small>
                                                 </div>
                                             </label>
@@ -2137,7 +2137,7 @@
                             <?php
                             $profile_pic_url = '../uploads/profile_pics/' . (($appearance['avatar'] ?? '') ?: 'default-avatar.png');
                             if (!file_exists($profile_pic_url)) {
-                                $profile_pic_url = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="90" height="90"%3E%3Ccircle cx="45" cy="45" r="45" fill="%236c757d"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+                                $profile_pic_url = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="90" height="90"%3E%3Ccircle cx="45" cy="45" r="45" fill="%236c757d"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-family="Arial"%3EðŸ‘¤%3C/text%3E%3C/svg%3E';
                             }
                             ?>
                             <img src="<?= $profile_pic_url ?>" class="preview-avatar" id="previewAvatar" alt="Avatar">
@@ -3146,6 +3146,8 @@
 // Close the connection
 mysqli_close($conn);
 ?>
+
+
 
 
 
