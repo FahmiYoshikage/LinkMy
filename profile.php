@@ -239,13 +239,14 @@
         // Query with categories JOIN using v3 schema (categories_v3)
         // Multi-profile: Filter by profile_id instead of user_id
         // INNER JOIN with profiles to prevent orphaned links from appearing
+        // LEFT JOIN categories with profile_id filter to prevent cross-profile category pollution
         $links_query = "SELECT l.id as link_id, l.profile_id, l.title, l.url, l.position as order_index, 
                         l.icon, l.clicks as click_count, l.is_active, l.created_at, l.category_id,
                         c.name as category_name, c.icon as category_icon, 
                         c.color as category_color, c.is_expanded as category_expanded
                         FROM links l
                         INNER JOIN profiles p ON l.profile_id = p.id
-                        LEFT JOIN categories_v3 c ON l.category_id = c.id
+                        LEFT JOIN categories_v3 c ON l.category_id = c.id AND c.profile_id = l.profile_id
                         WHERE l.profile_id = ? AND l.is_active = 1 AND p.id = ?
                         ORDER BY l.position ASC, l.id ASC";
     } else {
@@ -285,14 +286,16 @@
             
             $links[] = $row;
             
-            if ($categories_exists && $enable_categories && isset($row['category_id']) && $row['category_id']) {
+            if ($categories_exists && $enable_categories && isset($row['category_id']) && $row['category_id'] && !empty($row['category_name'])) {
+                // Only group by category if category data exists (from LEFT JOIN)
+                // If category_name is NULL, it means category_id doesn't belong to this profile
                 $cat_id = $row['category_id'];
                 
                 // Store category info (only if we have category data)
                 if (!isset($categories[$cat_id])) {
                     $categories[$cat_id] = [
                         'category_id' => $cat_id,
-                        'category_name' => $row['category_name'] ?? 'Uncategorized',
+                        'category_name' => $row['category_name'],
                         'category_icon' => $row['category_icon'] ?? 'bi-folder',
                         'category_color' => $row['category_color'] ?? '#667eea',
                         'category_expanded' => $row['category_expanded'] ?? 1
@@ -305,7 +308,7 @@
                 }
                 $links_by_category[$cat_id][] = $row;
             } else {
-                // Uncategorized links (default)
+                // Uncategorized links (default) or invalid category_id
                 if (!isset($links_by_category[0])) {
                     $links_by_category[0] = [];
                 }

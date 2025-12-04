@@ -90,11 +90,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         $error = 'Password baru minimal 6 karakter!';
     } else {
         // Handle both 'password' and 'password_hash' column names
-        $password_field = $user['password_hash'] ?? $user['password'];
+        $password_field = $user['password'] ?? $user['password_hash'];
         if (password_verify($current_password, $password_field)) {
             $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
             
-            $query = "UPDATE users SET password_hash = ? WHERE id = ?";
+            // Check which column exists in database
+            $check_col = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'password_hash'");
+            $has_password_hash = ($check_col && mysqli_num_rows($check_col) > 0);
+            
+            $column_name = $has_password_hash ? 'password_hash' : 'password';
+            $query = "UPDATE users SET {$column_name} = ? WHERE id = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'si', $new_hash, $current_user_id);
             
@@ -111,19 +116,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_email'])) {
     $new_email = trim($_POST['email']);
+    $confirm_password = $_POST['confirm_password_email'] ?? '';
     
     if (empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Email tidak valid!';
+    } elseif (empty($confirm_password)) {
+        $error = 'Password konfirmasi harus diisi untuk keamanan!';
     } else {
-        $query = "UPDATE users SET email = ? WHERE id = ?";
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'si', $new_email, $current_user_id);
-        
-        if (mysqli_stmt_execute($stmt)) {
-            $success = 'Email berhasil diupdate!';
-            $user['email'] = $new_email;
+        // Verify password before allowing email change
+        $password_field = $user['password'] ?? $user['password_hash'];
+        if (!password_verify($confirm_password, $password_field)) {
+            $error = 'Password salah! Email tidak dapat diubah.';
         } else {
-            $error = 'Gagal mengupdate email!';
+            // Check if email already used by another user
+            $check_email = get_single_row(
+                "SELECT id FROM users WHERE email = ? AND id != ?",
+                [$new_email, $current_user_id],
+                'si'
+            );
+            
+            if ($check_email) {
+                $error = 'Email sudah digunakan oleh user lain!';
+            } else {
+                $query = "UPDATE users SET email = ? WHERE id = ?";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'si', $new_email, $current_user_id);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    $success = 'Email berhasil diupdate! Silakan login kembali dengan email baru.';
+                    $user['email'] = $new_email;
+                } else {
+                    $error = 'Gagal mengupdate email!';
+                }
+            }
         }
     }
 }
@@ -597,11 +622,23 @@ $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM li
                         </h5>
                         
                         <form method="POST">
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Perhatian:</strong> Setelah email diubah, Anda harus login dengan email baru.
+                            </div>
+                            
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Email Baru</label>
                                 <input type="email" class="form-control" name="email" 
                                        value="<?= htmlspecialchars($user['email'] ?? '') ?>"
                                        placeholder="email@example.com" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Konfirmasi Password</label>
+                                <input type="password" class="form-control" name="confirm_password_email" 
+                                       placeholder="Masukkan password untuk verifikasi" required>
+                                <small class="text-muted">Diperlukan untuk keamanan</small>
                             </div>
                             
                             <button type="submit" name="update_email" class="btn btn-primary">
