@@ -92,43 +92,7 @@ if (isset($_SESSION['user_id'])) {
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </a>
                 </li>
-                <!-- Theme Toggle -->
-                <li class="nav-item">
-                    <button class="nav-link btn btn-link" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
-                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                    </button>
-                </li>
             </ul>
         </div>
     </div>
 </nav>
-
-<!-- Theme Toggle Script -->
-<script>
-// Check for saved theme preference or default to 'light' mode
-const currentTheme = localStorage.getItem('theme') || 'light';
-
-// Apply theme on page load
-if (currentTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    document.getElementById('themeIcon').className = 'bi bi-sun-fill';
-}
-
-// Toggle theme function
-function toggleTheme() {
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-    
-    if (body.classList.contains('dark-mode')) {
-        // Switch to light mode
-        body.classList.remove('dark-mode');
-        themeIcon.className = 'bi bi-moon-stars-fill';
-        localStorage.setItem('theme', 'light');
-    } else {
-        // Switch to dark mode
-        body.classList.add('dark-mode');
-        themeIcon.className = 'bi bi-sun-fill';
-        localStorage.setItem('theme', 'dark');
-    }
-}
-</script>

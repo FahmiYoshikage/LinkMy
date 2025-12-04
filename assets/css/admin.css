@@ -1,23 +1,12 @@
-/* ===== DUAL THEME ADMIN (PURPLE) ===== */
+/* ===== DARK THEME ADMIN (PURPLE) ===== */
 :root {
     /* Purple Primary Colors */
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --primary-color: #667eea;
     --secondary-color: #764ba2;
     --hover-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
-
-    /* Light Mode (Default) */
-    --bg-color: #f8f9fa;
-    --card-bg: #ffffff;
-    --card-hover: #f0f0f5;
-    --border-color: #e9ecef;
-    --text-color: #2d3748;
-    --text-secondary: #718096;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* Dark Mode */
-body.dark-mode {
+    
+    /* Dark Theme - Hardcoded */
     --bg-color: #0f1419;
     --card-bg: #1a1f2e;
     --card-hover: #252d3d;
@@ -27,11 +16,10 @@ body.dark-mode {
     --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Body Background (Theme Aware) */
+/* Body Background - Dark Mode */
 body {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* General Transitions */
@@ -154,12 +142,12 @@ body {
     color: var(--text-color) !important;
 }
 
-/* Close button adapts to theme */
-body.dark-mode .btn-close {
+/* Close button for dark theme */
+.btn-close {
     filter: invert(1);
 }
 
-/* Form Controls (Theme Aware) */
+/* Form Controls */
 .form-control,
 .form-select {
     background-color: var(--card-bg) !important;
@@ -208,13 +196,8 @@ body.dark-mode .btn-close {
 }
 
 .alert-success {
-    background-color: rgba(16, 185, 129, 0.15) !important;
-    border-color: rgba(16, 185, 129, 0.4) !important;
-    color: #10b981 !important;
-}
-
-body.dark-mode .alert-success {
     background-color: rgba(16, 185, 129, 0.2) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
     color: #34d399 !important;
 }
 
@@ -628,34 +611,4 @@ div {
 .container,
 .container-fluid {
     color: var(--text-color) !important;
-}
-
-/* Theme Toggle Button */
-.theme-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--primary-gradient);
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    transition: all 0.3s ease;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.theme-toggle:hover {
-    transform: scale(1.1) rotate(15deg);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-.theme-toggle:active {
-    transform: scale(0.95);
 }
