@@ -610,7 +610,7 @@
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body { 
-            background: #f5f7fa;
+            background: var(--dark-bg);
             padding-top: 76px;
         }
         
@@ -636,13 +636,13 @@
             overflow: hidden;
         }
         .upload-area:hover {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
             transform: translateY(-2px);
         }
         .upload-area.has-image {
             border-style: solid;
-            border-color: #667eea;
+            border-color: #0ea5e9;
             padding: 1rem;
         }
         .upload-area .image-preview {
@@ -667,14 +667,14 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
         .theme-card.active {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.3);
         }
         .theme-card .check-badge {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: #667eea;
+            background: #0ea5e9;
             color: white;
             border-radius: 50%;
             width: 35px;
