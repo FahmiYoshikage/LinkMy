@@ -113,15 +113,15 @@
                 $appearance['outer_bg_gradient_end'] = '#06b6d4';
             }
             if (!isset($appearance['outer_bg_color'])) {
-                $appearance['outer_bg_color'] = '#667eea';
+                $appearance['outer_bg_color'] = '#0ea5e9';
             }
         } else {
             // Defaults if no boxed row
             $appearance['boxed_layout'] = 0;
             $appearance['outer_bg_type'] = 'gradient';
-            $appearance['outer_bg_value'] = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            $appearance['outer_bg_gradient_start'] = '#667eea';
-            $appearance['outer_bg_gradient_end'] = '#764ba2';
+            $appearance['outer_bg_value'] = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
+            $appearance['outer_bg_gradient_start'] = '#0ea5e9';
+            $appearance['outer_bg_gradient_end'] = '#06b6d4';
             $appearance['container_max_width'] = 480;
             $appearance['container_border_radius'] = 30;
             $appearance['container_shadow'] = 0;
@@ -254,14 +254,14 @@
                 unlink($bg_path);
             }
             // Multi-profile: Remove background for active profile
-            $query = "UPDATE themes SET bg_type = 'gradient', bg_value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' WHERE profile_id = ?";
+            $query = "UPDATE themes SET bg_type = 'gradient', bg_value = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' WHERE profile_id = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'i', $active_profile_id);
             
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Background berhasil dihapus!';
                 $appearance['bg_type'] = 'gradient';
-                $appearance['bg_value'] = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                $appearance['bg_value'] = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
             }
         }
     }
@@ -286,7 +286,7 @@
 
     // Gradient presets CSS mapping (define early for use in POST handlers)
     $gradient_css_map = [
-        'Purple Dream' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'Sky Blue' => 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
         'Ocean Blue' => 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
         'Sunset Orange' => 'linear-gradient(135deg, #ff6a00 0%, #ee0979 100%)',
         'Fresh Mint' => 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
@@ -346,7 +346,7 @@
         // BUT: Only update if user changed gradient/color fields
         // Check if current bg_type is 'image' - if so, don't overwrite unless new gradient selected
         $current_bg_type = $appearance['bg_type'] ?? 'gradient';
-        $current_bg_value = $appearance['bg_value'] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        $current_bg_value = $appearance['bg_value'] ?? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
         
         // Check for custom gradient first
         $custom_gradient_start = !empty($_POST['custom_gradient_start']) ? $_POST['custom_gradient_start'] : null;
@@ -362,7 +362,7 @@
         error_log("POST custom_bg_color: " . ($custom_bg_color ?? 'NULL'));
         
         // Check if custom gradient was modified (either field changed from defaults)
-        $custom_gradient_defaults = ['#667eea', '#764ba2'];
+        $custom_gradient_defaults = ['#0ea5e9', '#06b6d4'];
         $custom_gradient_modified = ($custom_gradient_start && $custom_gradient_end) && 
                                    (!in_array($custom_gradient_start, $custom_gradient_defaults) || 
                                     !in_array($custom_gradient_end, $custom_gradient_defaults));
@@ -370,7 +370,7 @@
         // Use bg_choice to determine user's intent
         if ($bg_choice === 'preset' && !empty($gradient_preset) && $gradient_preset !== 'none') {
             // User selected a gradient preset
-            $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            $bg_value = $gradient_css_map[$gradient_preset] ?? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)';
             $bg_type = 'gradient';
             error_log("✅ Applied gradient preset '{$gradient_preset}': {$bg_value}");
         } elseif ($bg_choice === 'custom' && $custom_gradient_modified) {
