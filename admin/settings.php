@@ -374,6 +374,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_slug'])) {
                 mysqli_stmt_bind_param($stmt, 'iss', $current_user_id, $new_slug, $name);
                 
                 if (mysqli_stmt_execute($stmt)) {
+                    // Get the newly created profile_id
+                    $new_profile_id = mysqli_insert_id($conn);
+                    
+                    // Create default theme for the new profile
+                    $theme_query = "INSERT INTO themes (profile_id, bg_type, bg_value, button_style, button_color, text_color, font, layout, container_style) 
+                                   VALUES (?, 'gradient', 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', 'rounded', '#0ea5e9', '#333333', 'Inter', 'centered', 'wide')";
+                    $theme_stmt = mysqli_prepare($conn, $theme_query);
+                    mysqli_stmt_bind_param($theme_stmt, 'i', $new_profile_id);
+                    mysqli_stmt_execute($theme_stmt);
+                    mysqli_stmt_close($theme_stmt);
+                    
                     $success = "Profile baru '{$new_slug}' berhasil ditambahkan!";
                 } else {
                     $error = 'Gagal menambahkan profile!';

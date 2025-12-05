@@ -107,7 +107,18 @@
                     LEFT JOIN theme_boxed tb ON tb.theme_id = t.id
                     WHERE t.profile_id = ?";
     $theme_result = execute_query($theme_query, [$profile_data['id']], 'i');
-    $theme_data = $theme_result ? mysqli_fetch_assoc($theme_result) : [];
+    $theme_data = ($theme_result && mysqli_num_rows($theme_result) > 0) ? mysqli_fetch_assoc($theme_result) : [];
+    
+    // If theme doesn't exist, create default theme for this profile
+    if (empty($theme_data)) {
+        error_log("WARNING: No theme found for profile_id = {$profile_data['id']}, creating default theme");
+        $create_theme = "INSERT INTO themes (profile_id, bg_type, bg_value, button_style, button_color, text_color, font, layout, container_style) 
+                        VALUES (?, 'gradient', 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)', 'rounded', '#0ea5e9', '#333333', 'Inter', 'centered', 'wide')";
+        execute_query($create_theme, [$profile_data['id']], 'i');
+        // Re-fetch theme data after creation
+        $theme_result = execute_query($theme_query, [$profile_data['id']], 'i');
+        $theme_data = ($theme_result && mysqli_num_rows($theme_result) > 0) ? mysqli_fetch_assoc($theme_result) : [];
+    }
     
     // Merge profile and theme data (themes.id won't override profiles.id anymore)
     $user_data = array_merge($profile_data, $theme_data);
