@@ -506,490 +506,212 @@ $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM li
     </style>
 </head>
 <body>
-    <?php require_once __DIR__ . '/../partials/admin_nav.php'; ?>
-    
-    <div class="container py-4">
-        <h2 class="fw-bold mb-4">
-            <i class="bi bi-gear-fill"></i> Settings
-        </h2>
-        
+    <?php include '../partials/admin_nav.php'; ?>
+
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="fw-bold">Pengaturan Akun</h1>
+                <p class="text-muted">Kelola informasi akun, profil, dan keamanan Anda.</p>
+            </div>
+        </div>
+
         <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i><?= $success ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($success) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
-        
+
         <?php if ($error): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $error ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($error) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
-        
-        <div class="row">
-            <!-- Account Stats -->
-            <div class="col-lg-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="fw-bold mb-4">
-                            <i class="bi bi-person-circle"></i> Info Akun
-                        </h5>
-                        
-                        <div class="mb-3">
-                            <small class="text-muted">Username</small>
-                            <p class="fw-bold mb-0"><?= htmlspecialchars($user['username'] ?? explode('@', $user['email'])[0]) ?></p>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <small class="text-muted">Page Slug</small>
-                            <p class="fw-bold mb-0"><?= htmlspecialchars($user['page_slug']) ?></p>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <small class="text-muted">Email</small>
-                            <p class="fw-bold mb-0"><?= htmlspecialchars($user['email'] ?? 'Belum diset') ?></p>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <small class="text-muted">Bergabung Sejak</small>
-                            <p class="fw-bold mb-0">
-                                <?= date('d M Y', strtotime($user['created_at'])) ?>
-                            </p>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="stat-box mb-2">
-                                    <h3 class="fw-bold mb-0"><?= $total_links ?></h3>
-                                    <small>Total Links</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="stat-box mb-2">
-                                    <h3 class="fw-bold mb-0"><?= $total_clicks ?></h3>
-                                    <small>Total Klik</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Settings Forms -->
-            <div class="col-lg-8">
-                <!-- Change Password -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-shield-lock"></i> Ganti Password
-                        </h5>
-                        
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Password Lama</label>
-                                <input type="password" class="form-control" name="current_password" 
-                                       placeholder="Masukkan password lama" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Password Baru</label>
-                                <input type="password" class="form-control" name="new_password" 
-                                       placeholder="Minimal 6 karakter" required minlength="6">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Konfirmasi Password Baru</label>
-                                <input type="password" class="form-control" name="confirm_password" 
-                                       placeholder="Ulangi password baru" required>
-                            </div>
-                            
-                            <button type="submit" name="change_password" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Ganti Password
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Update Email -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-envelope"></i> Update Email
-                        </h5>
-                        
-                        <form method="POST">
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                <strong>Perhatian:</strong> Setelah email diubah, Anda harus login dengan email baru.
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Email Baru</label>
-                                <input type="email" class="form-control" name="email" 
-                                       value="<?= htmlspecialchars($user['email'] ?? '') ?>"
-                                       placeholder="email@example.com" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Konfirmasi Password</label>
-                                <input type="password" class="form-control" name="confirm_password_email" 
-                                       placeholder="Masukkan password untuk verifikasi" required>
-                                <small class="text-muted">Diperlukan untuk keamanan</small>
-                            </div>
-                            
-                            <button type="submit" name="update_email" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Update Email
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Change Primary Slug -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-link-45deg"></i> Ganti Slug
-                            <span class="badge bg-warning text-dark ms-2">Verifikasi OTP</span>
-                        </h5>
-                        
-                        <div class="alert alert-info mb-4">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            <strong>Slug Anda saat ini:</strong> 
-                            <ul class="mb-0 mt-2">
-                                <?php foreach ($user_profiles as $p): ?>
-                                    <li>
-                                        <code class="bg-white px-2 py-1 rounded"><?= htmlspecialchars($p['slug']) ?></code>
-                                        
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                        
-                        <?php if (isset($_SESSION['pending_slug_change'])): ?>
-                            <form method="POST">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Masukkan Kode OTP</label>
-                                    <input type="text" class="form-control" name="otp_code" 
-                                           placeholder="6 digit kode OTP" required maxlength="6">
-                                    <div class="form-text">Kode OTP telah dikirim ke email Anda.</div>
-                                </div>
-                                
-                                <button type="submit" name="verify_slug_change" class="btn btn-success">
-                                    <i class="bi bi-check-circle"></i> Verifikasi & Ganti Slug
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <form method="POST" id="slugChangeForm">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Pilih Slug yang Ingin Diganti</label>
-                                    <select class="form-select" name="target_profile_id" required>
-                                        <?php foreach ($user_profiles as $p): ?>
-                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['slug']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Slug Baru</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">linkmy.iet.ovh/</span>
-                                        <input type="text" class="form-control" name="new_slug" id="new_slug_input"
-                                               placeholder="slug-baru" required minlength="3" maxlength="50">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Profile Management Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Kelola Profil</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Anda dapat membuat beberapa profil di bawah satu akun. Setiap profil memiliki link dan tampilannya sendiri.</p>
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProfileModal">
+                            <i class="bi bi-plus-circle me-2"></i>Buat Profil Baru
+                        </button>
+                        <div class="list-group">
+                            <?php foreach ($user_profiles as $profile): ?>
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 fw-bold">
+                                            <?= htmlspecialchars($profile['name']) ?>
+                                            <?php if ($profile['display_order'] == 0): ?>
+                                                <span class="badge bg-warning text-dark ms-2">Utama</span>
+                                            <?php endif; ?>
+                                        </h6>
+                                        <small>Dibuat: <?= date('d M Y', strtotime($profile['created_at'])) ?></small>
                                     </div>
-                                    <div id="slug_check_feedback" class="form-text"></div>
-                                </div>
-                                
-                                <button type="submit" name="request_slug_change" class="btn btn-primary" id="requestSlugBtn">
-                                    <i class="bi bi-send"></i> Kirim Kode OTP
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                
-                <!-- Manage Multiple Slugs -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-4">
-                            <i class="bi bi-collection"></i> Kelola Slug Anda
-                            <span class="badge bg-info ms-2">Gratis: 2 Slug</span>
-                        </h5>
-                        
-                        <div class="alert alert-info">
-                            <i class="bi bi-lightbulb-fill me-2"></i>
-                            <strong>Fitur Multi-Slug:</strong> Anda bisa membuat hingga 2 slug yang mengarah ke profil yang sama!
-                            <br>
-                            <small>Contoh: <code>fahmi</code> dan <code>fahmi-portfolio</code> untuk berbagai keperluan.</small>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">Profile Anda (<?= count($user_profiles) ?>/2):</h6>
-                            
-                            <?php if (empty($user_profiles)): ?>
-                                <p class="text-muted">Belum ada profile. Silakan tambahkan profile pertama Anda!</p>
-                            <?php else: ?>
-                                <div class="list-group">
-                                    <?php 
-                                    // CRITICAL FIX: Use BACKUP data to prevent corruption
-                                    $profiles_to_render = isset($BACKUP_user_profiles) ? $BACKUP_user_profiles : $user_profiles;
-                                    foreach ($profiles_to_render as $profile): 
-                                    ?>
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <code class="fs-5"><?= htmlspecialchars($profile['slug']) ?></code>
-                                                <?php 
-                                                // Check actual page accessibility
-                                                $is_accessible = check_profile_accessibility($profile['slug']);
-                                                ?>
-                                                <?php if ($is_accessible): ?>
-                                                    <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Aktif</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-danger ms-2"><i class="bi bi-x-circle-fill"></i> Nonaktif</span>
-                                                <?php endif; ?>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <i class="bi bi-link-45deg"></i> <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
-                                                    | <i class="bi bi-cursor-fill"></i> <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
-                                                    | Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
-                                                </small>
-                                                <br>
-                                                <small class="text-muted">
-                                                    Link: <strong>linkmy.iet.ovh/<?= htmlspecialchars($profile['slug']) ?></strong>
-                                                </small>
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <?php if ($is_accessible): ?>
-                                                <a href="?toggle_active=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm btn-warning text-white"
-                                                   onclick="return confirm('Nonaktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
-                                                    <i class="bi bi-pause-circle"></i> 
-                                                    Nonaktifkan
-                                                </a>
-                                                <?php else: ?>
-                                                <a href="?toggle_active=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm btn-success text-white"
-                                                   onclick="return confirm('Aktifkan profile <?= htmlspecialchars($profile['slug']) ?>?')">
-                                                    <i class="bi bi-play-circle"></i> 
-                                                    Aktifkan
-                                                </a>
-                                                <?php endif; ?>
-                                                <a href="?delete_slug=<?= $profile['id'] ?>" 
-                                                   class="btn btn-sm btn-outline-danger"
-                                                   onclick="return confirm('Hapus profile <?= htmlspecialchars($profile['slug']) ?>?')">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </a>
-                                            </div>
+                                    <p class="mb-1">Slug: <a href="../<?= htmlspecialchars($profile['slug']) ?>" target="_blank">/<?= htmlspecialchars($profile['slug']) ?></a></p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <div>
+                                            <span class="badge bg-light text-dark border me-2"><i class="bi bi-link-45deg"></i> <?= $profile['link_count'] ?> Links</span>
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-graph-up"></i> <?= $profile['total_clicks'] ?> Clicks</span>
                                         </div>
-                                    <?php endforeach; ?>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditProfileModal(<?= htmlspecialchars(json_encode($profile), ENT_QUOTES, 'UTF-8') ?>)">
+                                                <i class="bi bi-pencil-fill"></i> Edit
+                                            </button>
+                                            <?php if ($profile['display_order'] != 0): ?>
+                                                <a href="../scripts/delete_profile.php?id=<?= $profile['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Anda yakin ingin menghapus profil ini? Semua link di dalamnya akan ikut terhapus.')">
+                                                    <i class="bi bi-trash-fill"></i> Hapus
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
-                        
-                        <?php if (count($user_profiles) < 2): ?>
-                        <hr>
-                        <h6 class="fw-bold mb-3">Tambah Slug Baru:</h6>
-                        <form method="POST" id="addSlugForm">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Slug Baru</label>
-                                <input type="text" class="form-control" name="new_slug" id="add_slug_input"
-                                       placeholder="contoh: nama-bisnis" pattern="[a-z0-9-]+" 
-                                       minlength="3" maxlength="50" required>
-                                <div id="add_slug_feedback" class="form-text"></div>
-                                <small class="text-muted">
-                                    Slug alias akan mengarah ke profil yang sama dengan slug utama.
-                                </small>
-                            </div>
-                            
-                            <button type="submit" name="add_slug" class="btn btn-success" 
-                                    id="addSlugBtn" disabled>
-                                <i class="bi bi-plus-circle"></i> Tambah Slug
-                            </button>
-                        </form>
-                        <?php else: ?>
-                        <div class="alert alert-warning mt-3">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Anda sudah mencapai batas maksimal 2 slug untuk akun gratis.
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
-                
-                <!-- Danger Zone -->
-                <div class="card">
+
+                <!-- Account Security Card -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Keamanan Akun</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title fw-bold text-danger mb-4">
-                            <i class="bi bi-exclamation-triangle-fill"></i> Danger Zone
-                        </h5>
-                        
-                        <div class="danger-zone">
-                            <h6 class="fw-bold">Hapus Akun</h6>
-                            <p class="text-muted mb-3">
-                                Tindakan ini tidak dapat dibatalkan. Semua data Anda termasuk links, 
-                                appearance, dan statistik akan dihapus permanen.
-                            </p>
-                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                <i class="bi bi-trash"></i> Hapus Akun Saya
-                            </button>
+                        <ul class="nav nav-tabs" id="securityTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="email-tab" data-bs-toggle="tab" data-bs-target="#email-pane" type="button">Ubah Email</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password-pane" type="button">Ubah Password</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content pt-3">
+                            <div class="tab-pane fade show active" id="email-pane" role="tabpanel">
+                                <form method="POST">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Saat Ini</label>
+                                        <input type="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Baru</label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirm_password_email" class="form-label">Konfirmasi Password Anda</label>
+                                        <input type="password" class="form-control" id="confirm_password_email" name="confirm_password_email" required>
+                                    </div>
+                                    <button type="submit" name="update_email" class="btn btn-primary">Update Email</button>
+                                </form>
+                            </div>
+                            <div class="tab-pane fade" id="password-pane" role="tabpanel">
+                                <form method="POST">
+                                    <div class="mb-3">
+                                        <label for="current_password" class="form-label">Password Lama</label>
+                                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="new_password" class="form-label">Password Baru</label>
+                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirm_password" class="form-label">Konfirmasi Password Baru</label>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    </div>
+                                    <button type="submit" name="change_password" class="btn btn-primary">Ganti Password</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Delete Account Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
+
+    <!-- Add Profile Modal -->
+    <div class="modal fade" id="addProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Konfirmasi Hapus Akun
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="fw-bold">Apakah Anda yakin ingin menghapus akun Anda?</p>
-                    <p class="text-muted mb-0">
-                        Tindakan ini akan menghapus:
-                    </p>
-                    <ul class="text-muted">
-                        <li>Semua link Anda (<?= $total_links ?> links)</li>
-                        <li>Pengaturan appearance</li>
-                        <li>Statistik klik (<?= $total_clicks ?> total klik)</li>
-                        <li>Semua data profil</li>
-                    </ul>
-                    <p class="text-danger fw-bold">Tindakan ini TIDAK DAPAT dibatalkan!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <a href="?delete_account=confirm" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Ya, Hapus Akun Saya
-                    </a>
-                </div>
+                <form action="../scripts/add_profile.php" method="POST">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Buat Profil Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="add_profile_name" class="form-label">Nama Profil</label>
+                            <input type="text" class="form-control" id="add_profile_name" name="profile_name" required placeholder="Contoh: Profil Bisnis">
+                        </div>
+                        <div class="mb-3">
+                            <label for="add_profile_slug" class="form-label">Slug Profil</label>
+                            <input type="text" class="form-control" id="add_profile_slug" name="profile_slug" required placeholder="contoh-slug-unik">
+                            <div id="addSlugFeedback" class="form-text"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    
-    <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/jquery-3.7.1.min.js"></script>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="../scripts/edit_profile.php" method="POST">
+                    <input type="hidden" name="profile_id" id="edit_profile_id">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Profil</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit_profile_name" class="form-label">Nama Profil</label>
+                            <input type="text" class="form-control" id="edit_profile_name" name="profile_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_profile_slug" class="form-label">Slug Profil</label>
+                            <input type="text" class="form-control" id="edit_profile_slug" name="profile_slug" required>
+                            <div id="editSlugFeedback" class="form-text"></div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="set_as_primary" name="set_as_primary">
+                            <label class="form-check-label" for="set_as_primary">
+                                Jadikan sebagai profil utama
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <?php include '../partials/admin_footer.php'; ?>
+
     <script>
-        // Debounce function to limit API calls
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+    function openEditProfileModal(profile) {
+        document.getElementById('edit_profile_id').value = profile.id;
+        document.getElementById('edit_profile_name').value = profile.name;
+        document.getElementById('edit_profile_slug').value = profile.slug;
+        document.getElementById('set_as_primary').checked = profile.display_order == 0;
+        document.getElementById('set_as_primary').disabled = profile.display_order == 0;
         
-        // Check slug availability via AJAX
-        function checkSlugAvailability(slug, feedbackElement, buttonElement) {
-            if (slug.length < 3) {
-                feedbackElement.innerHTML = '<span class="text-muted">Minimal 3 karakter</span>';
-                buttonElement.disabled = true;
-                return;
-            }
-            
-            // Sanitize slug client-side
-            slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
-            
-            feedbackElement.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Memeriksa...</span>';
-            buttonElement.disabled = true;
-            
-            $.ajax({
-                url: 'settings.php',
-                method: 'POST',
-                data: {
-                    action: 'check_slug_availability',
-                    slug: slug
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.available) {
-                        feedbackElement.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> ' + response.message + '</span>';
-                        buttonElement.disabled = false;
-                    } else {
-                        feedbackElement.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> ' + response.message + '</span>';
-                        buttonElement.disabled = true;
-                    }
-                },
-                error: function() {
-                    feedbackElement.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memeriksa ketersediaan</span>';
-                    buttonElement.disabled = true;
-                }
-            });
-        }
-        
-        // Debounced slug check for "Change Slug" form
-        const debouncedCheckNewSlug = debounce(function() {
-            const slug = $('#new_slug_input').val();
-            const feedback = document.getElementById('slug_check_feedback');
-            const button = document.getElementById('requestSlugBtn');
-            checkSlugAvailability(slug, feedback, button);
-        }, 500);
-        
-        // Debounced slug check for "Add Slug" form
-        const debouncedCheckAddSlug = debounce(function() {
-            const slug = $('#add_slug_input').val();
-            const feedback = document.getElementById('add_slug_feedback');
-            const button = document.getElementById('addSlugBtn');
-            checkSlugAvailability(slug, feedback, button);
-        }, 500);
-        
-        // Attach event listeners
-        $(document).ready(function() {
-            // Restore scroll position after OTP sent
-            <?php if (isset($_SESSION['slug_change_scroll'])): ?>
-                setTimeout(function() {
-                    $('html, body').animate({
-                        scrollTop: $('#slugChangeForm').offset().top - 100
-                    }, 500);
-                }, 100);
-                <?php unset($_SESSION['slug_change_scroll']); ?>
-            <?php endif; ?>
-            
-            // For "Change Slug" form
-            $('#new_slug_input').on('input', function() {
-                // Auto-sanitize input in real-time
-                let val = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
-                $(this).val(val);
-                debouncedCheckNewSlug();
-            });
-            
-            // For "Add Slug" form
-            $('#add_slug_input').on('input', function() {
-                // Auto-sanitize input in real-time
-                let val = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
-                $(this).val(val);
-                debouncedCheckAddSlug();
-            });
-            
-            // Form submission validation
-            $('#slugChangeForm').on('submit', function(e) {
-                const button = document.getElementById('requestSlugBtn');
-                if (button && button.disabled) {
-                    e.preventDefault();
-                    alert('Slug tidak tersedia atau tidak valid!');
-                    return false;
-                }
-            });
-            
-            $('#addSlugForm').on('submit', function(e) {
-                const button = document.getElementById('addSlugBtn');
-                if (button.disabled) {
-                    e.preventDefault();
-                    alert('Slug tidak tersedia atau tidak valid!');
-                    return false;
-                }
-            });
-        });
+        var myModal = new bootstrap.Modal(document.getElementById('editProfileModal'), {});
+        myModal.show();
+    }
+    // Add slug validation script if needed
     </script>
 </body>
 </html>
