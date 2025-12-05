@@ -1,191 +1,201 @@
 <?php
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+    // Enable error reporting for debugging
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 
-require_once __DIR__ . '/../config/auth_check.php';
-require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../config/session_handler.php'; // Modern session management
-
-$success = $_SESSION['success'] ?? '';
-$error = $_SESSION['error'] ?? '';
-unset($_SESSION['success'], $_SESSION['error']);
-
-// Multi-profile: Get active profile
-$active_profile_id = $_SESSION['active_profile_id'] ?? null;
-if (!$active_profile_id) {
-    $primary_profile = get_single_row(
-        "SELECT id, slug FROM profiles WHERE user_id = ? AND display_order = 0 ORDER BY id ASC LIMIT 1",
-        [$current_user_id],
-        'i'
-    );
-    if ($primary_profile) {
-        $active_profile_id = $primary_profile['id'];
-        $_SESSION['active_profile_id'] = $active_profile_id;
-        $_SESSION['page_slug'] = $primary_profile['slug'];
-    } else {
-        // Handle case where user has no profiles
-        $error = "Tidak ada profil yang ditemukan. Silakan buat profil pertama Anda di pengaturan.";
-        // To prevent further errors, let's ensure critical variables are set
-        $active_profile_id = null;
-        $_SESSION['page_slug'] = '';
-    }
-}
-
-// Update page slug in session if it has changed
-$current_page_slug = get_single_row("SELECT slug FROM profiles WHERE id = ?", [$active_profile_id], 'i')['slug'] ?? '';
-$_SESSION['page_slug'] = $current_page_slug;
-
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_link'])) {
+    require_once __DIR__ . '/../config/auth_check.php';
+    require_once __DIR__ .  '/../config/db.php';
+    
+    $success = '';
+    $error = '';
+    
+    // Multi-profile: Get active profile
+    $active_profile_id = $_SESSION['active_profile_id'] ?? null;
     if (!$active_profile_id) {
-        $_SESSION['error'] = 'Error: Tidak ada profile aktif. Silakan refresh halaman.';
-    } else {
-        $title = trim($_POST['title']);
-        $url = trim($_POST['url']);
-        $icon_class = trim($_POST['icon_class']);
-        $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
+        // Get user's primary profile
+        $primary_profile = get_single_row(
+            "SELECT id, slug FROM profiles WHERE user_id = ? AND display_order = 0 ORDER BY id ASC LIMIT 1",
+            [$current_user_id],
+            'i'
+        );
+        if ($primary_profile) {
+            $active_profile_id = $primary_profile['id'];
+            $_SESSION['active_profile_id'] = $active_profile_id;
+            $_SESSION['page_slug'] = $primary_profile['slug'];
+        }
+    }
 
-        if (empty($title) || empty($url)) {
-            $_SESSION['error'] = 'Judul dan URL harus diisi';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_link'])){
+        // CRITICAL: Validate active_profile_id exists
+        if (!$active_profile_id) {
+            $error = 'Error: Tidak ada profile aktif. Silakan refresh halaman.';
         } else {
-            $verify_profile = get_single_row(
-                "SELECT id FROM profiles WHERE id = ? AND user_id = ?",
-                [$active_profile_id, $current_user_id],
-                'ii'
-            );
+            $title = trim($_POST['title']);
+            $url = trim($_POST['url']);
+            $icon_class = trim($_POST['icon_class']);
+            $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
 
-            if (!$verify_profile) {
-                $_SESSION['error'] = 'Error: Profile tidak valid. Silakan logout dan login kembali.';
-                $_SESSION['active_profile_id'] = null; // Clear invalid session
+            if (empty($title) || empty($url)){
+                $error = 'Judul dan URL harus diisi';
             } else {
-                $last_order_row = get_single_row("SELECT MAX(position) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
-                $new_order = ($last_order_row['max_order'] ?? 0) + 1;
+                // Verify profile belongs to user before adding link
+                $verify_profile = get_single_row(
+                    "SELECT id FROM profiles WHERE id = ? AND user_id = ?",
+                    [$active_profile_id, $current_user_id],
+                    'ii'
+                );
+                
+                if (!$verify_profile) {
+                    $error = 'Error: Profile tidak valid. Silakan logout dan login kembali.';
+                    $_SESSION['active_profile_id'] = null; // Clear invalid session
+                } else {
+                    // Multi-profile: Use active_profile_id for new link
+                    $last_order_row = get_single_row("SELECT MAX(position) AS max_order FROM links WHERE profile_id = ?", [$active_profile_id], 'i');
+            $last_order = $last_order_row['max_order'] ?? 0;
+            $new_order = $last_order + 1;
 
+            // Check if category_id column exists
+            $check_col = mysqli_query($conn, "SHOW COLUMNS FROM links LIKE 'category_id'");
+            $has_categories = ($check_col && mysqli_num_rows($check_col) > 0);
+
+            if ($has_categories) {
                 $query = "INSERT INTO links (profile_id, title, url, icon, category_id, position, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)";
                 $stmt = mysqli_prepare($conn, $query);
-                if ($stmt) {
+                if ($stmt){
                     mysqli_stmt_bind_param($stmt, 'isssii', $active_profile_id, $title, $url, $icon_class, $category_id, $new_order);
-                    if (mysqli_stmt_execute($stmt)) {
-                        $_SESSION['success'] = 'Link berhasil ditambahkan';
+                    if (mysqli_stmt_execute($stmt)){
+                        $success = 'Link berhasil ditambahkan';
                     } else {
-                        $_SESSION['error'] = 'Gagal menambahkan link: ' . mysqli_error($conn);
+                        $error = 'Gagal menambahkan link';
                     }
                 } else {
-                    $_SESSION['error'] = 'Gagal menyiapkan statement';
+                    $error = 'Gagal menyiapkan statement';
+                }
+            } else {
+                // Fallback to schema without category_id
+                $query = "INSERT INTO links (profile_id, title, url, icon, position, is_active) VALUES (?, ?, ?, ?, ?, 1)";
+                $stmt = mysqli_prepare($conn, $query);
+                if ($stmt){
+                    mysqli_stmt_bind_param($stmt, 'isssi', $active_profile_id, $title, $url, $icon_class, $new_order);
+                    if (mysqli_stmt_execute($stmt)){
+                        $success = 'Link berhasil ditambahkan';
+                    } else {
+                        $error = 'Gagal menambahkan link';
+                    }
+                } else {
+                    $error = 'Gagal menyiapkan statement';
+                }
+            }
                 }
             }
         }
     }
-    header("Location: dashboard.php");
-    exit;
-}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_link'])) {
-    $link_id = intval($_POST['link_id']);
-    $title = trim($_POST['title']);
-    $url = trim($_POST['url']);
-    $icon_class = trim($_POST['icon_class']);
-    $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
-
-    if (empty($title) || empty($url)) {
-        $_SESSION['error'] = 'Judul dan URL harus diisi!';
-    } else {
-        $query = "UPDATE links SET title = ?, url = ?, icon = ?, category_id = ? WHERE id = ? AND profile_id = ?";
-        $stmt = mysqli_prepare($conn, $query);
-        mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $active_profile_id);
-
-        if (mysqli_stmt_execute($stmt)) {
-            $_SESSION['success'] = 'Link berhasil diupdate!';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_link'])) {
+        $link_id = intval($_POST['link_id']);
+        $title = trim($_POST['title']);
+        $url = trim($_POST['url']);
+        $icon_class = trim($_POST['icon_class']);
+        $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
+        
+        if (empty($title) || empty($url)) {
+            $error = 'Judul dan URL harus diisi!';
         } else {
-            $_SESSION['error'] = 'Gagal mengupdate link!';
+            // V3 schema: always has category_id
+            $query = "UPDATE links SET title = ?, url = ?, icon = ?, category_id = ? WHERE id = ? AND profile_id = ?";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'sssiii', $title, $url, $icon_class, $category_id, $link_id, $active_profile_id);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                $success = 'Link berhasil diupdate!';
+            } else {
+                $error = 'Gagal mengupdate link!';
+            }
         }
     }
-    header("Location: dashboard.php");
-    exit;
-}
 
-if (isset($_GET['delete'])) {
-    $link_id = intval($_GET['delete']);
-    $query = "DELETE FROM links WHERE id = ? AND profile_id = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, 'ii', $link_id, $active_profile_id);
-
-    if (mysqli_stmt_execute($stmt)) {
-        $_SESSION['success'] = 'Link berhasil dihapus!';
-    } else {
-        $_SESSION['error'] = 'Gagal menghapus link!';
+    // Multi-profile: Delete link from active profile
+    if (isset($_GET['delete'])) {
+        $link_id = intval($_GET['delete']);
+        
+        $query = "DELETE FROM links WHERE id = ? AND profile_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'ii', $link_id, $active_profile_id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success = 'Link berhasil dihapus!';
+        } else {
+            $error = 'Gagal menghapus link!';
+        }
     }
-    header("Location: dashboard.php");
-    exit;
-}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order'])) {
-    $order_data = json_decode($_POST['order_data'], true);
-    if ($order_data && $active_profile_id) {
-        $conn->begin_transaction();
-        try {
-            $query = "UPDATE links SET position = ? WHERE id = ? AND profile_id = ?";
-            $stmt = $conn->prepare($query);
+    // Multi-profile: Reorder links within active profile
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order'])) {
+        $order_data = json_decode($_POST['order_data'], true);
+        
+        if ($order_data) {
             foreach ($order_data as $item) {
                 $link_id = intval($item['id']);
                 $order_index = intval($item['order']);
-                $stmt->bind_param('iii', $order_index, $link_id, $active_profile_id);
-                $stmt->execute();
+                
+                $query = "UPDATE links SET position = ? WHERE id = ? AND profile_id = ?";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'iii', $order_index, $link_id, $active_profile_id);
+                mysqli_stmt_execute($stmt);
             }
-            $stmt->close();
-            $conn->commit();
-            echo json_encode(['success' => true, 'message' => 'Order updated successfully.']);
-        } catch (Exception $e) {
-            $conn->rollback();
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            
+            echo json_encode(['success' => true]);
+            exit;
         }
-        exit;
     }
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid data.']);
-    exit;
-}
-
-// Data Fetching (only if a profile is active)
-$links = [];
-$link_performance = [];
-$user_categories = [];
-$daily_clicks = [];
-$click_by_location = [];
-$dates_range = [];
-
-if ($active_profile_id) {
+    // Multi-profile: Load links for active profile only (v3 schema)
     $links = get_all_rows("SELECT id as link_id, title, url, icon as icon_class, position as order_index, clicks as click_count, category_id, is_active FROM links WHERE profile_id = ? ORDER BY position ASC", [$active_profile_id], 'i');
     
+    // Get analytics data for charts
+    // Get link performance data (top 10 most clicked links) - Multi-profile
     $link_performance = get_all_rows(
         "SELECT title, clicks as click_count FROM links WHERE profile_id = ? AND is_active = 1 ORDER BY clicks DESC LIMIT 10",
         [$active_profile_id],
         'i'
     );
     
+    // Get user categories for dropdown (with error handling)
+    $user_categories = [];
     try {
-        $user_categories = get_all_rows(
-            "SELECT id as category_id, name as category_name, icon as category_icon, color as category_color FROM categories_v3 WHERE profile_id = ? ORDER BY position ASC",
-            [$active_profile_id],
-            'i'
-        ) ?? [];
+        // Check if table exists first
+        $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'categories_v3'");
+        if ($check_table && mysqli_num_rows($check_table) > 0) {
+            // Multi-profile: Load categories for active profile
+            $user_categories = get_all_rows(
+                "SELECT id as category_id, name as category_name, icon as category_icon, color as category_color FROM categories_v3 WHERE profile_id = ? ORDER BY position ASC",
+                [$active_profile_id],
+                'i'
+            ) ?? [];
+        }
     } catch (Exception $e) {
+        // Silently fail if categories not available yet
         $user_categories = [];
     }
 
+    // Get daily clicks for last 7 days (including today for realtime updates) - Multi-profile
     $daily_clicks = get_all_rows(
-        "SELECT DATE(clicked_at) as date, COUNT(*) as clicks
+        "SELECT 
+            DATE(clicked_at) as date,
+            COUNT(*) as clicks
         FROM clicks c
         INNER JOIN links l ON c.link_id = l.id
-        WHERE l.profile_id = ? AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        GROUP BY DATE(clicked_at) ORDER BY date ASC",
+        WHERE l.profile_id = ? 
+          AND DATE(clicked_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          AND DATE(clicked_at) <= CURDATE()
+        GROUP BY DATE(clicked_at)
+        ORDER BY date ASC",
         [$active_profile_id],
         'i'
     );
     
+    // Fill missing dates with 0 clicks
+    $dates_range = [];
     for ($i = 6; $i >= 0; $i--) {
         $date = date('Y-m-d', strtotime("-$i days"));
         $dates_range[$date] = 0;
@@ -195,6 +205,7 @@ if ($active_profile_id) {
         $dates_range[$row['date']] = intval($row['clicks']);
     }
     
+    // Get click distribution by geographic location (city + country) - Multi-profile
     $click_by_location = get_all_rows(
         "SELECT 
             CASE 
@@ -205,108 +216,309 @@ if ($active_profile_id) {
         FROM clicks c
         INNER JOIN links l ON c.link_id = l.id
         WHERE l.profile_id = ?
-        GROUP BY location ORDER BY clicks DESC LIMIT 10",
+        GROUP BY location
+        ORDER BY clicks DESC
+        LIMIT 10",
         [$active_profile_id],
         'i'
     );
-}
-
-$page_title = "Dashboard";
-include '../partials/admin_header.php';
+    
+    // If no country data, show IP-based location summary - Multi-profile
+    if (empty($click_by_location)) {
+        $click_by_location = get_all_rows(
+            "SELECT 
+                CASE 
+                    WHEN ip LIKE '172.%' OR ip LIKE '192.168.%' THEN 'Local Network'
+                    WHEN ip IS NULL OR ip = '' THEN 'Unknown'
+                    ELSE CONCAT('IP: ', SUBSTRING(ip, 1, 10), '...')
+                END as location,
+                COUNT(*) as clicks
+            FROM clicks c
+            INNER JOIN links l ON c.link_id = l.id
+            WHERE l.profile_id = ?
+            GROUP BY location
+            ORDER BY clicks DESC
+            LIMIT 10",
+            [$active_profile_id],
+            'i'
+        );
+    }
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LinkMy</title>
+    <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="../assets/css/admin.css" rel="stylesheet">
+    <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
+    <style>
+        body {
+            background: #f5f7fa;
+            padding-top: 76px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .link-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.3s;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .link-item:hover {
+            border-color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+        }
+        .link-item.dragging {
+            opacity: 0.5;
+        }
+        .drag-handle {
+            cursor: grab;
+            color: #999;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        /* Drag Overlay for Mobile - Blur everything EXCEPT links container */
+        .drag-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 998;
+            display: none;
+            pointer-events: none;
+        }
+        .drag-overlay.active {
+            display: block;
+        }
+        /* Highlight all links container when dragging */
+        #linksList.dragging-active {
+            position: relative;
+            z-index: 999;
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8);
+        }
+        .link-item.dragging {
+            z-index: 1000;
+            position: relative;
+            opacity: 0.9;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .link-item {
+                padding: 1rem;
+                border: 2px solid #e9ecef;
+                border-radius: 12px;
+                margin-bottom: 0.75rem;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            .link-item .d-flex {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.75rem;
+            }
+            /* Top row: drag handle + icon + title */
+            .link-item .d-flex > .d-flex:first-child {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+            .link-item .flex-grow-1 {
+                width: 100%;
+            }
+            .link-item .flex-grow-1 > .d-flex {
+                margin-bottom: 0.5rem;
+            }
+            .link-item .flex-grow-1 > .d-flex i {
+                font-size: 20px;
+            }
+            .link-item .flex-grow-1 strong {
+                font-size: 15px;
+                flex: 1;
+            }
+            .link-item small {
+                font-size: 11px;
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+            }
+            .link-item .badge {
+                font-size: 11px;
+                padding: 0.35em 0.65em;
+            }
+            .drag-handle {
+                font-size: 22px;
+                padding: 4px;
+                touch-action: none;
+                margin-right: 0.5rem;
+            }
+            /* Action buttons - horizontal at bottom */
+            .link-item > .d-flex > div:last-child {
+                display: flex;
+                gap: 0.5rem;
+                justify-content: flex-end;
+                width: 100%;
+            }
+            .link-item .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+                flex: 1;
+                max-width: 48%;
+            }
+            .link-item .btn i {
+                font-size: 13px;
+            }
+            .stat-card {
+                padding: 1rem;
+            }
+            .stat-card h6 {
+                font-size: 12px;
+            }
+            .stat-card h2 {
+                font-size: 24px;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            /* Better spacing for mobile */
+            .mb-3 {
+                margin-bottom: 1rem !important;
+            }
+            /* Stack elements vertically on mobile */
+            .d-flex {
+                flex-wrap: wrap !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            h2 {
+                font-size: 24px;
+            }
+            .link-item {
+                padding: 10px;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            .card {
+                border-radius: 10px;
+            }
+            /* Touch-friendly buttons */
+            .btn {
+                min-height: 44px;
+            }
+        }
+    </style>
+</head>
 <body>
+    <!-- Drag Overlay for Mobile -->
+    <div class="drag-overlay" id="dragOverlay"></div>
+
     <?php include '../partials/admin_nav.php'; ?>
 
-    <div class="container-fluid px-4 py-4">
-        <div class="row mb-4 align-items-center">
+    <div class="container py-4">
+        <div class="row mb-4">
             <div class="col">
-                <h1 class="fw-bold mb-1">Halo, <?= htmlspecialchars($current_username) ?>! 👋</h1>
-                <p class="text-muted">Kelola semua link dan profil Anda dari sini.</p>
+                <h2 class="fw-bold">Halo, <?= htmlspecialchars($current_username) ?>! 👋</h2>
+                <p class="text-muted">Kelola link Anda di bawah ini</p>
             </div>
         </div>
-
-        <?php if (!$active_profile_id): ?>
-            <div class="alert alert-warning" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Anda belum memiliki profil.</strong> Silakan buka <a href="settings.php" class="alert-link">Pengaturan</a> untuk membuat profil pertama Anda.
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <h6 class="text-uppercase mb-2">Total Links</h6>
+                    <h2 class="fw-bold mb-0"><?= count($links) ?></h2>
+                </div>
             </div>
-        <?php endif; ?>
-
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <h6 class="text-uppercase mb-2">Total Klik</h6>
+                    <h2 class="fw-bold mb-0"><?= array_sum(array_column($links, 'click_count')) ?></h2>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <h6 class="text-uppercase mb-2">Page Slug</h6>
+                    <h2 class="fw-bold mb-0"><?= htmlspecialchars($current_page_slug) ?></h2>
+                </div>
+            </div>
+        </div>
         <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($success) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <i class="bi bi-check-circle-fill me-2"></i><?= $success ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
 
         <?php if ($error): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($error) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $error ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-
-        <?php if ($active_profile_id): ?>
-        <!-- Stat Cards -->
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="stat-card card h-100">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted mb-2">Total Links</h6>
-                        <h2 class="fw-bold mb-0"><?= count($links) ?></h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="stat-card card h-100">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted mb-2">Total Klik</h6>
-                        <h2 class="fw-bold mb-0"><?= array_sum(array_column($links, 'click_count')) ?></h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="stat-card card h-100">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted mb-2">Page Slug Aktif</h6>
-                        <h2 class="fw-bold mb-0 fs-5 text-truncate" title="<?= htmlspecialchars($current_page_slug) ?>"><?= htmlspecialchars($current_page_slug) ?></h2>
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <!-- Analytics Charts Section -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up"></i> Analytics Dashboard</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Analytics Dashboard</h5>
                     </div>
                     <div class="card-body">
                         <ul class="nav nav-tabs" id="analyticsTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="trends-tab" data-bs-toggle="tab" data-bs-target="#trends" type="button">
-                                    <i class="bi bi-graph-up-arrow"></i> Tren Klik
+                                    <i class="bi bi-graph-up-arrow"></i> Click Trends (7 Days)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance" type="button">
-                                    <i class="bi bi-bar-chart"></i> Performa Link
+                                    <i class="bi bi-bar-chart"></i> Link Performance
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="traffic-tab" data-bs-toggle="tab" data-bs-target="#traffic" type="button">
-                                    <i class="bi bi-pie-chart"></i> Sumber Traffic
+                                    <i class="bi bi-pie-chart"></i> Traffic Sources
                                 </button>
                             </li>
                         </ul>
                         <div class="tab-content pt-3" id="analyticsTabContent">
+                            <!-- Click Trends Chart -->
                             <div class="tab-pane fade show active" id="trends" role="tabpanel">
                                 <div id="clickTrendsChart" style="height: 400px;"></div>
                             </div>
+                            
+                            <!-- Link Performance Chart -->
                             <div class="tab-pane fade" id="performance" role="tabpanel">
                                 <div id="linkPerformanceChart" style="height: 400px;"></div>
                             </div>
+                            
+                            <!-- Traffic Sources Chart -->
                             <div class="tab-pane fade" id="traffic" role="tabpanel">
                                 <div id="trafficSourcesChart" style="height: 400px;"></div>
                             </div>
@@ -330,39 +542,39 @@ include '../partials/admin_header.php';
                         </div>
 
                         <p class="text-muted small mb-3">
-                            <i class="bi bi-info-circle"></i> Drag & drop untuk mengubah urutan.
+                            <i class="bi bi-info-circle"></i> Drag & drop untuk mengubah urutan
                         </p>
 
                         <div id="linksList">
                             <?php if (empty($links)): ?>
-                                <div class="text-center py-5 border rounded-3">
+                                <div class="text-center py-5">
                                     <i class="bi bi-inbox display-1 text-muted"></i>
-                                    <p class="text-muted mt-3 mb-0">Belum ada link. Tambahkan link pertama Anda!</p>
+                                    <p class="text-muted mt-3">Belum ada link. Tambahkan link pertama Anda!</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($links as $link): ?>
-                                    <div class="link-item card card-body mb-2" data-id="<?= $link['link_id'] ?>">
+                                    <div class="link-item" data-id="<?= $link['link_id'] ?>">
                                         <div class="d-flex align-items-center">
-                                            <div class="drag-handle me-3 text-muted" style="cursor: grab;">
+                                            <div class="drag-handle me-3">
                                                 <i class="bi bi-grip-vertical fs-4"></i>
                                             </div>
                                             <div class="flex-grow-1">
                                                 <div class="d-flex align-items-center mb-1">
-                                                    <i class="<?= htmlspecialchars($link['icon_class']) ?> me-2 fs-5"></i>
-                                                    <strong class="text-break"><?= htmlspecialchars($link['title']) ?></strong>
+                                                    <i class="<?= htmlspecialchars($link['icon_class']) ?> me-2"></i>
+                                                    <strong><?= htmlspecialchars($link['title']) ?></strong>
                                                 </div>
-                                                <small class="text-muted text-break d-block">
+                                                <small class="text-muted">
                                                     <i class="bi bi-link-45deg"></i> <?= htmlspecialchars($link['url']) ?>
                                                 </small>
-                                                <div class="mt-2">
-                                                    <span class="badge bg-light text-dark border">
+                                                <div class="mt-1">
+                                                    <span class="badge bg-secondary">
                                                         <i class="bi bi-mouse"></i> <?= $link['click_count'] ?> klik
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div class="ms-2">
-                                                <button class="btn btn-sm btn-outline-secondary me-1"
-                                                        onclick="editLink(<?= htmlspecialchars(json_encode($link), ENT_QUOTES, 'UTF-8') ?>)">
+                                            <div>
+                                                <button class="btn btn-sm btn-outline-primary me-1"
+                                                        onclick="editLink(<?= htmlspecialchars(json_encode($link)) ?>)">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </button>
                                                 <a href="?delete=<?= $link['link_id'] ?>"
@@ -381,24 +593,38 @@ include '../partials/admin_header.php';
             </div>
 
             <div class="col-lg-4">
-                <div class="card sticky-top" style="top: 20px;">
+                <div class="card">
                     <div class="card-body">
                         <h5 class="card-title fw-bold mb-3">
-                            <i class="bi bi-lightbulb-fill text-warning"></i> Tips Cepat
+                            <i class="bi bi-lightbulb-fill text-warning"></i> Tips
                         </h5>
                         <ul class="list-unstyled">
-                            <li class="mb-2 d-flex"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>Gunakan judul yang jelas.</li>
-                            <li class="mb-2 d-flex"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>Pilih ikon yang sesuai.</li>
-                            <li class="mb-2 d-flex"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>Urutkan link terpenting di atas.</li>
-                            <li class="mb-2 d-flex"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>Cek statistik klik secara berkala.</li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Gunakan judul yang jelas dan menarik
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Pilih ikon yang sesuai dengan platform
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Urutkan link berdasarkan prioritas
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Cek statistik klik secara berkala
+                            </li>
                         </ul>
+
                         <hr>
+
                         <h6 class="fw-bold mb-2">Link Publik Anda:</h6>
                         <div class="input-group">
                             <input type="text" class="form-control"
-                                   value="https://linkmy.iet.ovh/<?= htmlspecialchars($current_page_slug) ?>"
+                                   value="linkmy.iet.ovh/<?= $current_page_slug ?>"
                                    id="publicLink" readonly>
-                            <button class="btn btn-outline-secondary" onclick="copyLink(this)">
+                            <button class="btn btn-outline-secondary" onclick="copyLink()">
                                 <i class="bi bi-clipboard"></i>
                             </button>
                         </div>
@@ -406,77 +632,131 @@ include '../partials/admin_header.php';
                 </div>
             </div>
         </div>
-        <?php endif; // end of if($active_profile_id) ?>
     </div>
-
-    <!-- Add Link Modal -->
     <div class="modal fade" id="addModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
                     <div class="modal-header">
-                        <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle"></i> Tambah Link Baru</h5>
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-circle"></i> Tambah Link Baru
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Judul Link</label>
-                            <input type="text" class="form-control" name="title" required placeholder="Contoh: Instagram Saya">
+                            <input type="text" class="form-control" name="title" required
+                                   placeholder="Contoh: Instagram Saya">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">URL</label>
-                            <input type="url" class="form-control" name="url" required placeholder="https://instagram.com/username">
+                            <input type="url" class="form-control" name="url" required
+                                   placeholder="https://instagram.com/username">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Kategori (Opsional)</label>
+                            <label class="form-label fw-semibold">Category (Optional) <span class="badge bg-success">New!</span></label>
                             <select class="form-select" name="category_id">
-                                <option value="">Tanpa Kategori</option>
+                                <option value="">None (Uncategorized)</option>
                                 <?php foreach ($user_categories as $cat): ?>
-                                    <option value="<?= $cat['category_id'] ?>"><?= htmlspecialchars($cat['category_name']) ?></option>
+                                    <option value="<?= $cat['category_id'] ?>">
+                                        <i class="<?= htmlspecialchars($cat['category_icon']) ?>"></i>
+                                        <?= htmlspecialchars($cat['category_name']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">Kelompokkan link dalam kategori. <a href="categories.php">Kelola Kategori</a></small>
+                            <small class="text-muted">Group this link under a category. <a href="categories.php">Manage Categories</a></small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Ikon (Bootstrap Icons)</label>
                             <div class="input-group mb-2">
-                                <span class="input-group-text"><i id="iconPreview" class="bi bi-link-45deg fs-5"></i></span>
-                                <input type="text" class="form-control" name="icon_class" id="iconInput" value="bi-link-45deg" placeholder="Contoh: bi-instagram">
+                                <span class="input-group-text">
+                                    <i id="iconPreview" class="bi-link-45deg" style="font-size: 1.5rem;"></i>
+                                </span>
+                                <input type="text" class="form-control" name="icon_class" id="iconInput"
+                                       value="bi-link-45deg"
+                                       placeholder="Example: bi-instagram">
                             </div>
-                            <div class="alert alert-info py-2 px-3 mb-2 d-flex align-items-center">
-                                <i class="bi bi-info-circle me-2"></i
-                                ><small>Gunakan format <code>bi-[nama-ikon]</code>. Contoh: <code>bi-github</code>. Lihat <a href="https://icons.getbootstrap.com/" target="_blank" class="alert-link">Bootstrap Icons</a>.</small>
+                            <div class="alert alert-info py-2 px-3 mb-2">
+                                <small>
+                                    <strong>💡 Format:</strong> Gunakan prefix <code>bi-</code> diikuti nama icon<br>
+                                    <strong>📖 Example:</strong> <code>bi-instagram</code>, <code>bi-github</code>, <code>bi-linkedin</code>
+                                </small>
                             </div>
-                            <div>
-                                <label class="form-label text-muted small mb-1">Ikon Populer:</label>
+                            
+                            <!-- Popular Icons Template -->
+                            <div class="mb-2">
+                                <label class="form-label text-muted small mb-1">🔥 Popular Icons:</label>
                                 <div class="d-flex flex-wrap gap-2">
-                                    <?php $popular_icons = ['instagram', 'facebook', 'twitter-x', 'tiktok', 'youtube', 'linkedin', 'github', 'whatsapp', 'telegram', 'discord', 'spotify', 'envelope-fill', 'globe', 'link-45deg']; ?>
-                                    <?php foreach ($popular_icons as $icon): ?>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-<?= $icon ?>" title="<?= ucfirst($icon) ?>">
-                                        <i class="bi bi-<?= $icon ?>"></i>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-instagram" title="Instagram">
+                                        <i class="bi-instagram"></i> Instagram
                                     </button>
-                                    <?php endforeach; ?>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-facebook" title="Facebook">
+                                        <i class="bi-facebook"></i> Facebook
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-twitter-x" title="Twitter/X">
+                                        <i class="bi-twitter-x"></i> Twitter
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-tiktok" title="TikTok">
+                                        <i class="bi-tiktok"></i> TikTok
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-youtube" title="YouTube">
+                                        <i class="bi-youtube"></i> YouTube
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-linkedin" title="LinkedIn">
+                                        <i class="bi-linkedin"></i> LinkedIn
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-github" title="GitHub">
+                                        <i class="bi-github"></i> GitHub
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-whatsapp" title="WhatsApp">
+                                        <i class="bi-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-telegram" title="Telegram">
+                                        <i class="bi-telegram"></i> Telegram
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-discord" title="Discord">
+                                        <i class="bi-discord"></i> Discord
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-spotify" title="Spotify">
+                                        <i class="bi-spotify"></i> Spotify
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-envelope-fill" title="Email">
+                                        <i class="bi-envelope-fill"></i> Email
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-globe" title="Website">
+                                        <i class="bi-globe"></i> Website
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary icon-template" data-icon="bi-link-45deg" title="Link">
+                                        <i class="bi-link-45deg"></i> Link
+                                    </button>
                                 </div>
                             </div>
+                            
+                            <small class="text-muted">
+                                📚 Browse more: <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons Library</a>
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" name="add_link" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+                        <button type="submit" name="add_link" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Simpan
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <!-- Edit Link Modal -->
     <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST">
                     <input type="hidden" name="link_id" id="edit_link_id">
                     <div class="modal-header">
-                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-fill"></i> Edit Link</h5>
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-pencil-fill"></i> Edit Link
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -489,232 +769,339 @@ include '../partials/admin_header.php';
                             <input type="url" class="form-control" name="url" id="edit_url" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Kategori</label>
+                            <label class="form-label fw-semibold">Category <span class="badge bg-success">New!</span></label>
                             <select class="form-select" name="category_id" id="edit_category">
-                                <option value="">Tanpa Kategori</option>
+                                <option value="">None (Uncategorized)</option>
                                 <?php foreach ($user_categories as $cat): ?>
-                                    <option value="<?= $cat['category_id'] ?>"><?= htmlspecialchars($cat['category_name']) ?></option>
+                                    <option value="<?= $cat['category_id'] ?>">
+                                        <?= htmlspecialchars($cat['category_name']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Ikon</label>
-                            <input type="text" class="form-control" name="icon_class" id="edit_icon_class">
+                            <input type="text" class="form-control" name="icon_class" id="edit_icon">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" name="edit_link" class="btn btn-primary"><i class="bi bi-save"></i> Update</button>
+                        <button type="submit" name="edit_link" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Update
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <?php include '../partials/admin_footer.php'; ?>
-    
+    <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/jquery-3.7.1.min.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
+    <script src="../assets/js/admin.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
         // Live icon preview
-        const iconInput = document.getElementById('iconInput');
-        const iconPreview = document.getElementById('iconPreview');
-        if(iconInput) {
-            iconInput.addEventListener('input', function(e) {
-                iconPreview.className = 'bi ' + (e.target.value.trim() || 'bi-link-45deg') + ' fs-5';
-            });
-        }
-
+        document.getElementById('iconInput')?.addEventListener('input', function(e) {
+            const iconClass = e.target.value.trim();
+            const preview = document.getElementById('iconPreview');
+            if (preview) {
+                preview.className = iconClass || 'bi-link-45deg';
+            }
+        });
+        
+        // Icon template selector
         document.querySelectorAll('.icon-template').forEach(btn => {
             btn.addEventListener('click', function() {
                 const iconClass = this.getAttribute('data-icon');
-                if(iconInput) iconInput.value = iconClass;
-                if(iconPreview) iconPreview.className = 'bi ' + iconClass + ' fs-5';
+                const input = document.getElementById('iconInput');
+                const preview = document.getElementById('iconPreview');
                 
-                document.querySelectorAll('.icon-template.active').forEach(b => b.classList.remove('active', 'btn-primary'));
-                this.classList.add('active', 'btn-primary');
+                if (input) input.value = iconClass;
+                if (preview) preview.className = iconClass;
+                
+                // Visual feedback
+                document.querySelectorAll('.icon-template').forEach(b => b.classList.remove('active', 'btn-primary'));
+                document.querySelectorAll('.icon-template').forEach(b => b.classList.add('btn-outline-secondary'));
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-primary', 'active');
             });
         });
-
-        // SortableJS for drag & drop
-        const linksList = document.getElementById('linksList');
-        if (linksList) {
-            new Sortable(linksList, {
-                animation: 150,
-                handle: '.drag-handle',
-                onUpdate: function (evt) {
-                    const order = Array.from(evt.to.children).map((el, index) => ({
-                        id: el.dataset.id,
-                        order: index + 1
-                    }));
-
-                    fetch('dashboard.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            update_order: true,
-                            order_data: order
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            console.error('Failed to save order:', data.message);
-                            alert('Gagal menyimpan urutan baru.');
-                        }
-                    }).catch(error => {
-                        console.error('Error:', error);
-                        alert('Terjadi kesalahan saat menyimpan urutan.');
-                    });
-                }
-            });
+        
+        function editLink(link) {
+            document.getElementById('edit_link_id').value = link.link_id;
+            document.getElementById('edit_title').value = link.title;
+            document.getElementById('edit_url').value = link.url;
+            document.getElementById('edit_icon').value = link.icon_class;
+            document.getElementById('edit_category').value = link.category_id || '';
+            new bootstrap.Modal(document.getElementById('editModal')).show();
         }
-
-        // Highcharts Theme Integration
-        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
-        const chartBackgroundColor = isDarkMode ? '#212529' : '#ffffff';
-        const chartTextColor = isDarkMode ? '#f8f9fa' : '#333333';
-        const chartGridLineColor = isDarkMode ? '#495057' : '#e6e6e6';
-
+        function copyLink() {
+            const input = document.getElementById('publicLink');
+            input.select();
+            document.execCommand('copy');
+            alert('Link berhasil disalin!');
+        }
+        
+        // Highcharts Global Options
         Highcharts.setOptions({
-            colors: ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+            colors: ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'],
             chart: {
-                backgroundColor: chartBackgroundColor,
                 style: {
-                    fontFamily: 'Inter, sans-serif',
-                    color: chartTextColor
+                    fontFamily: 'Inter, sans-serif'
                 }
             },
-            title: { style: { color: chartTextColor } },
-            subtitle: { style: { color: chartTextColor } },
-            xAxis: {
-                labels: { style: { color: chartTextColor } },
-                lineColor: chartGridLineColor,
-                tickColor: chartGridLineColor,
-                title: { style: { color: chartTextColor } }
-            },
-            yAxis: {
-                labels: { style: { color: chartTextColor } },
-                gridLineColor: chartGridLineColor,
-                lineColor: chartGridLineColor,
-                tickColor: chartGridLineColor,
-                title: { style: { color: chartTextColor } }
-            },
-            legend: {
-                itemStyle: { color: chartTextColor },
-                itemHoverStyle: { color: '#ffffff' },
-                itemHiddenStyle: { color: '#606063' }
-            },
-            credits: { enabled: false },
-            tooltip: {
-                backgroundColor: isDarkMode ? 'rgba(33, 37, 41, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-                style: { color: chartTextColor }
+            credits: {
+                enabled: false
             }
         });
-
-        // 1. Click Trends Chart
-        if (document.getElementById('clickTrendsChart')) {
-            Highcharts.chart('clickTrendsChart', {
-                chart: { type: 'area' },
-                title: { text: 'Tren Klik - 7 Hari Terakhir', align: 'left' },
-                xAxis: {
-                    categories: <?= json_encode(array_keys($dates_range)) ?>,
-                    labels: {
-                        formatter: function() {
-                            const parts = this.value.split('-');
-                            const date = new Date(parts[0], parts[1] - 1, parts[2]);
-                            return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
-                        }
+        
+        // 1. Click Trends Chart (Line Chart - Last 7 Days)
+        Highcharts.chart('clickTrendsChart', {
+            chart: {
+                type: 'area',
+                backgroundColor: '#f8f9fa'
+            },
+            title: {
+                text: 'Click Trends - Last 7 Days',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Total clicks per day on your links',
+                align: 'left'
+            },
+            xAxis: {
+                categories: <?= json_encode(array_keys($dates_range)) ?>,
+                crosshair: true,
+                labels: {
+                    formatter: function() {
+                        // Parse YYYY-MM-DD format manually to avoid timezone issues
+                        const parts = this.value.split('-');
+                        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+                        return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
                     }
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Number of Clicks'
                 },
-                yAxis: { title: { text: 'Jumlah Klik' }, min: 0 },
-                tooltip: { shared: true, valueSuffix: ' klik' },
-                plotOptions: {
-                    area: {
-                        fillColor: {
-                            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-                            stops: [ [0, 'rgba(14, 165, 233, 0.5)'], [1, 'rgba(14, 165, 233, 0.05)'] ]
+                min: 0
+            },
+            tooltip: {
+                shared: true,
+                valueSuffix: ' clicks',
+                formatter: function() {
+                    // this.x is category index, get the actual date string from categories
+                    const dateString = this.points[0].point.category;
+                    const parts = dateString.split('-');
+                    const date = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return '<b>' + date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '</b><br/>' +
+                           this.points.map(p => p.series.name + ': <b>' + p.y + ' clicks</b>').join('<br/>');
+                }
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
                         },
-                        marker: { radius: 4 },
+                        stops: [
+                            [0, 'rgba(14, 165, 233, 0.3)'],
+                            [1, 'rgba(14, 165, 233, 0.05)']
+                        ]
+                    },
+                    marker: {
+                        radius: 4,
+                        fillColor: '#0ea5e9',
                         lineWidth: 2,
-                    }
-                },
-                series: [{ name: 'Klik Harian', data: <?= json_encode(array_values($dates_range)) ?>, color: '#0ea5e9' }]
-            });
-        }
-
-        // 2. Link Performance Chart
-        if (document.getElementById('linkPerformanceChart')) {
-            Highcharts.chart('linkPerformanceChart', {
-                chart: { type: 'column' },
-                title: { text: 'Top 10 Link Paling Banyak Diklik', align: 'left' },
-                xAxis: { categories: <?= json_encode(array_column($link_performance, 'title')) ?>, labels: { rotation: -45, style: { fontSize: '11px' } } },
-                yAxis: { min: 0, title: { text: 'Total Klik' } },
-                tooltip: { pointFormat: 'Klik: <b>{point.y}</b>' },
-                series: [{ name: 'Clicks', data: <?= json_encode(array_map('intval', array_column($link_performance, 'click_count'))) ?>, colorByPoint: true, showInLegend: false }]
-            });
-        }
-
-        // 3. Traffic Sources Chart
-        if (document.getElementById('trafficSourcesChart')) {
-            Highcharts.chart('trafficSourcesChart', {
-                chart: { type: 'pie' },
-                title: { text: 'Traffic Berdasarkan Lokasi', align: 'left' },
-                tooltip: { pointFormat: '<b>{point.percentage:.1f}%</b> ({point.y} klik)' },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: 'pointer',
-                        dataLabels: { enabled: true, format: '{point.name}: {point.percentage:.1f} %' },
-                        showInLegend: true
-                    }
-                },
-                series: [{
-                    name: 'Traffic Share',
-                    colorByPoint: true,
-                    data: [
-                        <?php 
-                        $sources_data = [];
-                        foreach ($click_by_location as $location) {
-                            $sources_data[] = '{ name: "' . htmlspecialchars($location['location'], ENT_QUOTES) . '", y: ' . intval($location['clicks']) . ' }';
+                        lineColor: '#fff'
+                    },
+                    lineWidth: 3,
+                    states: {
+                        hover: {
+                            lineWidth: 4
                         }
-                        echo implode(',', $sources_data);
-                        ?>
-                    ]
-                }]
-            });
-        }
-    });
-
-    function editLink(link) {
-        document.getElementById('edit_link_id').value = link.link_id;
-        document.getElementById('edit_title').value = link.title;
-        document.getElementById('edit_url').value = link.url;
-        document.getElementById('edit_icon_class').value = link.icon_class;
-        document.getElementById('edit_category').value = link.category_id || '';
-        new bootstrap.Modal(document.getElementById('editModal')).show();
-    }
-
-    function copyLink(button) {
-        const input = document.getElementById('publicLink');
-        input.select();
-        input.setSelectionRange(0, 99999); // For mobile devices
-        navigator.clipboard.writeText(input.value).then(() => {
-            const originalIcon = button.innerHTML;
-            button.innerHTML = '<i class="bi bi-check-lg"></i>';
-            setTimeout(() => {
-                button.innerHTML = originalIcon;
-            }, 2000);
-        }).catch(err => {
-            alert('Gagal menyalin link.');
+                    },
+                    threshold: null
+                }
+            },
+            series: [{
+                name: 'Daily Clicks',
+                data: <?= json_encode(array_values($dates_range)) ?>,
+                color: '#0ea5e9'
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
         });
-    }
+        
+        // 2. Link Performance Chart (Bar Chart)
+        Highcharts.chart('linkPerformanceChart', {
+            chart: {
+                type: 'column',
+                backgroundColor: '#f8f9fa'
+            },
+            title: {
+                text: 'Top 10 Most Clicked Links',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Performance comparison of your links',
+                align: 'left'
+            },
+            xAxis: {
+                categories: <?= json_encode(array_column($link_performance, 'title')) ?>,
+                crosshair: true,
+                labels: {
+                    rotation: -45,
+                    style: {
+                        fontSize: '11px'
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Total Clicks'
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:14px"><b>{point.key}</b></span><br/>',
+                pointFormat: '<span style="color:{point.color}">●</span> Clicks: <b>{point.y}</b>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.y}',
+                        style: {
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    colorByPoint: true
+                }
+            },
+            series: [{
+                name: 'Clicks',
+                data: <?= json_encode(array_map('intval', array_column($link_performance, 'click_count'))) ?>,
+                showInLegend: false
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
+        });
+        
+        // 3. Traffic Sources Chart (Pie Chart)
+        Highcharts.chart('trafficSourcesChart', {
+            chart: {
+                type: 'pie',
+                backgroundColor: '#f8f9fa',
+                options3d: {
+                    enabled: true,
+                    alpha: 45
+                }
+            },
+            title: {
+                text: 'Traffic by Location',
+                align: 'left',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                }
+            },
+            subtitle: {
+                text: 'Geographic distribution of your visitors',
+                align: 'left'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.percentage:.1f}%</b><br/>Total Clicks: <b>{point.y}</b>',
+                style: {
+                    fontSize: '13px'
+                }
+            },
+            accessibility: {
+                point: {
+                    valueSuffix: '%'
+                }
+            },
+            plotOptions: {
+                pie: {
+                    innerSize: '50%',
+                    depth: 45,
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b><br>{point.percentage:.1f}%<br>{point.y} clicks',
+                        style: {
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                        },
+                        connectorColor: 'silver'
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                align: 'right',
+                verticalAlign: 'middle',
+                layout: 'vertical',
+                itemStyle: {
+                    fontSize: '13px'
+                }
+            },
+            series: [{
+                name: 'Traffic Share',
+                colorByPoint: true,
+                data: [
+                    <?php 
+                    $sources_data = [];
+                    foreach ($click_by_location as $location) {
+                        $sources_data[] = '{
+                            name: "' . htmlspecialchars($location['location']) . '",
+                            y: ' . intval($location['clicks']) . '
+                        }';
+                    }
+                    echo implode(',', $sources_data);
+                    ?>
+                ]
+            }],
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

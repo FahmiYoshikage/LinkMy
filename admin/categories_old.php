@@ -198,7 +198,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                     </h2>
                     <p class="text-muted mb-0">Organize your links by category â€¢ <?= count($categories) ?> categories</p>
                 </div>
-                <button class="btn btn-primary btn-lg" style="border-radius: 12px;" data-bs-toggle="modal" data-bs-target="#addModal">
+                <button class="btn btn-lg" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
                     <i class="bi bi-plus-circle me-2"></i> New Category
                 </button>
             </div>
@@ -351,7 +351,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="add_preview_box" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="add_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Category Name</label>
@@ -407,7 +407,7 @@ $categories = get_all_rows("SELECT c.*, COUNT(l.link_id) as link_count FROM link
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="edit_preview_box" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="edit_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="bi-folder" id="edit_preview_icon"></i>
                                 </div>
                                 <div>

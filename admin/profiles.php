@@ -1,204 +1,523 @@
 <?php
+// Prevent caching to always show fresh data
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 require_once '../config/auth_check.php';
 require_once '../config/db.php';
-require_once '../config/session_handler.php';
 
-$success = $_SESSION['success'] ?? '';
-$error = $_SESSION['error'] ?? '';
-unset($_SESSION['success'], $_SESSION['error']);
+$success = '';
+$error = '';
 
-// Get current user's profiles with stats
-$user_profiles = get_all_rows(
-    "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
-            p.title, p.bio, p.avatar,
-            (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
-            (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
-     FROM profiles p
-     WHERE p.user_id = ?
-     ORDER BY p.display_order ASC, p.created_at ASC",
-    [$current_user_id],
-    'i'
-);
+// Get current user's profiles with stats (using subquery method for better compatibility)
+$user_profiles = [];
+$profiles_query = "SELECT p.id, p.slug, p.name, p.display_order, p.is_active, p.created_at,
+                   p.title, p.bio, p.avatar,
+                   (SELECT COUNT(*) FROM links WHERE profile_id = p.id) as link_count,
+                   (SELECT COALESCE(SUM(clicks), 0) FROM links WHERE profile_id = p.id) as total_clicks
+                   FROM profiles p
+                   WHERE p.user_id = ?
+                   ORDER BY p.display_order ASC, p.created_at ASC";
+$profiles_stmt = mysqli_prepare($conn, $profiles_query);
+if ($profiles_stmt) {
+    mysqli_stmt_bind_param($profiles_stmt, 'i', $current_user_id);
+    mysqli_stmt_execute($profiles_stmt);
+    $profiles_result = mysqli_stmt_get_result($profiles_stmt);
+    if ($profiles_result) {
+        while ($profile = mysqli_fetch_assoc($profiles_result)) {
+            $user_profiles[] = $profile;
+        }
+    }
+    mysqli_stmt_close($profiles_stmt);
+} else {
+    error_log("Error preparing profiles query: " . mysqli_error($conn));
+}
 
 // Get active profile
 $active_profile_id = $_SESSION['active_profile_id'] ?? null;
+if (!$active_profile_id && !empty($user_profiles)) {
+    // Set to primary profile (display_order = 0)
+    foreach ($user_profiles as $prof) {
+        if ($prof['display_order'] == 0) {
+            $active_profile_id = $prof['id'];
+            $_SESSION['active_profile_id'] = $active_profile_id;
+            break;
+        }
+    }
+    // If no primary found, use first profile
+    if (!$active_profile_id && !empty($user_profiles)) {
+        $active_profile_id = $user_profiles[0]['id'];
+        $_SESSION['active_profile_id'] = $active_profile_id;
+    }
+}
+
+// HANDLER: Switch active profile
+if (isset($_GET['switch_profile'])) {
+    $profile_id = intval($_GET['switch_profile']);
+    
+    // Verify profile belongs to user
+    $profile = get_single_row(
+        "SELECT * FROM profiles WHERE id = ? AND user_id = ?",
+        [$profile_id, $current_user_id],
+        'ii'
+    );
+    
+    if ($profile) {
+        $_SESSION['active_profile_id'] = $profile_id;
+        $_SESSION['page_slug'] = $profile['slug'];
+        
+        $success = "Beralih ke profil: {$profile['profile_name']}";
+        header("Location: dashboard.php");
+        exit;
+    } else {
+        $error = "Profil tidak ditemukan!";
+    }
+}
 
 // HANDLER: Create new profile
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_profile'])) {
     $profile_name = trim($_POST['profile_name']);
     $slug = trim($_POST['slug']);
+    $profile_description = trim($_POST['profile_description'] ?? '');
     
+    // Sanitize slug
     $slug = strtolower($slug);
     $slug = preg_replace('/[^a-z0-9-]/', '', $slug);
     
     if (empty($profile_name) || empty($slug)) {
-        $_SESSION['error'] = "Nama profil dan slug harus diisi!";
+        $error = "Nama profil dan slug harus diisi!";
     } elseif (strlen($slug) < 3 || strlen($slug) > 50) {
-        $_SESSION['error'] = "Slug harus 3-50 karakter!";
+        $error = "Slug harus 3-50 karakter!";
     } else {
-        $count = count($user_profiles);
+        // Check profile count limit (max 2 for free)
+        $count = get_single_row(
+            "SELECT COUNT(*) as count FROM profiles WHERE user_id = ?",
+            [$current_user_id],
+            'i'
+        )['count'];
+        
         if ($count >= 2) {
-            $_SESSION['error'] = "Maksimal 2 profil untuk akun gratis!";
+            $error = "Maksimal 2 profil untuk akun gratis!";
         } else {
-            $existing = get_single_row("SELECT id FROM profiles WHERE slug = ?", [$slug], 's');
+            // Check slug availability
+            $existing = get_single_row(
+                "SELECT profile_id FROM profiles WHERE slug = ?",
+                [$slug],
+                's'
+            );
+            
             if ($existing) {
-                $_SESSION['error'] = "Slug sudah digunakan!";
+                $error = "Slug sudah digunakan!";
             } else {
-                $query = "INSERT INTO profiles (user_id, slug, name, display_order, is_active) VALUES (?, ?, ?, ?, 1)";
-                $display_order = $count > 0 ? 1 : 0; // First profile is primary
-                
+                // Create profile
+                $query = "INSERT INTO profiles (user_id, slug, profile_name, profile_description, is_primary) 
+                          VALUES (?, ?, ?, ?, 0)";
                 $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'issi', $current_user_id, $slug, $profile_name, $display_order);
+                mysqli_stmt_bind_param($stmt, 'isss', $current_user_id, $slug, $profile_name, $profile_description);
                 
                 if (mysqli_stmt_execute($stmt)) {
-                    $_SESSION['success'] = "Profil '{$profile_name}' berhasil dibuat!";
+                    $new_profile_id = mysqli_insert_id($conn);
+                    
+                    // Create default appearance for new profile
+                    $app_query = "INSERT INTO user_appearance (user_id, profile_id) VALUES (?, ?)";
+                    $app_stmt = mysqli_prepare($conn, $app_query);
+                    mysqli_stmt_bind_param($app_stmt, 'ii', $current_user_id, $new_profile_id);
+                    mysqli_stmt_execute($app_stmt);
+                    
+                    // Log activity
+                    $log_query = "INSERT INTO profile_activity_log (profile_id, user_id, action_type, ip_address) 
+                                  VALUES (?, ?, 'created', ?)";
+                    $log_stmt = mysqli_prepare($conn, $log_query);
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    mysqli_stmt_bind_param($log_stmt, 'iis', $new_profile_id, $current_user_id, $ip);
+                    mysqli_stmt_execute($log_stmt);
+                    
+                    $success = "Profil '{$profile_name}' berhasil dibuat!";
+                    
+                    // Reload profiles
+                    header("Location: profiles.php?created=1");
+                    exit;
                 } else {
-                    $_SESSION['error'] = "Gagal membuat profil!";
+                    $error = "Gagal membuat profil!";
                 }
             }
         }
     }
-    header("Location: profiles.php");
-    exit;
 }
 
 // HANDLER: Delete profile
 if (isset($_GET['delete_profile'])) {
     $profile_id = intval($_GET['delete_profile']);
     
-    $profile = get_single_row("SELECT * FROM profiles WHERE id = ? AND user_id = ?", [$profile_id, $current_user_id], 'ii');
+    // Get profile data
+    $profile = get_single_row(
+        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
+        [$profile_id, $current_user_id],
+        'ii'
+    );
     
     if (!$profile) {
-        $_SESSION['error'] = "Profil tidak ditemukan!";
-    } elseif ($profile['display_order'] == 0) {
-        $_SESSION['error'] = "Tidak bisa menghapus profil utama!";
+        $error = "Profil tidak ditemukan!";
+    } elseif ($profile['is_primary']) {
+        $error = "Tidak bisa menghapus profil utama!";
     } else {
-        $query = "DELETE FROM profiles WHERE id = ? AND user_id = ?";
+        // Delete profile (CASCADE will delete related data)
+        $query = "DELETE FROM profiles WHERE profile_id = ? AND user_id = ?";
         $stmt = mysqli_prepare($conn, $query);
         mysqli_stmt_bind_param($stmt, 'ii', $profile_id, $current_user_id);
         
         if (mysqli_stmt_execute($stmt)) {
+            // If deleted profile was active, switch to primary
             if ($active_profile_id == $profile_id) {
-                $primary = get_single_row("SELECT id FROM profiles WHERE user_id = ? AND display_order = 0", [$current_user_id], 'i');
-                $_SESSION['active_profile_id'] = $primary['id'];
+                $primary = get_single_row(
+                    "SELECT profile_id FROM profiles WHERE user_id = ? AND is_primary = 1",
+                    [$current_user_id],
+                    'i'
+                );
+                $_SESSION['active_profile_id'] = $primary['profile_id'];
             }
-            $_SESSION['success'] = "Profil '{$profile['name']}' berhasil dihapus!";
+            
+            $success = "Profil '{$profile['profile_name']}' berhasil dihapus!";
+            header("Location: profiles.php?deleted=1");
+            exit;
         } else {
-            $_SESSION['error'] = "Gagal menghapus profil!";
+            $error = "Gagal menghapus profil!";
         }
     }
-    header("Location: profiles.php");
-    exit;
 }
 
 // HANDLER: Set primary profile
-if (isset($_GET['set_primary'])) {
-    $profile_id = intval($_GET['set_primary']);
+if (isset($_GET['set_primary_profile'])) {
+    $profile_id = intval($_GET['set_primary_profile']);
     
-    $profile = get_single_row("SELECT * FROM profiles WHERE id = ? AND user_id = ?", [$profile_id, $current_user_id], 'ii');
+    $profile = get_single_row(
+        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
+        [$profile_id, $current_user_id],
+        'ii'
+    );
     
     if (!$profile) {
-        $_SESSION['error'] = "Profil tidak ditemukan!";
+        $error = "Profil tidak ditemukan!";
     } else {
-        mysqli_begin_transaction($conn);
-        try {
-            // Unset all primary flags
-            execute_query("UPDATE profiles SET display_order = 1 WHERE user_id = ? AND display_order = 0", [$current_user_id], 'i');
-            
-            // Set new primary
-            execute_query("UPDATE profiles SET display_order = 0 WHERE id = ? AND user_id = ?", [$profile_id, $current_user_id], 'ii');
-            
-            mysqli_commit($conn);
-            $_SESSION['success'] = "'{$profile['name']}' sekarang profil utama!";
-        } catch (Exception $e) {
-            mysqli_rollback($conn);
-            $_SESSION['error'] = "Gagal mengubah profil utama!";
+        // Unset all primary flags
+        $query1 = "UPDATE profiles SET is_primary = 0 WHERE user_id = ?";
+        $stmt1 = mysqli_prepare($conn, $query1);
+        mysqli_stmt_bind_param($stmt1, 'i', $current_user_id);
+        mysqli_stmt_execute($stmt1);
+        
+        // Set new primary
+        $query2 = "UPDATE profiles SET is_primary = 1 WHERE profile_id = ? AND user_id = ?";
+        $stmt2 = mysqli_prepare($conn, $query2);
+        mysqli_stmt_bind_param($stmt2, 'ii', $profile_id, $current_user_id);
+        
+        if (mysqli_stmt_execute($stmt2)) {
+            // Update users.page_slug (trigger will handle this)
+            $success = "'{$profile['profile_name']}' sekarang profil utama!";
+            header("Location: profiles.php?primary_changed=1");
+            exit;
+        } else {
+            $error = "Gagal mengubah profil utama!";
         }
     }
-    header("Location: profiles.php");
+}
+
+// HANDLER: Clone profile
+if (isset($_GET['clone_profile'])) {
+    $source_profile_id = intval($_GET['clone_profile']);
+    
+    $source_profile = get_single_row(
+        "SELECT * FROM profiles WHERE profile_id = ? AND user_id = ?",
+        [$source_profile_id, $current_user_id],
+        'ii'
+    );
+    
+    if (!$source_profile) {
+        $error = "Profil sumber tidak ditemukan!";
+    } else {
+        // Check limit
+        $count = get_single_row(
+            "SELECT COUNT(*) as count FROM profiles WHERE user_id = ?",
+            [$current_user_id],
+            'i'
+        )['count'];
+        
+        if ($count >= 2) {
+            $error = "Maksimal 2 profil!";
+        } else {
+            // Generate new slug
+            $new_slug = $source_profile['slug'] . '-copy';
+            $counter = 1;
+            while (get_single_row("SELECT profile_id FROM profiles WHERE slug = ?", [$new_slug], 's')) {
+                $new_slug = $source_profile['slug'] . '-copy' . $counter;
+                $counter++;
+            }
+            
+            // Clone profile
+            $query = "INSERT INTO profiles (user_id, slug, profile_name, profile_description, profile_title, bio, profile_pic_filename, is_primary)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, 0)";
+            $stmt = mysqli_prepare($conn, $query);
+            $new_name = $source_profile['profile_name'] . ' (Copy)';
+            mysqli_stmt_bind_param($stmt, 'issssss', 
+                $current_user_id, 
+                $new_slug, 
+                $new_name,
+                $source_profile['profile_description'],
+                $source_profile['profile_title'],
+                $source_profile['bio'],
+                $source_profile['profile_pic_filename']
+            );
+            
+            if (mysqli_stmt_execute($stmt)) {
+                $new_profile_id = mysqli_insert_id($conn);
+                
+                // Clone appearance
+                $appearance = get_single_row(
+                    "SELECT * FROM user_appearance WHERE profile_id = ?",
+                    [$source_profile_id],
+                    'i'
+                );
+                
+                if ($appearance) {
+                    $app_cols = array_keys($appearance);
+                    $exclude = ['appearance_id', 'profile_id', 'user_id'];
+                    $app_cols = array_diff($app_cols, $exclude);
+                    
+                    $cols_str = implode(', ', $app_cols);
+                    $placeholders = implode(', ', array_fill(0, count($app_cols), '?'));
+                    
+                    $clone_app_query = "INSERT INTO user_appearance (user_id, profile_id, $cols_str) 
+                                        SELECT user_id, ?, $cols_str FROM user_appearance WHERE profile_id = ?";
+                    $clone_stmt = mysqli_prepare($conn, $clone_app_query);
+                    mysqli_stmt_bind_param($clone_stmt, 'ii', $new_profile_id, $source_profile_id);
+                    mysqli_stmt_execute($clone_stmt);
+                }
+                
+                // Clone links
+                $clone_links_query = "INSERT INTO links (user_id, profile_id, title, url, order_index, icon_class, category_id)
+                                      SELECT user_id, ?, title, url, order_index, icon_class, category_id 
+                                      FROM links WHERE profile_id = ?";
+                $links_stmt = mysqli_prepare($conn, $clone_links_query);
+                mysqli_stmt_bind_param($links_stmt, 'ii', $new_profile_id, $source_profile_id);
+                mysqli_stmt_execute($links_stmt);
+                
+                // Clone categories
+                $clone_cats_query = "INSERT INTO link_categories (user_id, profile_id, category_name, category_icon, category_color, display_order)
+                                     SELECT user_id, ?, category_name, category_icon, category_color, display_order
+                                     FROM link_categories WHERE profile_id = ?";
+                $cats_stmt = mysqli_prepare($conn, $clone_cats_query);
+                mysqli_stmt_bind_param($cats_stmt, 'ii', $new_profile_id, $source_profile_id);
+                mysqli_stmt_execute($cats_stmt);
+                
+                // Log
+                $log_query = "INSERT INTO profile_activity_log (profile_id, user_id, action_type, action_details, ip_address)
+                              VALUES (?, ?, 'cloned', ?, ?)";
+                $log_stmt = mysqli_prepare($conn, $log_query);
+                $details = json_encode(['source_profile_id' => $source_profile_id]);
+                $ip = $_SERVER['REMOTE_ADDR'];
+                mysqli_stmt_bind_param($log_stmt, 'iiss', $new_profile_id, $current_user_id, $details, $ip);
+                mysqli_stmt_execute($log_stmt);
+                
+                $success = "Profil berhasil di-clone!";
+                header("Location: profiles.php?cloned=1");
+                exit;
+            } else {
+                $error = "Gagal clone profil!";
+            }
+        }
+    }
+}
+
+// AJAX: Check slug availability for new profile
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'check_profile_slug') {
+    header('Content-Type: application/json');
+    
+    $slug = trim($_POST['slug'] ?? '');
+    $slug = strtolower($slug);
+    $slug = preg_replace('/[^a-z0-9-]/', '', $slug);
+    
+    if (strlen($slug) < 3 || strlen($slug) > 50) {
+        echo json_encode(['available' => false, 'message' => 'Slug harus 3-50 karakter']);
+        exit;
+    }
+    
+    $existing = get_single_row("SELECT profile_id FROM profiles WHERE slug = ?", [$slug], 's');
+    
+    if ($existing) {
+        echo json_encode(['available' => false, 'message' => 'Slug sudah digunakan']);
+    } else {
+        echo json_encode(['available' => true, 'message' => 'Slug tersedia!']);
+    }
     exit;
 }
 
-$profile_count = count($user_profiles);
-$profile_limit = 2;
+// Stats already included in the main query above (lines 10-25)
+// No need to fetch stats again per profile
 
-$page_title = "Kelola Profil";
-include '../partials/admin_header.php';
+$profile_count = count($user_profiles);
+$profile_limit = 2; // Free tier limit
+
+// DEBUG: Check what's in $user_profiles (remove after verifying)
+if (isset($_GET['debug'])) {
+    echo "<pre style='background:#f0f0f0;padding:20px;border:2px solid #333;'>";
+    echo "DEBUG INFO:\n";
+    echo "current_user_id: {$current_user_id}\n\n";
+    echo "user_profiles array count: " . count($user_profiles) . "\n\n";
+    echo "user_profiles data:\n";
+    print_r($user_profiles);
+    echo "\nprofile_count: {$profile_count}\n";
+    echo "</pre>";
+    exit;
+}
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Profil - LinkMy</title>
+    <?php require_once __DIR__ . '/../partials/favicons.php'; ?>
+    <link href="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="../assets/css/admin.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7fa;
+            padding-top: 76px;
+        }
+        .profile-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .profile-card.active {
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+        }
+        .profile-card.primary {
+            border-color: #28a745;
+        }
+        .profile-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .stat-badge {
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
 <body>
-    <?php include '../partials/admin_nav.php'; ?>
+    <?php require_once __DIR__ . '/../partials/admin_nav.php'; ?>
     
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h1 class="fw-bold mb-1">Kelola Profil</h1>
-                <p class="text-muted mb-0">Anda memiliki <strong><?= $profile_count ?>/<?= $profile_limit ?></strong> profil. Profil utama akan menjadi halaman default Anda.</p>
-            </div>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">
+                <i class="bi bi-collection"></i> Kelola Profil
+            </h2>
             <?php if ($profile_count < $profile_limit): ?>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProfileModal">
-                <i class="bi bi-plus-circle me-2"></i> Buat Profil Baru
+                <i class="bi bi-plus-circle"></i> Buat Profil Baru
             </button>
             <?php endif; ?>
         </div>
         
+        <?php if (isset($_GET['created'])): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle-fill me-2"></i>Profil berhasil dibuat!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+        
         <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show">
-                <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($success) ?>
+                <i class="bi bi-check-circle-fill me-2"></i><?= $success ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
         
         <?php if ($error): ?>
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= htmlspecialchars($error) ?>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= $error ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
         
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>Multi-Profile System:</strong> Kelola hingga 2 profil berbeda dengan tampilan dan konten yang unik!
+            <br>
+            <small>Profil Anda: <strong><?= $profile_count ?>/<?= $profile_limit ?></strong></small>
+        </div>
+        
         <div class="row">
-            <?php foreach ($user_profiles as $profile): ?>
+            <?php foreach ($user_profiles as $prof_data): ?>
+            <?php // Rename to avoid conflict with $profile used elsewhere ?>
+            <?php $profile = $prof_data; // Keep backward compatibility ?>
             <div class="col-md-6 mb-4">
-                <div class="card profile-card h-100 shadow-sm <?= $profile['id'] == $active_profile_id ? 'active' : '' ?> <?= $profile['display_order'] == 0 ? 'primary' : '' ?>">
+                <div class="card profile-card <?= $profile['profile_id'] == $active_profile_id ? 'active' : '' ?> <?= $profile['is_primary'] ? 'primary' : '' ?>">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h5 class="fw-bold mb-1 d-flex align-items-center gap-2">
-                                    <?= htmlspecialchars($profile['name']) ?>
-                                    <?php if ($profile['display_order'] == 0): ?>
-                                        <span class="badge bg-success-soft text-success">Utama</span>
+                                <h5 class="fw-bold mb-1">
+                                    <?= htmlspecialchars($profile['profile_name']) ?>
+                                    <?php if ($profile['is_primary']): ?>
+                                        <span class="badge bg-success ms-2">Utama</span>
                                     <?php endif; ?>
-                                    <?php if ($profile['id'] == $active_profile_id): ?>
-                                        <span class="badge bg-primary-soft text-primary">Aktif</span>
+                                    <?php if ($profile['profile_id'] == $active_profile_id): ?>
+                                        <span class="badge bg-primary ms-2">Aktif</span>
                                     <?php endif; ?>
                                 </h5>
-                                <a href="../<?= htmlspecialchars($profile['slug']) ?>" target="_blank" class="text-muted text-decoration-none">
-                                    <small>../<?= htmlspecialchars($profile['slug']) ?> <i class="bi bi-box-arrow-up-right"></i></small>
-                                </a>
+                                <code class="text-muted"><?= htmlspecialchars($profile['slug']) ?></code>
                             </div>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <?php if ($profile['id'] != $active_profile_id): ?>
+                                    <?php if ($profile['profile_id'] != $active_profile_id): ?>
                                     <li>
-                                        <a class="dropdown-item" href="../scripts/switch_profile.php?id=<?= $profile['id'] ?>">
-                                            <i class="bi bi-arrow-left-right me-2"></i> Aktifkan Profil
+                                        <a class="dropdown-item" href="?switch_profile=<?= $profile['profile_id'] ?>">
+                                            <i class="bi bi-arrow-left-right"></i> Aktifkan Profil Ini
                                         </a>
                                     </li>
                                     <?php endif; ?>
-                                    <?php if ($profile['display_order'] != 0): ?>
+                                    <?php if (!$profile['is_primary']): ?>
                                     <li>
-                                        <a class="dropdown-item" href="?set_primary=<?= $profile['id'] ?>" onclick="return confirm('Jadikan profil ini sebagai yang utama?')">
-                                            <i class="bi bi-star-fill me-2"></i> Jadikan Utama
+                                        <a class="dropdown-item" href="?set_primary_profile=<?= $profile['profile_id'] ?>"
+                                           onclick="return confirm('Jadikan <?= htmlspecialchars($profile['profile_name']) ?> sebagai profil utama?')">
+                                            <i class="bi bi-star"></i> Jadikan Utama
+                                        </a>
+                                    </li>
+                                    <?php endif; ?>
+                                    <?php if ($profile_count < $profile_limit): ?>
+                                    <li>
+                                        <a class="dropdown-item" href="?clone_profile=<?= $profile['profile_id'] ?>"
+                                           onclick="return confirm('Clone profil ini?')">
+                                            <i class="bi bi-files"></i> Clone Profil
                                         </a>
                                     </li>
                                     <?php endif; ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <?php if ($profile['display_order'] != 0): ?>
                                     <li>
-                                        <a class="dropdown-item text-danger" href="?delete_profile=<?= $profile['id'] ?>" onclick="return confirm('Yakin ingin menghapus profil ini? Semua link dan data terkait akan hilang permanen!')">
-                                            <i class="bi bi-trash-fill me-2"></i> Hapus Profil
+                                        <a class="dropdown-item" href="../<?= htmlspecialchars($profile['slug']) ?>" target="_blank">
+                                            <i class="bi bi-eye"></i> Lihat Profil
+                                        </a>
+                                    </li>
+                                    <?php if (!$profile['is_primary']): ?>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="?delete_profile=<?= $profile['profile_id'] ?>"
+                                           onclick="return confirm('Hapus profil <?= htmlspecialchars($profile['profile_name']) ?>? Semua link dan pengaturan akan dihapus!')">
+                                            <i class="bi bi-trash"></i> Hapus Profil
                                         </a>
                                     </li>
                                     <?php endif; ?>
@@ -206,15 +525,27 @@ include '../partials/admin_header.php';
                             </div>
                         </div>
                         
-                        <div class="d-flex gap-3 mt-3 pt-3 border-top">
+                        <?php if (!empty($profile['profile_description'])): ?>
+                        <p class="text-muted small mb-2">
+                            <?= htmlspecialchars($profile['profile_description']) ?>
+                        </p>
+                        <?php endif; ?>
+                        
+                        <div class="profile-stats">
                             <div class="stat-badge">
                                 <i class="bi bi-link-45deg"></i>
                                 <strong><?= intval($profile['link_count'] ?? 0) ?></strong> Links
                             </div>
                             <div class="stat-badge">
-                                <i class="bi bi-graph-up"></i>
+                                <i class="bi bi-cursor-fill"></i>
                                 <strong><?= intval($profile['total_clicks'] ?? 0) ?></strong> Klik
                             </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Dibuat: <?= !empty($profile['created_at']) && $profile['created_at'] != '0000-00-00 00:00:00' ? date('d M Y', strtotime($profile['created_at'])) : date('d M Y') ?>
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -223,10 +554,11 @@ include '../partials/admin_header.php';
             
             <?php if ($profile_count < $profile_limit): ?>
             <div class="col-md-6 mb-4">
-                <div class="card profile-card-add h-100" data-bs-toggle="modal" data-bs-target="#createProfileModal">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
-                        <i class="bi bi-plus-circle-dotted display-3 text-muted"></i>
-                        <h5 class="mt-3 text-muted fw-bold">Buat Profil Baru</h5>
+                <div class="card profile-card border-dashed" data-bs-toggle="modal" data-bs-target="#createProfileModal" style="border-style: dashed !important; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                    <div class="card-body text-center">
+                        <i class="bi bi-plus-circle" style="font-size: 3rem; color: #ccc;"></i>
+                        <h5 class="mt-3 text-muted">Buat Profil Baru</h5>
+                        <p class="text-muted small">Klik untuk membuat profil kedua</p>
                     </div>
                 </div>
             </div>
@@ -236,74 +568,110 @@ include '../partials/admin_header.php';
     
     <!-- Create Profile Modal -->
     <div class="modal fade" id="createProfileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Buat Profil Baru
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
                 <form method="POST" id="createProfileForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Buat Profil Baru</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Nama Profil</label>
-                            <input type="text" class="form-control" name="profile_name" placeholder="contoh: Profil Bisnis" required>
-                            <small class="text-muted">Nama ini untuk identifikasi Anda, tidak ditampilkan publik.</small>
+                            <label class="form-label fw-semibold">Nama Profil</label>
+                            <input type="text" class="form-control" name="profile_name" 
+                                   placeholder="contoh: Bisnis Saya" required>
+                            <small class="text-muted">Nama internal untuk identifikasi (tidak tampil di publik)</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Slug (URL)</label>
-                            <input type="text" class="form-control" name="slug" id="new_profile_slug" placeholder="contoh: bisnis-keren" pattern="[a-z0-9-]+" minlength="3" maxlength="50" required>
-                            <div id="profile_slug_feedback" class="form-text mt-1"></div>
-                            <small class="text-muted">URL unik profil Anda. Hanya huruf kecil, angka, dan strip (-).</small>
+                            <label class="form-label fw-semibold">Slug</label>
+                            <input type="text" class="form-control" name="slug" id="new_profile_slug"
+                                   placeholder="contoh: nama-bisnis" pattern="[a-z0-9-]+" 
+                                   minlength="3" maxlength="50" required>
+                            <div id="profile_slug_feedback" class="form-text"></div>
+                            <small class="text-muted">URL unik untuk profil ini (hanya huruf kecil, angka, dan tanda hubung)</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Deskripsi (Opsional)</label>
+                            <textarea class="form-control" name="profile_description" rows="3" 
+                                      placeholder="Catatan tentang profil ini..."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb-fill me-2"></i>
+                            Setelah dibuat, Anda bisa mengatur tampilan, links, dan konten secara terpisah untuk profil ini!
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" name="create_profile" class="btn btn-primary" id="createProfileBtn">Buat Profil</button>
+                        <button type="submit" name="create_profile" class="btn btn-primary" id="createProfileBtn" disabled>
+                            <i class="bi bi-plus-circle"></i> Buat Profil
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
     
-    <?php include '../partials/admin_footer.php'; ?>
-
-    <style>
-        .profile-card, .profile-card-add {
-            border: 1px solid var(--bs-border-color);
-            border-radius: 0.75rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .profile-card-add {
-            cursor: pointer;
-            border-style: dashed;
-        }
-        .profile-card-add:hover {
-            background-color: var(--bs-secondary-bg);
-            border-color: var(--bs-primary);
-        }
-        .profile-card.active {
-            border-color: var(--bs-primary);
-            box-shadow: 0 0 0 3px var(--bs-primary-bg-subtle);
-        }
-        .profile-card.primary {
-            border-left: 5px solid var(--bs-success);
-        }
-        .stat-badge {
-            background-color: var(--bs-secondary-bg);
-            padding: 0.35rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--bs-body-color);
-        }
-        .bg-success-soft { background-color: var(--bs-success-bg-subtle); }
-        .text-success { color: var(--bs-success-text-emphasis) !important; }
-        .bg-primary-soft { background-color: var(--bs-primary-bg-subtle); }
-        .text-primary { color: var(--bs-primary-text-emphasis) !important; }
-    </style>
-
+    <script src="../assets/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/jquery-3.7.1.min.js"></script>
     <script>
-        // Simple slug availability check via AJAX could be added here if needed
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+        
+        // Check profile slug availability
+        function checkProfileSlugAvailability(slug) {
+            if (slug.length < 3) {
+                $('#profile_slug_feedback').html('<span class="text-muted">Minimal 3 karakter</span>');
+                $('#createProfileBtn').prop('disabled', true);
+                return;
+            }
+            
+            slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            $('#profile_slug_feedback').html('<span class="text-muted"><i class="bi bi-hourglass-split"></i> Memeriksa...</span>');
+            $('#createProfileBtn').prop('disabled', true);
+            
+            $.ajax({
+                url: 'profiles.php',
+                method: 'POST',
+                data: { action: 'check_profile_slug', slug: slug },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.available) {
+                        $('#profile_slug_feedback').html('<span class="text-success"><i class="bi bi-check-circle-fill"></i> ' + response.message + '</span>');
+                        $('#createProfileBtn').prop('disabled', false);
+                    } else {
+                        $('#profile_slug_feedback').html('<span class="text-danger"><i class="bi bi-x-circle-fill"></i> ' + response.message + '</span>');
+                        $('#createProfileBtn').prop('disabled', true);
+                    }
+                },
+                error: function() {
+                    $('#profile_slug_feedback').html('<span class="text-danger">Error checking availability</span>');
+                    $('#createProfileBtn').prop('disabled', true);
+                }
+            });
+        }
+        
+        const debouncedCheck = debounce(function() {
+            checkProfileSlugAvailability($('#new_profile_slug').val());
+        }, 500);
+        
+        $(document).ready(function() {
+            $('#new_profile_slug').on('input', function() {
+                let val = $(this).val().toLowerCase().replace(/[^a-z0-9-]/g, '');
+                $(this).val(val);
+                debouncedCheck();
+            });
+        });
     </script>
 </body>
 </html>

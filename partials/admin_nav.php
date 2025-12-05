@@ -1,39 +1,33 @@
 <?php
 // Admin Navigation Bar
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Ensure user is authenticated
-if (!isset($_SESSION['user_id'])) {
+if (!isset($current_username) || !isset($current_page_slug)) {
+    // Redirect if not authenticated
     header('Location: ../login.php');
     exit;
 }
 
-require_once __DIR__ . '/../config/db.php';
-
-$current_user_id = $_SESSION['user_id'];
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Load all user profiles for dropdown
-$user_profiles = get_all_rows("SELECT id, name, slug, display_order FROM profiles WHERE user_id = ? ORDER BY display_order ASC, created_at ASC", [$current_user_id], 'i');
+// Multi-profile: Load all user profiles for dropdown
+require_once __DIR__ . '/../config/db.php';
 
-// Determine active profile
-$active_profile_id = $_SESSION['active_profile_id'] ?? null;
-$active_profile_name = 'Pilih Profil';
-$current_page_slug = '';
-
-if ($active_profile_id) {
-    foreach ($user_profiles as $profile) {
-        if ($profile['id'] == $active_profile_id) {
-            $active_profile_name = $profile['name'];
-            $current_page_slug = $profile['slug'];
-            break;
+$user_profiles = [];
+$active_profile_name = 'Profile';
+if (isset($_SESSION['user_id'])) {
+    $stmt = mysqli_prepare($conn, "SELECT id, name, slug, display_order FROM profiles WHERE user_id = ? ORDER BY display_order ASC, created_at ASC");
+    mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $user_profiles[] = $row;
+        if (isset($_SESSION['active_profile_id']) && $row['id'] == $_SESSION['active_profile_id']) {
+            $active_profile_name = $row['name'];
         }
     }
+    mysqli_stmt_close($stmt);
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+<nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="dashboard.php">
             <i class="bi bi-link-45deg"></i> LinkMy
@@ -42,71 +36,101 @@ if ($active_profile_id) {
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'dashboard.php' ? 'active' : '' ?>" href="dashboard.php">
-                        <i class="bi bi-house-door-fill"></i> Dashboard
+                        <i class="bi bi-house-fill"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'appearance.php' ? 'active' : '' ?>" href="appearance.php">
-                        <i class="bi bi-palette-fill"></i> Tampilan
+                        <i class="bi bi-palette-fill"></i> Appearance
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'categories.php' ? 'active' : '' ?>" href="categories.php">
-                        <i class="bi bi-folder-fill"></i> Kategori
+                        <i class="bi bi-folder-fill"></i> Categories
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'settings.php' ? 'active' : '' ?>" href="settings.php">
-                        <i class="bi bi-gear-fill"></i> Pengaturan
+                        <i class="bi bi-gear-fill"></i> Settings
                     </a>
                 </li>
-            </ul>
-            <ul class="navbar-nav ms-auto">
+                
                 <!-- Multi-Profile Switcher Dropdown -->
-                <?php if (!empty($user_profiles)): ?>
+                <?php if (count($user_profiles) > 1): ?>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle"></i> <?= htmlspecialchars($active_profile_name) ?>
+                        <i class="bi bi-collection"></i> <?= htmlspecialchars($active_profile_name) ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                        <li><h6 class="dropdown-header">Ganti Profil</h6></li>
+                        <li><h6 class="dropdown-header">Switch Profile</h6></li>
                         <?php foreach ($user_profiles as $profile): ?>
                             <li>
-                                <a class="dropdown-item <?= ($profile['id'] == $active_profile_id) ? 'active' : '' ?>" 
-                                   href="../scripts/switch_profile.php?profile_id=<?= $profile['id'] ?>">
-                                    <?= $profile['display_order'] == 0 ? '<i class="bi bi-star-fill text-warning me-2"></i>' : '<i class="bi bi-person me-2"></i>' ?>
+                                <a class="dropdown-item <?= (isset($_SESSION['active_profile_id']) && $profile['id'] == $_SESSION['active_profile_id']) ? 'active' : '' ?>" 
+                                   href="profiles.php?switch_profile=<?= $profile['id'] ?>">
+                                    <?= $profile['display_order'] == 0 ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-circle"></i>' ?>
                                     <?= htmlspecialchars($profile['name']) ?>
+                                    <small class="text-muted">(<?= htmlspecialchars($profile['slug']) ?>)</small>
                                 </a>
                             </li>
                         <?php endforeach; ?>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="settings.php"><i class="bi bi-gear me-2"></i>Kelola Profil</a></li>
+                        <li><a class="dropdown-item" href="settings.php"><i class="bi bi-gear"></i> Profile Settings</a></li>
                     </ul>
                 </li>
                 <?php endif; ?>
                 
-                <?php if ($current_page_slug): ?>
                 <li class="nav-item">
-                    <a class="nav-link" href="../<?= htmlspecialchars($current_page_slug) ?>" target="_blank" title="Lihat Halaman Publik">
-                        <i class="bi bi-eye-fill"></i> <span class="d-lg-none ms-1">Lihat Halaman</span>
+                    <a class="nav-link" href="../<?= htmlspecialchars($current_page_slug) ?>" target="_blank">
+                        <i class="bi bi-eye-fill"></i> View Page
                     </a>
                 </li>
-                <?php endif; ?>
-
                 <li class="nav-item">
-                    <a class="nav-link" href="../logout.php" title="Logout">
-                        <i class="bi bi-box-arrow-right"></i> <span class="d-lg-none ms-1">Logout</span>
+                    <a class="nav-link" href="../logout.php">
+                        <i class="bi bi-box-arrow-right"></i> Logout
                     </a>
                 </li>
-                <li class="nav-item ms-lg-2">
-                    <button class="btn nav-link theme-toggle-btn" id="themeToggle" title="Ganti Tema">
-                        <i class="bi" id="themeIcon"></i>
+                <li class="nav-item">
+                    <button class="nav-link btn btn-link p-0" id="themeToggle" style="border: none; background: none;">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
                     </button>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
+
+<script>
+// Theme toggle functionality - wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+    updateIcon(savedTheme);
+
+    // Add click event listener
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        });
+    }
+
+    function updateIcon(theme) {
+        if (themeIcon) {
+            themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        }
+    }
+});
+</script>
