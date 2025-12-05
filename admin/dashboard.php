@@ -221,63 +221,6 @@
         LIMIT 10",
         [$active_profile_id],
         'i'
-    );
-    
-    // If no country data, show IP-based location summary - Multi-profile
-    if (empty($click_by_location)) {
-        $click_by_location = get_all_rows(
-            "SELECT 
-                CASE 
-                    WHEN ip LIKE '172.%' OR ip LIKE '192.168.%' THEN 'Local Network'
-                    WHEN ip IS NULL OR ip = '' THEN 'Unknown'
-                    ELSE CONCAT('IP: ', SUBSTRING(ip, 1, 10), '...')
-                END as location,
-                COUNT(*) as clicks
-            FROM clicks c
-            INNER JOIN links l ON c.link_id = l.id
-            WHERE l.profile_id = ?
-            GROUP BY location
-            ORDER BY clicks DESC
-            LIMIT 10",
-            [$active_profile_id],
-            'i'
-        );
-    }
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - LinkMy</title>
-        }
-        .link-item {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: move;
-            transition: all 0.3s;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-        .link-item:hover {
-            border-color: #0ea5e9;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
-        }
-        .link-item.dragging {
-            opacity: 0.5;
-        }
-        .drag-handle {
-            cursor: grab;
-            color: #999;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
             border-radius: 15px;
             padding: 1.5rem;

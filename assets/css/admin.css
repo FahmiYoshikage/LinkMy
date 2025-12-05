@@ -1,34 +1,34 @@
 /* ===== PROFESSIONAL THEME ADMIN ===== */
 :root {
     /* Professional Blue Colors */
-    --primary-color: #3b82f6;
-    --primary-dark: #2563eb;
+    --primary-color: #2563eb; /* Royal Blue */
+    --primary-dark: #1e40af;
     --primary-light: #60a5fa;
-    --hover-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+    --hover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
     /* Light Mode (Default) */
-    --bg-color: #f8fafc;
+    --bg-color: #f1f5f9; /* Slate 100 */
     --card-bg: #ffffff;
-    --card-hover: #f1f5f9;
+    --card-hover: #f8fafc;
     --border-color: #e2e8f0;
-    --text-color: #1e293b;
-    --text-secondary: #64748b;
-    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --text-color: #0f172a; /* Slate 900 */
+    --text-secondary: #64748b; /* Slate 500 */
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --navbar-bg: #ffffff;
-    --navbar-text: #1e293b;
+    --navbar-text: #0f172a;
 }
 
 /* Dark Mode */
 [data-theme='dark'] {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --card-hover: #334155;
+    --bg-color: #0f172a; /* Slate 900 */
+    --card-bg: #1e293b; /* Slate 800 */
+    --card-hover: #334155; /* Slate 700 */
     --border-color: #334155;
-    --text-color: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --text-color: #f8fafc; /* Slate 50 */
+    --text-secondary: #94a3b8; /* Slate 400 */
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
     --navbar-bg: #1e293b;
-    --navbar-text: #f1f5f9;
+    --navbar-text: #f8fafc;
 } /* Body Background - Dark Mode */
 body {
     background-color: var(--bg-color) !important;
