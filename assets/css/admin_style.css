@@ -1,0 +1,199 @@
+/* General Variables */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+
+    --font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Light Theme */
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --card-border-color: #dee2e6;
+    --nav-bg: #ffffff;
+    --nav-text-color: #495057;
+    --nav-link-active-color: var(--primary-color);
+    --input-bg: #fff;
+    --input-border-color: #ced4da;
+    --input-text-color: #212529;
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+    --bg-color: #121212;
+    --text-color: #e9ecef;
+    --card-bg: #1e1e1e;
+    --card-border-color: #343a40;
+    --nav-bg: #1e1e1e;
+    --nav-text-color: #adb5bd;
+    --nav-link-active-color: var(--info-color);
+    --input-bg: #2c2c2c;
+    --input-border-color: #495057;
+    --input-text-color: #f8f9fa;
+}
+
+/* General Styles */
+body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-color);
+}
+
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--card-border-color);
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border-color);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+    color: var(--input-text-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--input-text-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-color);
+}
+
+.alert-success {
+    background-color: var(--success-color);
+    color: #fff;
+}
+.alert-danger {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+.alert-warning {
+    background-color: var(--warning-color);
+    color: #212529;
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: var(--nav-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--card-border-color);
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: var(--nav-text-color);
+    font-weight: 500;
+}
+
+.navbar-custom .nav-link:hover {
+    color: var(--nav-link-active-color);
+}
+
+.navbar-custom .nav-link.active {
+    color: var(--nav-link-active-color);
+    font-weight: 700;
+}
+
+.dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--card-border-color);
+}
+
+.dropdown-item {
+    color: var(--text-color);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme='dark'] .dropdown-item:hover,
+[data-theme='dark'] .dropdown-item:focus {
+    background-color: rgba(13, 202, 240, 0.15);
+}
+
+.theme-toggle-btn {
+    cursor: pointer;
+}
+
+/* Stat Cards */
+.stat-card {
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+/* Link Items */
+.link-item {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.link-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
+}
+
+.drag-handle {
+    cursor: grab;
+}
+.sortable-ghost {
+    opacity: 0.4;
+    background: var(--primary-color);
+}
+.sortable-chosen {
+    cursor: grabbing;
+}
+
+/* Highcharts dark theme adjustments */
+[data-theme='dark'] .highcharts-background {
+    fill: var(--card-bg);
+}
+[data-theme='dark'] .highcharts-title,
+[data-theme='dark'] .highcharts-subtitle,
+[data-theme='dark'] .highcharts-axis-labels text,
+[data-theme='dark'] .highcharts-axis-title,
+[data-theme='dark'] .highcharts-legend-item text {
+    fill: var(--text-color) !important;
+}
+[data-theme='dark'] .highcharts-grid-line {
+    stroke: #495057;
+}
+[data-theme='dark'] .highcharts-tooltip-box {
+    fill: #1e1e1e;
+}
+[data-theme='dark'] .highcharts-tooltip-text {
+    fill: var(--text-color) !important;
+}
