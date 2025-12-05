@@ -631,30 +631,34 @@ div {
 }
 
 /* Theme Toggle Button Styling */
-#themeToggle {
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0.6rem 1rem !important;
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
-    border: none !important;
-    background: none !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
     color: var(--navbar-text) !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-#themeToggle:hover {
-    background: rgba(59, 130, 246, 0.1) !important;
-    transform: scale(1.1);
+.theme-toggle-btn:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
     color: var(--primary-color) !important;
+    transform: rotate(15deg);
 }
 
-#themeToggle:focus {
-    outline: none;
-    box-shadow: none;
+.theme-toggle-btn:active {
+    transform: scale(0.95);
 }
 
 #themeIcon {
-    display: inline-block;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 /* Smooth transitions for theme switch */

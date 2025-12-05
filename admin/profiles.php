@@ -382,7 +382,6 @@ if (isset($_GET['debug'])) {
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body {
-            background: #f5f7fa;
             padding-top: 76px;
         }
         .profile-card {

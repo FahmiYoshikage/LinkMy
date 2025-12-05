@@ -483,7 +483,6 @@ $total_clicks = get_single_row("SELECT COALESCE(SUM(clicks), 0) as total FROM li
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body {
-            background: #f5f7fa;
             padding-top: 76px;
         }
         .card {

@@ -92,8 +92,8 @@ if (isset($_SESSION['user_id'])) {
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </a>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link btn btn-link p-0" id="themeToggle" style="border: none; background: none;">
+                <li class="nav-item ms-2">
+                    <button class="btn btn-link nav-link theme-toggle-btn" id="themeToggle" title="Toggle Theme">
                         <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
                     </button>
                 </li>
@@ -103,34 +103,34 @@ if (isset($_SESSION['user_id'])) {
 </nav>
 
 <script>
-// Theme toggle functionality - wrapped in DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
+// Theme toggle functionality
+(function() {
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const html = document.documentElement;
+    
+    // Function to set theme
+    function setTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        if (themeIcon) {
+            themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        }
+    }
 
     // Load saved theme or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
-    html.setAttribute('data-theme', savedTheme);
-    updateIcon(savedTheme);
+    setTheme(savedTheme);
 
     // Add click event listener
     if (themeToggle) {
         themeToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            const currentTheme = html.getAttribute('data-theme');
+            const currentTheme = html.getAttribute('data-theme') || 'light';
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateIcon(newTheme);
+            setTheme(newTheme);
         });
     }
-
-    function updateIcon(theme) {
-        if (themeIcon) {
-            themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
-        }
-    }
-});
+})();
 </script>

@@ -610,7 +610,6 @@
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body { 
-            background: var(--dark-bg);
             padding-top: 76px;
         }
         

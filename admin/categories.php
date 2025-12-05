@@ -105,7 +105,6 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
         body {
-            background: var(--page-bg);
             min-height: 100vh;
             padding-top: 76px;
         }
