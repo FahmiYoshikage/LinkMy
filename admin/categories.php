@@ -104,26 +104,25 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="../assets/css/admin.css" rel="stylesheet">
     <style>
-        body { 
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); 
+        body {
+            background: var(--page-bg);
             min-height: 100vh;
             padding-top: 76px;
         }
-        
-        .container { 
+        .container {
             padding-bottom: 3rem;
             margin-top: 1rem;
         }
-        .card { 
-            border: none; 
-            border-radius: 20px; 
+        .card {
+            border: none;
+            border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             backdrop-filter: blur(10px);
-            background: rgba(255,255,255,0.95);
+            background: var(--card-bg);
         }
         .category-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
-            border: 2px solid #e9ecef;
+            background: var(--surface-bg);
+            border: 2px solid var(--border-color);
             border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 1rem;
@@ -149,13 +148,13 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
             width: 60px;
             height: 60px;
             border-radius: 12px;
-            border: 3px solid #fff;
+            border: 3px solid var(--preview-border-color);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: white;
+            color: var(--preview-icon-color);
         }
         .icon-picker {
             display: grid;
@@ -164,7 +163,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
             max-height: 300px;
             overflow-y: auto;
             padding: 1rem;
-            background: #f8f9fa;
+            background: var(--picker-bg);
             border-radius: 10px;
         }
         .icon-option {
@@ -180,17 +179,17 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
             font-size: 1.3rem;
         }
         .icon-option:hover {
-            background: white;
-            border-color: #0ea5e9;
+            background: var(--hover-bg);
+            border-color: var(--primary);
             transform: scale(1.1);
         }
         .icon-option.selected {
-            background: #0ea5e9;
-            color: white;
-            border-color: #0ea5e9;
+            background: var(--primary);
+            color: var(--on-primary);
+            border-color: var(--primary);
         }
         .header-card {
-            background: rgba(255,255,255,0.95);
+            background: var(--card-bg);
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2rem;
@@ -206,11 +205,11 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h2 class="fw-bold mb-2">
-                        <i class="bi bi-folder-fill" style="color: #0ea5e9;"></i> Link Categories
+                        <i class="bi bi-folder-fill" style="color: var(--primary);"></i> Link Categories
                     </h2>
                     <p class="text-muted mb-0">Organize your links â€¢ <?= count($categories) ?> categories</p>
                 </div>
-                <button class="btn btn-lg" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; border: none; border-radius: 15px; padding: 0.75rem 2rem; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);" data-bs-toggle="modal" data-bs-target="#addModal">
+                <button class="btn btn-primary btn-lg" style="border-radius: 12px;" data-bs-toggle="modal" data-bs-target="#addModal">
                     <i class="bi bi-plus-circle me-2"></i> New Category
                 </button>
             </div>
@@ -247,7 +246,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                     <?php foreach ($categories as $cat): ?>
                         <div class="category-card" data-id="<?= $cat['category_id'] ?>" style="--cat-color: <?= htmlspecialchars($cat['category_color'] ?? '#0ea5e9') ?>;">
                             <div class="d-flex align-items-center flex-wrap gap-3">
-                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color'] ?? '#0ea5e9') ?>;">
+                                <div class="category-color-preview" style="background: <?= htmlspecialchars($cat['category_color'] ?? '') ?>;">
                                     <i class="<?= htmlspecialchars($cat['category_icon'] ?? 'bi-folder') ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
@@ -364,7 +363,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="add_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="add_preview_box" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="bi-folder" id="add_preview_icon"></i>
                                 </div>
                                 <div>
@@ -456,7 +455,7 @@ $categories = get_all_rows("SELECT c.id as category_id, c.name as category_name,
                         
                         <div class="alert alert-light border">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="category-color-preview" id="edit_preview_box" style="background: #0ea5e9; width: 50px; height: 50px; font-size: 1.2rem;">
+                                <div class="category-color-preview" id="edit_preview_box" style="width: 50px; height: 50px; font-size: 1.2rem;">
                                     <i class="bi-folder" id="edit_preview_icon"></i>
                                 </div>
                                 <div>
